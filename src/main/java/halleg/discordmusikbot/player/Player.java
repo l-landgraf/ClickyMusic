@@ -79,7 +79,7 @@ public class Player {
 		}
 	}
 
-	public void removeElement(Message message) {
+	public void removeElement(Message message, Member member) {
 
 		if (this.currentTrack != null && this.currentTrack.getMessage().getIdLong() == message.getIdLong()) {
 			nextTrack();
@@ -87,7 +87,7 @@ public class Player {
 
 		for (QueueElement queueElement : this.queue) {
 			if (queueElement.getMessage().getIdLong() == message.getIdLong()) {
-				this.handler.getBuilder().setPlayed(message);
+				this.handler.getBuilder().setRemoved(message, member);
 				this.queue.remove(queueElement);
 				break;
 			}

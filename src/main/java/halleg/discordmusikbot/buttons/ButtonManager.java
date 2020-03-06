@@ -26,7 +26,7 @@ public class ButtonManager {
 		this.buttons.add(new Button(handler, GuildHandler.REMOVE_EMOJI, "remove from queue") {
 			@Override
 			protected void run(Message message, MessageReaction react, Member member) {
-				this.handler.getPlayer().removeElement(message);
+				this.handler.getPlayer().removeElement(message, member);
 			}
 		});
 

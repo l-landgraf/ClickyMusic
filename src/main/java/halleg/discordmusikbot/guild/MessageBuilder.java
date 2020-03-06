@@ -6,8 +6,11 @@ import halleg.discordmusikbot.buttons.Button;
 import halleg.discordmusikbot.commands.Command;
 import halleg.discordmusikbot.player.Track;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
+
+import java.awt.*;
 
 public class MessageBuilder {
 	private GuildHandler handler;
@@ -88,8 +91,18 @@ public class MessageBuilder {
 		m.addReaction(GuildHandler.REPEAT_EMOJI).queue(null, null);
 	}
 
-	public void setRemoved(Message m) {
+	public void setRemoved(Message m, Member remover) {
+		if (!this.handler.reactionPermissionCheck()) {
+			return;
+		}
+
 		setPlayed(m);
+
+		MessageEmbed embed = m.getEmbeds().get(0);
+		EmbedBuilder builder = new EmbedBuilder(embed);
+		builder.appendDescription(", removed by " + remover.getAsMention());
+		builder.setColor(Color.RED);
+		m.editMessage(builder.build()).queue();
 	}
 
 	public MessageEmbed buildNewErrorMessage(String error) {
