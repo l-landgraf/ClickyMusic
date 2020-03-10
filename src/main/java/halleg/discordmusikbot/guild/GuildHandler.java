@@ -88,11 +88,7 @@ public class GuildHandler {
 						return;
 					}
 
-					for (MessageReaction react : message.getReactions()) {
-						if (react.isSelf()) {
-							GuildHandler.this.builder.setPlayed(message);
-						}
-					}
+					GuildHandler.this.builder.setPlayed(message);
 				}
 
 			}
@@ -129,7 +125,7 @@ public class GuildHandler {
 	}
 
 	public void handleReaction(final MessageReaction react, Message message, final Member member) {
-		log("recieved Message: " + react.getReactionEmote().getEmoji());
+		log("recieved Reaction: " + react.getReactionEmote().getEmoji());
 
 		if (message.getChannel().getIdLong() != this.output.getIdLong()) {
 			return;

@@ -100,7 +100,6 @@ public class MessageBuilder {
 
 		MessageEmbed embed = m.getEmbeds().get(0);
 		EmbedBuilder builder = new EmbedBuilder(embed);
-		builder.appendDescription(", removed by " + remover.getAsMention());
 		builder.setColor(Color.RED);
 		m.editMessage(builder.build()).queue();
 	}
