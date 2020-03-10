@@ -8,10 +8,10 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason;
 
 import halleg.discordmusikbot.guild.GuildHandler;
 
-public class AudioListener extends AudioEventAdapter {
+public class EventListener extends AudioEventAdapter {
 	private GuildHandler handler;
 
-	public AudioListener(GuildHandler handler) {
+	public EventListener(GuildHandler handler) {
 		this.handler = handler;
 	}
 
@@ -35,7 +35,6 @@ public class AudioListener extends AudioEventAdapter {
 		if (endReason.mayStartNext) {
 			this.handler.getPlayer().nextTrack();
 		}
-
 		// endReason == FINISHED: A track finished or died by an exception (mayStartNext
 		// = true).
 		// endReason == LOAD_FAILED: Loading of a track failed (mayStartNext = true).

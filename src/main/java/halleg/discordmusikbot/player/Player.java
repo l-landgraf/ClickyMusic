@@ -20,27 +20,32 @@ import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.managers.AudioManager;
 
-public class Player {
+public class Player implements Timer.TimerListener {
+	private static final long DISCONNECT_TIME = 10000l;
+
 	private List<QueueElement> queue;
 	private QueueElement currentTrack;
 
 	private AudioPlayerManager manager;
 	private SendHandler sender;
-	private AudioListener listener;
+	private EventListener listener;
 
 	private AudioPlayer player;
 	private GuildHandler handler;
 	private AudioManager audioManager;
+
+	private Timer timer;
 
 	public Player(GuildHandler handler, AudioPlayerManager manager) {
 		this.handler = handler;
 		this.audioManager = handler.getGuild().getAudioManager();
 		this.manager = manager;
 		this.player = this.manager.createPlayer();
-		this.listener = new AudioListener(handler);
+		this.listener = new EventListener(handler);
 		this.player.addListener(this.listener);
 		this.sender = new SendHandler(this.player);
 		this.queue = new LinkedList<QueueElement>();
+		this.timer = new Timer(DISCONNECT_TIME, this);
 	}
 
 	public void playSearch(String query, Member member) {
@@ -154,8 +159,24 @@ public class Player {
 			this.player.stopTrack();
 		}
 	}
+	public void voiceUpdate() {
+		if(audioManager.isConnected()){
+			if(audioManager.getConnectedChannel().getMembers().size() > 1){
+				handler.log("Timer stopped.");
+				timer.stop();
+			} if(audioManager.getConnectedChannel().getMembers().size() == 1){
+				handler.log("Disconnecting in "+DISCONNECT_TIME/1000+"s...");
+				timer.start();
+			}
+		}
+	}
 
 	public void setPaused(boolean b) {
 		this.player.setPaused(b);
+	}
+
+	@Override
+	public void onTimerEnd() {
+		leave();
 	}
 }

@@ -138,6 +138,12 @@ public class GuildHandler {
 		GuildHandler.this.buttons.handleReaction(message, react, member);
 	}
 
+
+
+	public void voiceUpdate() {
+		player.voiceUpdate();
+	}
+
 	public void delete(Message message) {
 		try {
 			message.delete().queue();
@@ -225,5 +231,4 @@ public class GuildHandler {
 	public ButtonManager getButtons() {
 		return this.buttons;
 	}
-
 }

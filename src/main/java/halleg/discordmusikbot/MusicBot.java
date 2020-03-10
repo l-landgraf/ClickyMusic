@@ -15,15 +15,17 @@ import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers;
 
 import halleg.discordmusikbot.guild.GuildHandler;
 import net.dv8tion.jda.api.JDA;
-import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.MessageChannel;
-import net.dv8tion.jda.api.entities.MessageReaction;
+import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.guild.GuildJoinEvent;
+import net.dv8tion.jda.api.events.guild.voice.GuildVoiceJoinEvent;
+import net.dv8tion.jda.api.events.guild.voice.GuildVoiceLeaveEvent;
+import net.dv8tion.jda.api.events.guild.voice.GuildVoiceUpdateEvent;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.guild.react.GuildMessageReactionAddEvent;
 import net.dv8tion.jda.api.events.message.guild.react.GuildMessageReactionRemoveEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+
+import javax.annotation.Nonnull;
 
 public class MusicBot extends ListenerAdapter {
 	private JDA jda;
@@ -105,6 +107,19 @@ public class MusicBot extends ListenerAdapter {
 				getHandler(message.getGuild().getIdLong()).handleReaction(react, message, member);
 			}
 		});
+	}
+
+	@Override
+	public void onGuildVoiceUpdate(@Nonnull GuildVoiceUpdateEvent event) {
+		VoiceChannel channel = event.getChannelJoined();
+
+		if(channel == null){
+			channel = event.getChannelLeft();
+		}
+
+		if(channel != null){
+			getHandler(channel.getGuild().getIdLong()).voiceUpdate();
+		}
 	}
 
 	@Override
