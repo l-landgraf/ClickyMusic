@@ -19,7 +19,7 @@ public class ButtonManager {
 		this.buttons.add(new Button(handler, GuildHandler.REPEAT_EMOJI, "queue song again") {
 			@Override
 			protected void run(Message message, MessageReaction react, Member member) {
-				this.handler.getPlayer().play(this.handler.getBuilder().getURI(message), member);
+				this.handler.getPlayer().loadAndQueue(this.handler.getBuilder().getURI(message), member);
 			}
 		});
 

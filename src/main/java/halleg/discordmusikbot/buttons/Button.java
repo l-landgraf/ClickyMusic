@@ -7,37 +7,45 @@ import net.dv8tion.jda.api.entities.MessageReaction;
 
 public abstract class Button {
 
-	protected GuildHandler handler;
-	protected String emoji;
-	protected String description;
+    protected GuildHandler handler;
+    protected String emoji;
+    protected String description;
 
-	protected abstract void run(Message message, MessageReaction react, Member member);
+    protected abstract void run(Message message, MessageReaction react, Member member);
 
-	public Button(GuildHandler handler, String emoji, String description) {
-		this.handler = handler;
-		this.emoji = emoji;
-		this.description = description;
-	}
+    public Button(GuildHandler handler, String emoji, String description) {
+        this.handler = handler;
+        this.emoji = emoji;
+        this.description = description;
+    }
 
-	public boolean check(Message message, MessageReaction react, Member member, String emoji) {
-		if (emoji.equalsIgnoreCase(this.emoji)) {
-			this.handler.log("executing button: " + react.getReactionEmote().getEmoji());
-			run(message, react, member);
-			return true;
-		}
-		return false;
-	}
+    public boolean check(Message message, MessageReaction react, Member member, String emoji) {
+        if (message.getChannel().getIdLong() != this.handler.getChannel().getIdLong()) {
+            return false;
+        }
 
-	public GuildHandler getHandler() {
-		return this.handler;
-	}
+        //if (member.getVoiceState().getChannel().getIdLong() != this.handler.getPlayer().getConnectedChannel().getIdLong()) {
+        //   return false;
+        //}
 
-	public String getEmoji() {
-		return this.emoji;
-	}
+        if (emoji.equalsIgnoreCase(this.emoji)) {
+            this.handler.log("executing button: " + react.getReactionEmote().getEmoji());
+            run(message, react, member);
+            return true;
+        }
+        return false;
+    }
 
-	public String getDescription() {
-		return this.description;
-	}
+    public GuildHandler getHandler() {
+        return this.handler;
+    }
+
+    public String getEmoji() {
+        return this.emoji;
+    }
+
+    public String getDescription() {
+        return this.description;
+    }
 
 }

@@ -12,13 +12,15 @@ public abstract class Command {
 	protected int atibNum;
 	protected String description;
 	protected String[] tips;
-	protected boolean channelOnly;
+	protected boolean textChannelOnly;
+	protected boolean voiceChannelOnly;
 
-	public Command(GuildHandler handler, String command, boolean channelOnly, String description, String... tips) {
+	public Command(GuildHandler handler, String command, boolean textChannelOnly,boolean voiceChannelOnly, String description, String... tips) {
 		this.handler = handler;
 		this.command = command;
 		this.atibNum = tips.length;
-		this.channelOnly = channelOnly;
+		this.textChannelOnly = textChannelOnly;
+		this.voiceChannelOnly = voiceChannelOnly;
 		this.description = description;
 		this.tips = tips;
 	}
@@ -26,7 +28,11 @@ public abstract class Command {
 	protected abstract void run(List<String> args, Message message);
 
 	public boolean check(Message message) {
-		if (this.channelOnly && message.getChannel().getIdLong() != this.handler.getChannel().getIdLong()) {
+		if (this.textChannelOnly && message.getChannel().getIdLong() != this.handler.getChannel().getIdLong()) {
+			return false;
+		}
+
+		if (this.voiceChannelOnly && message.getMember().getVoiceState().getChannel().getIdLong() != this.handler.getPlayer().getConnectedChannel().getIdLong()) {
 			return false;
 		}
 

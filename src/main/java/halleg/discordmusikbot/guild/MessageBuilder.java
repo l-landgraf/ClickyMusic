@@ -32,14 +32,6 @@ public class MessageBuilder {
 
 		eb.addField("By", info.author, true);
 		eb.addField("Length", toTime(info.length), true);
-		eb.addField("URI", "`" + info.uri + "`", false);
-
-		String foot = "";
-		for (Button button : this.handler.getButtons().getButtons()) {
-			foot += button.getEmoji() + " " + button.getDescription() + "\n";
-		}
-
-		eb.setFooter(foot);
 		return eb.build();
 	}
 
@@ -91,16 +83,19 @@ public class MessageBuilder {
 		m.addReaction(GuildHandler.REPEAT_EMOJI).queue(null, null);
 	}
 
-	public void setRemoved(Message m, Member remover) {
+	public void setRemoved(Message m) {
 		if (!this.handler.reactionPermissionCheck()) {
 			return;
 		}
 
 		setPlayed(m);
+		setColor(m,Color.RED);
+	}
 
+	public void setColor(Message m,Color color){
 		MessageEmbed embed = m.getEmbeds().get(0);
 		EmbedBuilder builder = new EmbedBuilder(embed);
-		builder.setColor(Color.RED);
+		builder.setColor(color);
 		m.editMessage(builder.build()).queue();
 	}
 
@@ -114,7 +109,7 @@ public class MessageBuilder {
 
 	public String getURI(Message message) {
 		try {
-			return message.getEmbeds().get(0).getFields().get(2).getValue().replace("`", "");
+			return message.getEmbeds().get(0).getUrl();
 		} catch (Exception e) {
 			return "";
 		}

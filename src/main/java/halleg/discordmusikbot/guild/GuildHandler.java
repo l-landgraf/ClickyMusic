@@ -88,7 +88,11 @@ public class GuildHandler {
 						return;
 					}
 
-					GuildHandler.this.builder.setPlayed(message);
+					for (MessageReaction react : message.getReactions()) {
+						if (react.isSelf()) {
+							GuildHandler.this.builder.setPlayed(message);
+						}
+					}
 				}
 
 			}
@@ -119,7 +123,7 @@ public class GuildHandler {
 
 			delete(event.getMessage());
 
-			this.player.play(event.getMessage().getContentRaw(), event.getMember());
+			this.player.loadAndQueue(event.getMessage().getContentRaw(), event.getMember());
 		}
 
 	}
@@ -223,8 +227,7 @@ public class GuildHandler {
 	public CommandManager getCommands() {
 		return this.commands;
 	}
+	public ButtonManager getButtons() {return this.buttons;}
 
-	public ButtonManager getButtons() {
-		return this.buttons;
-	}
+
 }
