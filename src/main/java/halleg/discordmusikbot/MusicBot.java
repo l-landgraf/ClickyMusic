@@ -2,7 +2,7 @@ package halleg.discordmusikbot;
 
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
-import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager;
+import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers;
 import halleg.discordmusikbot.guild.GuildHandler;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.*;
@@ -27,8 +27,7 @@ public class MusicBot extends ListenerAdapter {
     public MusicBot(JDA jda) {
         this.jda = jda;
         this.manager = new DefaultAudioPlayerManager();
-        manager.registerSourceManager(new YoutubeAudioSourceManager());
-        manager.registerSourceManager(new SpotifyAudioSourceManager());
+        AudioSourceManagers.registerRemoteSources(this.manager);
         this.map = new HashMap<Long, GuildHandler>();
         loadConfigs();
     }
@@ -89,19 +88,6 @@ public class MusicBot extends ListenerAdapter {
         handleReaction(event.getMember(), event.getChannel(), event.getMessageIdLong(), event.getReaction());
     }
 
-    private void handleReaction(final Member member, MessageChannel channel, long messageid,
-                                final MessageReaction react) {
-        if (member.getUser().isBot()) {
-            return;
-        }
-
-        channel.retrieveMessageById(messageid).queue(new Consumer<Message>() {
-            public void accept(Message message) {
-                getHandler(message.getGuild().getIdLong()).handleReaction(react, message, member);
-            }
-        });
-    }
-
     @Override
     public void onGuildVoiceUpdate(@Nonnull GuildVoiceUpdateEvent event) {
         VoiceChannel channel = event.getChannelJoined();
@@ -118,6 +104,20 @@ public class MusicBot extends ListenerAdapter {
     @Override
     public void onGuildJoin(GuildJoinEvent event) {
         getHandler(event.getGuild().getIdLong());
+    }
+
+    private void handleReaction(final Member member, MessageChannel channel, long messageid,
+                                final MessageReaction react) {
+        if (member.getUser().isBot()) {
+            return;
+        }
+
+        channel.retrieveMessageById(messageid).queue(new Consumer<Message>() {
+            @Override
+            public void accept(Message message) {
+                getHandler(message.getGuild().getIdLong()).handleReaction(react, message, member);
+            }
+        });
     }
 
     private GuildHandler getHandler(long id) {

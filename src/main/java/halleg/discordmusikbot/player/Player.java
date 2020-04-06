@@ -3,6 +3,10 @@ package halleg.discordmusikbot.player;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import halleg.discordmusikbot.guild.GuildHandler;
+import halleg.discordmusikbot.player.loader.LoadHandler;
+import halleg.discordmusikbot.player.loader.PlaylistLoadHandler;
+import halleg.discordmusikbot.player.loader.PlaylistLoadSynchonizer;
+import halleg.discordmusikbot.player.queue.QueueElement;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
@@ -13,11 +17,9 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
 import java.io.IOException;
-import java.net.URL;
 import java.net.URLEncoder;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.function.Consumer;
 
 public class Player implements Timer.TimerListener {
     private static final long DISCONNECT_TIME = 10000l;
@@ -35,6 +37,8 @@ public class Player implements Timer.TimerListener {
 
     private Timer timer;
 
+    private SpotifyLinkHandler spotifyLinkHandler;
+
     public Player(GuildHandler handler, AudioPlayerManager manager) {
         this.handler = handler;
         this.audioManager = handler.getGuild().getAudioManager();
@@ -43,25 +47,25 @@ public class Player implements Timer.TimerListener {
         this.listener = new EventListener(handler);
         this.player.addListener(this.listener);
         this.sender = new SendHandler(this.player);
-        this.queue = new LinkedList<QueueElement>();
+        this.queue = new LinkedList<>();
         this.timer = new Timer(DISCONNECT_TIME, this);
         this.audioManager.setSendingHandler(this.sender);
+        this.spotifyLinkHandler = new SpotifyLinkHandler(this.handler);
     }
 
-    public void playSearch(String query, Member member) {
+    public void loadAndQueueSearch(String query, Member member) {
         loadAndQueue(youtubeSearch(query), member, false);
     }
 
-    private String youtubeSearch(String query) {
+    private synchronized String youtubeSearch(String query) {
         try {
-            this.handler.log("searching youtube for: " + query);
+            this.handler.log("searching youtube for: \"" + query + "\"");
             String escape = "https://www.youtube.com/results?search_query=" + URLEncoder.encode(query, "UTF-8");
-            URL url = new URL(escape);
             Document doc = Jsoup.connect(escape).get();
             for (Element e : doc.getElementsByTag("a")) {
                 String href = e.attr("href");
                 if (href.startsWith("/watch?v=")) {
-                    this.handler.log("found link: " + href);
+                    this.handler.log("found link: " + href + " for \"" + query + "\"");
                     return "https://www.youtube.com" + href;
                 }
             }
@@ -69,33 +73,19 @@ public class Player implements Timer.TimerListener {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return "";
+        this.handler.log("found nothing");
+        return null;
     }
 
     public void clearQueue() {
         this.player.stopTrack();
         for (QueueElement queueElement : this.queue) {
-            this.handler.getBuilder().setPlayed(queueElement.getMessage());
+            queueElement.setPlayed();
         }
 
         if (this.currentTrack != null) {
-            this.handler.getBuilder().setPlayed(this.currentTrack.getMessage());
+            this.currentTrack.setPlayed();
             this.currentTrack = null;
-        }
-    }
-
-    public void removeElement(Message message, Member member) {
-
-        if (this.currentTrack != null && this.currentTrack.getMessage().getIdLong() == message.getIdLong()) {
-            nextTrack();
-        }
-
-        for (QueueElement queueElement : this.queue) {
-            if (queueElement.getMessage().getIdLong() == message.getIdLong()) {
-                this.handler.getBuilder().setRemoved(message);
-                this.queue.remove(queueElement);
-                break;
-            }
         }
     }
 
@@ -103,8 +93,19 @@ public class Player implements Timer.TimerListener {
         loadAndQueue(source, member, true);
     }
 
+    public void loadAndQueueSpotify(String source, Member member, PlaylistLoadSynchonizer sync, int nr) {
+        try {
+            this.audioManager.openAudioConnection(member.getVoiceState().getChannel());
+        } catch (IllegalArgumentException e) {
+            this.handler.sendErrorMessage("Cant find Voicechannel!");
+            return;
+        }
+        String ytLink = youtubeSearch(source);
+        PlaylistLoadHandler loader = new PlaylistLoadHandler(sync, source, nr);
+        this.manager.loadItem(ytLink, loader);
+    }
+
     private void loadAndQueue(String source, Member member, boolean retry) {
-        this.handler.log("trying to load " + source);
         try {
             this.audioManager.openAudioConnection(member.getVoiceState().getChannel());
         } catch (IllegalArgumentException e) {
@@ -115,7 +116,11 @@ public class Player implements Timer.TimerListener {
 
         if (source.startsWith("https://www.youtube.com") || source.startsWith("www.youtube.com")
                 || source.startsWith("youtube.com")) {
-            source = source.replace("watch", "playlist");
+            source = source.split("&")[0];
+        }
+
+        if (this.spotifyLinkHandler.handleLink(source, member)) {
+            return;
         }
 
         this.manager.loadItem(source, new LoadHandler(this.handler, member, source, retry));
@@ -126,48 +131,80 @@ public class Player implements Timer.TimerListener {
         clearQueue();
     }
 
-    public void queue(final Track track) {
-        MessageEmbed m = this.handler.getBuilder().buildNewQueueMessage(track);
-        this.handler.log("queueing song");
-        this.handler.sendQueueMessage(track, new Consumer<Message>() {
-            public void accept(Message m) {
-                Player.this.handler.log("added song to queue");
-                Player.this.queue.add(new QueueElement(track, m));
-                if (Player.this.player.getPlayingTrack() == null) {
-                    nextTrack();
-                } else {
-                    Player.this.handler.getBuilder().setQueue(m);
-                }
-            }
-        });
+    public void queueComplete(QueueElement element) {
+        MessageEmbed m = element.buildMessage();
+        Message message = this.handler.complete(m);
+        element.setMessage(message);
+        Player.this.queue.add(element);
+        if (Player.this.player.getPlayingTrack() == null && element.isPlayable()) {
+            nextTrack();
+        } else {
+            element.setQueued();
+        }
     }
 
     public void nextTrack() {
-        setPaused(false);
+        nextTrack(null);
+    }
+
+    public void nextTrack(Member member) {
 
         if (this.currentTrack != null) {
-            this.handler.getBuilder().setPlayed(this.currentTrack.getMessage());
+            if (member == null) {
+                this.currentTrack.setPlayed();
+            } else {
+                this.currentTrack.setSkiped(member);
+            }
         }
-        if (!this.queue.isEmpty()) {
-
-            this.currentTrack = this.queue.get(0);
-            this.player.playTrack(this.currentTrack.getTrack().getTrack());
-            this.handler.getBuilder().setPlaying(this.currentTrack.getMessage());
-            this.queue.remove(0);
-        } else {
+        QueueElement next = getNextPlayableElement();
+        if (next == null) {
             this.player.stopTrack();
+        } else {
+            this.queue.remove(next);
+            this.currentTrack = next;
+            this.player.playTrack(this.currentTrack.getTrack());
+            this.currentTrack.setPlaying();
+        }
+        setPaused(false);
+    }
+
+    private QueueElement getNextPlayableElement() {
+        for (QueueElement e : this.queue) {
+            if (e.isPlayable()) {
+                return e;
+            }
+        }
+        return null;
+    }
+
+    public void removeElement(QueueElement element, Member member) {
+        if (this.queue.remove(element)) {
+            element.setRemoved(member);
         }
     }
 
-    public void voiceUpdate() {
-        if (audioManager.isConnected()) {
-            if (audioManager.getConnectedChannel().getMembers().size() > 1) {
-                handler.log("Timer stopped.");
-                timer.stop();
+    public QueueElement findElement(long id) {
+        if (this.currentTrack.getMessage().getIdLong() == id) {
+            return this.currentTrack;
+        }
+
+        for (QueueElement queueElement : this.queue) {
+            if (queueElement.getMessage().getIdLong() == id) {
+                return queueElement;
             }
-            if (audioManager.getConnectedChannel().getMembers().size() == 1) {
-                handler.log("Disconnecting in " + DISCONNECT_TIME / 1000 + "s...");
-                timer.start();
+        }
+        return null;
+    }
+
+    public void voiceUpdate() {
+        if (this.audioManager.isConnected()) {
+            if (this.audioManager.getConnectedChannel().getMembers().size() > 1) {
+                this.handler.log("Timer stopped.");
+                this.timer.stop();
+            }
+            if (this.audioManager.getConnectedChannel().getMembers().size() == 1) {
+                this.handler.log("Disconnecting in " + DISCONNECT_TIME / 1000 + "s...");
+                this.timer.start();
             }
         }
     }
@@ -176,12 +213,29 @@ public class Player implements Timer.TimerListener {
         this.player.setPaused(b);
     }
 
+    public boolean isPaused() {
+        return this.player.isPaused();
+    }
+
     public VoiceChannel getConnectedChannel() {
-        return audioManager.getConnectedChannel();
+        return this.audioManager.getConnectedChannel();
     }
 
     @Override
     public void onTimerEnd() {
         leave();
+    }
+
+    public void togglePaused(Member member) {
+        setPaused(!isPaused());
+        if (isPaused()) {
+            this.currentTrack.setPaused(member);
+        } else {
+            this.currentTrack.setUnpaused(member);
+        }
+    }
+
+    public QueueElement getCurrentElement() {
+        return this.currentTrack;
     }
 }
