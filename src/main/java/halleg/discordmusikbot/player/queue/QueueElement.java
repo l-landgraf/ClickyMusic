@@ -8,6 +8,7 @@ import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 
+import java.awt.*;
 import java.util.function.Consumer;
 
 public abstract class QueueElement {
@@ -83,6 +84,15 @@ public abstract class QueueElement {
         this.message.addReaction(GuildHandler.REPEAT_EMOJI).queue();
     }
 
+    public void addError(String message) {
+        if (this.message.getEmbeds().get(0).getFooter() == null) {
+            setFooter(message);
+        } else {
+            setFooter(this.message.getEmbeds().get(0).getFooter() + "\n" + message);
+        }
+        setColor(Color.RED);
+    }
+
 
     protected String toTime(long length) {
         String sec = Long.toString((length / 1000l) % 60l);
@@ -116,6 +126,17 @@ public abstract class QueueElement {
     protected void setFooter(String footer) {
         EmbedBuilder eb = new EmbedBuilder(this.message.getEmbeds().get(0));
         eb.setFooter(footer);
+        this.message.editMessage(eb.build()).queue(new Consumer<Message>() {
+            @Override
+            public void accept(Message message) {
+                QueueElement.this.message = message;
+            }
+        });
+    }
+
+    protected void setColor(Color color) {
+        EmbedBuilder eb = new EmbedBuilder(this.message.getEmbeds().get(0));
+        eb.setColor(color);
         this.message.editMessage(eb.build()).queue(new Consumer<Message>() {
             @Override
             public void accept(Message message) {

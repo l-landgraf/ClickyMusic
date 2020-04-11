@@ -2,6 +2,7 @@ package halleg.discordmusikbot.player;
 
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
+import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import halleg.discordmusikbot.guild.GuildHandler;
 import halleg.discordmusikbot.player.loader.LoadHandler;
 import halleg.discordmusikbot.player.loader.PlaylistLoadHandler;
@@ -196,6 +197,19 @@ public class Player implements Timer.TimerListener {
         return null;
     }
 
+    public QueueElement findElement(AudioTrack track) {
+        if (this.currentTrack.getTrack() == track) {
+            return this.currentTrack;
+        }
+
+        for (QueueElement queueElement : this.queue) {
+            if (queueElement.getTrack() == track) {
+                return queueElement;
+            }
+        }
+        return null;
+    }
+
     public void voiceUpdate() {
         if (this.audioManager.isConnected()) {
             if (this.audioManager.getConnectedChannel().getMembers().size() > 1) {
@@ -233,9 +247,5 @@ public class Player implements Timer.TimerListener {
         } else {
             this.currentTrack.setUnpaused(member);
         }
-    }
-
-    public QueueElement getCurrentElement() {
-        return this.currentTrack;
     }
 }
