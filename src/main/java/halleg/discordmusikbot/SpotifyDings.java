@@ -10,12 +10,22 @@ import com.wrapper.spotify.requests.data.albums.GetAlbumRequest;
 import com.wrapper.spotify.requests.data.playlists.GetPlaylistRequest;
 
 import java.io.IOException;
+import java.util.Calendar;
 
 public class SpotifyDings {
 
     private static SpotifyApi spotifyApi = null;
+    private static String clientSecret;
+    private static String clientId;
+    private static long experationDate = 0;
 
     public static void initialize(String clientId, String clientSecret) {
+        SpotifyDings.clientId = clientId;
+        SpotifyDings.clientSecret = clientSecret;
+        getAccess();
+    }
+
+    public static void getAccess() {
         spotifyApi = new SpotifyApi.Builder()
                 .setClientId(clientId)
                 .setClientSecret(clientSecret)
@@ -30,13 +40,23 @@ public class SpotifyDings {
             // Set access token for further "spotifyApi" object usage
             spotifyApi.setAccessToken(clientCredentials.getAccessToken());
 
-            System.out.println("Expires in: " + clientCredentials.getExpiresIn());
+            experationDate = clientCredentials.getExpiresIn() * 1000 + System.currentTimeMillis();
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTimeInMillis(experationDate);
+            System.out.println("New Spotify Experation Date: " + calendar.getTime().toString());
         } catch (IOException | SpotifyWebApiException e) {
             System.out.println("Error: " + e.getMessage());
         }
     }
 
+    private static void checkAccess() {
+        if (experationDate < System.currentTimeMillis() - 1000l) {
+            getAccess();
+        }
+    }
+
     public static Playlist loadPlaylist(String s) {
+        checkAccess();
         System.out.println("Trying to load Playlist: " + s);
 
         GetPlaylistRequest getPlaylistRequest = spotifyApi
@@ -46,15 +66,15 @@ public class SpotifyDings {
         try {
             Playlist playlist = getPlaylistRequest.execute();
             return playlist;
-
         } catch (IOException | SpotifyWebApiException e) {
-            System.out.println("Error: " + e.getMessage());
+            System.out.println("Spotify Error: " + e.getMessage());
         }
         return null;
     }
 
     public static Album loadAlbum(String s) {
-        System.out.println("Trying to load Playlist: " + s);
+        checkAccess();
+        System.out.println("Trying to load Album: " + s);
 
         GetAlbumRequest getAlbumRequest = spotifyApi
                 .getAlbum(s)
@@ -64,7 +84,7 @@ public class SpotifyDings {
             return album;
 
         } catch (IOException | SpotifyWebApiException e) {
-            System.out.println("Error: " + e.getMessage());
+            System.out.println("Spotify Error: " + e.getMessage());
         }
         return null;
     }

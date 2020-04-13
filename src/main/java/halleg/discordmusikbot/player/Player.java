@@ -83,11 +83,9 @@ public class Player implements Timer.TimerListener {
         for (QueueElement queueElement : this.queue) {
             queueElement.setPlayed();
         }
+        this.queue.clear();
 
-        if (this.currentTrack != null) {
-            this.currentTrack.setPlayed();
-            this.currentTrack = null;
-        }
+        nextTrack();
     }
 
     public void loadAndQueue(String source, Member member) {
