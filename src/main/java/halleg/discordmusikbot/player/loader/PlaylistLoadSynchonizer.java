@@ -1,7 +1,6 @@
 package halleg.discordmusikbot.player.loader;
 
 import halleg.discordmusikbot.guild.GuildHandler;
-import halleg.discordmusikbot.player.queue.PlaylistHeaderQueueElement;
 import halleg.discordmusikbot.player.queue.PlaylistQueueElement;
 import halleg.discordmusikbot.player.tracks.MyPlaylist;
 import halleg.discordmusikbot.player.tracks.MyPlaylistTrack;
@@ -12,7 +11,7 @@ public class PlaylistLoadSynchonizer {
     private Member member;
     private MyPlaylist playlist;
     private String querry;
-    private PlaylistHeaderQueueElement element;
+    private PlaylistQueueElement element;
 
     public PlaylistLoadSynchonizer(GuildHandler handler, Member member, MyPlaylist playlist, String querry) {
         this.member = member;
@@ -24,11 +23,12 @@ public class PlaylistLoadSynchonizer {
     public synchronized void add(MyPlaylistTrack track) {
 
         if (this.element == null) {
-            this.element = new PlaylistHeaderQueueElement(this.handler.getPlayer(), this.playlist);
+            this.element = new PlaylistQueueElement(this.handler.getPlayer(), this.playlist);
+            this.element.addTrack(track);
             this.handler.getPlayer().queueComplete(this.element);
+        } else {
+            this.element.addTrack(track);
         }
-        PlaylistQueueElement newEle = new PlaylistQueueElement(this.handler.getPlayer(), track, this.element);
-        this.element.addTrack(newEle, track.getNr());
     }
 
     public GuildHandler getHandler() {

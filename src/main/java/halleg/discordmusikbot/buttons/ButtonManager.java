@@ -17,49 +17,65 @@ public class ButtonManager {
         this.handler = handler;
         this.buttons = new ArrayList<Button>();
 
-        this.buttons.add(new Button(handler, GuildHandler.REPEAT_EMOJI, "queue song again") {
+        this.buttons.add(new Button(handler, GuildHandler.REPEAT_EMOJI, false,
+                "Queue this Song again.") {
             @Override
             protected void run(Message message, MessageReaction react, Member member) {
-                this.handler.getPlayer().loadAndQueue(this.handler.getBuilder().getURI(message), member);
+                this.handler.getPlayer().loadAndQueueAndJoin(this.handler.getBuilder().getURI(message), member);
             }
         });
 
-        this.buttons.add(new Button(handler, GuildHandler.REMOVE_EMOJI, "remove from queue") {
+        this.buttons.add(new Button(handler, GuildHandler.REMOVE_EMOJI, true,
+                "Remove this Song from the Queue.") {
             @Override
             protected void run(Message message, MessageReaction react, Member member) {
                 QueueElement ele = this.handler.getPlayer().findElement(message.getIdLong());
                 if (ele != null) {
-                    ele.reactDelete(member);
+                    ele.onDelete();
                 }
             }
         });
 
-        this.buttons.add(new Button(handler, GuildHandler.RESUME_PAUSE_EMOJI, "resume/pause player") {
+        this.buttons.add(new Button(handler, GuildHandler.RESUME_PAUSE_EMOJI, true,
+                "Resume/Pause the Player.") {
             @Override
             protected void run(Message message, MessageReaction react, Member member) {
                 QueueElement ele = this.handler.getPlayer().findElement(message.getIdLong());
                 if (ele != null) {
-                    ele.reactResumePause(member);
+                    ele.onResumePause();
                 }
             }
         });
 
-        this.buttons.add(new Button(handler, GuildHandler.SKIP_EMOJI, "skip current song") {
+        this.buttons.add(new Button(handler, GuildHandler.SKIP_EMOJI, true,
+                "Skip the current Song.") {
             @Override
             protected void run(Message message, MessageReaction react, Member member) {
                 QueueElement ele = this.handler.getPlayer().findElement(message.getIdLong());
                 if (ele != null) {
-                    ele.reactSkip(member);
+                    ele.onSkip();
                 }
             }
         });
 
-        this.buttons.add(new Button(handler, GuildHandler.REMOVE_ALL_EMOJI, "remove all unplayed songs from this playlist from queue") {
+        this.buttons.add(new Button(handler, GuildHandler.SHUFFLE_EMOJI, true,
+                "Play all remaining Songs in this Playlist in a random order.") {
             @Override
             protected void run(Message message, MessageReaction react, Member member) {
                 QueueElement ele = this.handler.getPlayer().findElement(message.getIdLong());
                 if (ele != null) {
-                    ele.reactDeletePlaylist(member);
+                    ele.onShuffle();
+                }
+            }
+        });
+
+        this.buttons.add(new Button(handler, GuildHandler.REMOVE_ALL_EMOJI, true,
+                "Remove all remaining Songs from this playlist from the Queue.") {
+            @Override
+            protected void run(Message message, MessageReaction react, Member member) {
+                QueueElement ele = this.handler.getPlayer().findElement(message.getIdLong());
+                if (ele != null) {
+                    ele.onDeletePlaylist();
                 }
             }
         });

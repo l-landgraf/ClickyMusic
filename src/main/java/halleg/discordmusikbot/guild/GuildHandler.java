@@ -20,6 +20,7 @@ public class GuildHandler {
     public static final String REPEAT_EMOJI = "🔁";
     public static final String SKIP_EMOJI = "⏭";
     public static final String REMOVE_ALL_EMOJI = "❎";
+    public static final String SHUFFLE_EMOJI = "\uD83D\uDD00";
 
     private Guild guild;
 
@@ -111,16 +112,9 @@ public class GuildHandler {
         if (event.getMessage().getContentRaw().startsWith(this.prefix)) {
             this.commands.handleCommand(event.getMessage());
         } else {
-
-            if (event.getChannel().getIdLong() != this.output.getIdLong()) {
-                return;
-            }
-
+            this.player.loadAndQueueAndJoin(event.getMessage().getContentRaw(), event.getMember());
             delete(event.getMessage());
-
-            this.player.loadAndQueue(event.getMessage().getContentRaw(), event.getMember());
         }
-
     }
 
     public void handleReaction(final MessageReaction react, Message message, final Member member) {

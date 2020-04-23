@@ -14,13 +14,15 @@ public abstract class Command {
     protected String[] tips;
     protected boolean textChannelOnly;
     protected boolean voiceChannelOnly;
+    protected boolean connectedOnly;
 
-    public Command(GuildHandler handler, String command, boolean textChannelOnly, boolean voiceChannelOnly, String description, String... tips) {
+    public Command(GuildHandler handler, String command, boolean textChannelOnly, boolean voiceChannelOnly, boolean connectedOnly, String description, String... tips) {
         this.handler = handler;
         this.command = command;
         this.atibNum = tips.length;
         this.textChannelOnly = textChannelOnly;
         this.voiceChannelOnly = voiceChannelOnly;
+        this.connectedOnly = connectedOnly;
         this.description = description;
         this.tips = tips;
     }
@@ -32,22 +34,31 @@ public abstract class Command {
             return false;
         }
 
-        try {
-            if (this.voiceChannelOnly && message.getMember().getVoiceState().getChannel().getIdLong() != this.handler.getPlayer().getConnectedChannel().getIdLong()) {
-                return false;
-            }
-        } catch (NullPointerException e) {
-            return false;
-        }
-
 
         List<String> args = Arrays.asList(message.getContentRaw().split(" "));
-
-        if ((args.size() - 1) != this.atibNum) {
-            return false;
-        }
-
         if (args.get(0).equalsIgnoreCase(this.handler.getPrefix() + this.command)) {
+            if (this.voiceChannelOnly) {
+                if (message.getMember().getVoiceState().getChannel() == null) {
+                    this.handler.sendErrorMessage("Cant find your Voicechannel.");
+                    return false;
+                }
+
+                if (this.handler.getPlayer().getConnectedChannel() != null &&
+                        message.getMember().getVoiceState().getChannel() != this.handler.getPlayer().getConnectedChannel()) {
+                    this.handler.sendErrorMessage("Im bussy in a diffrent Voicechanel.");
+                    return false;
+                }
+            }
+
+            if (this.connectedOnly && this.handler.getPlayer().getConnectedChannel() == null) {
+                this.handler.sendErrorMessage("Im not connected to any Voicechanel.");
+                return false;
+            }
+
+            if ((args.size() - 1) != this.atibNum) {
+                this.handler.sendErrorMessage("Command ussage: " + getTip());
+                return false;
+            }
             this.handler.log("executing command: " + this.command);
             run(args, message);
             return true;

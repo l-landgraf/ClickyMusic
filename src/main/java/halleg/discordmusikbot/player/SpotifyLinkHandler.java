@@ -16,10 +16,14 @@ public class SpotifyLinkHandler {
 
     public boolean handleLink(String link, Member member) {
         if (link.startsWith("https://open.spotify.com/playlist/")) {
-            queuePlaylist(link.replace("https://open.spotify.com/playlist/", ""), member, link);
+            String querry = link.replace("https://open.spotify.com/playlist/", "");
+            querry = querry.split("\\?")[0];
+            queuePlaylist(querry, member, link);
             return true;
         } else if (link.startsWith("https://open.spotify.com/album/")) {
-            queueAlbum(link.replace("https://open.spotify.com/album/", ""), member, link);
+            String querry = link.replace("https://open.spotify.com/album/", "");
+            querry = querry.split("\\?")[0];
+            queueAlbum(querry, member, link);
             return true;
         }
         return false;

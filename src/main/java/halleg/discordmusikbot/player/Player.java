@@ -81,38 +81,25 @@ public class Player implements Timer.TimerListener {
     public void clearQueue() {
         this.player.stopTrack();
         for (QueueElement queueElement : this.queue) {
-            queueElement.setPlayed();
+            queueElement.onPlayed();
         }
         this.queue.clear();
 
         nextTrack();
     }
 
-    public void loadAndQueue(String source, Member member) {
+    public void loadAndQueueAndJoin(String source, Member member) {
+        join(member.getVoiceState().getChannel());
         loadAndQueue(source, member, true);
     }
 
     public void loadAndQueueSpotify(String source, Member member, PlaylistLoadSynchonizer sync, int nr) {
-        try {
-            this.audioManager.openAudioConnection(member.getVoiceState().getChannel());
-        } catch (IllegalArgumentException e) {
-            this.handler.sendErrorMessage("Cant find Voicechannel!");
-            return;
-        }
         String ytLink = youtubeSearch(source);
         PlaylistLoadHandler loader = new PlaylistLoadHandler(sync, source, nr);
         this.manager.loadItem(ytLink, loader);
     }
 
     private void loadAndQueue(String source, Member member, boolean retry) {
-        try {
-            this.audioManager.openAudioConnection(member.getVoiceState().getChannel());
-        } catch (IllegalArgumentException e) {
-            this.handler.sendErrorMessage("Cant find Voicechannel!");
-            return;
-        }
-
-
         if (source.startsWith("https://www.youtube.com") || source.startsWith("www.youtube.com")
                 || source.startsWith("youtube.com")) {
             source = source.split("&")[0];
@@ -125,65 +112,84 @@ public class Player implements Timer.TimerListener {
         this.manager.loadItem(source, new LoadHandler(this.handler, member, source, retry));
     }
 
-    public void leave() {
+    public void disconnect() {
         this.audioManager.closeAudioConnection();
+    }
+
+    public void leave() {
+        disconnect();
         clearQueue();
     }
 
     public void queueComplete(QueueElement element) {
-        MessageEmbed m = element.buildMessage();
-        Message message = this.handler.complete(m);
-        element.setMessage(message);
-        Player.this.queue.add(element);
-        if (Player.this.player.getPlayingTrack() == null && element.isPlayable()) {
-            nextTrack();
-        } else {
-            element.setQueued();
+        try {
+            MessageEmbed m = element.buildMessage();
+            Message message = this.handler.complete(m);
+            element.setMessage(message);
+            Player.this.queue.add(element);
+            if (this.currentTrack == null) {
+                nextTrack();
+            } else {
+                element.onQueued();
+            }
+        } catch (Exception e) {
+            System.err.println(e.getCause());
+            e.printStackTrace();
         }
+    }
+
+    public void trackEnded() {
+        this.currentTrack.onEnded();
     }
 
     public void nextTrack() {
-        nextTrack(null);
-    }
-
-    public void nextTrack(Member member) {
-
         if (this.currentTrack != null) {
-            if (member == null) {
-                this.currentTrack.setPlayed();
-            } else {
-                this.currentTrack.setSkiped(member);
-            }
+            this.currentTrack.onPlayed();
+            this.currentTrack = null;
         }
-        QueueElement next = getNextPlayableElement();
+
+        QueueElement next = null;
+        if (!this.queue.isEmpty()) {
+            next = this.queue.get(0);
+        }
+
         if (next == null) {
             this.player.stopTrack();
         } else {
             this.queue.remove(next);
             this.currentTrack = next;
-            this.player.playTrack(this.currentTrack.getTrack());
-            this.currentTrack.setPlaying();
+            this.currentTrack.onPlaying();
         }
+
+    }
+
+    public void playTrack(AudioTrack track) {
+        this.player.playTrack(track);
+    }
+
+    public void join(VoiceChannel c) {
+        if (c == null) {
+            return;
+        }
+
+        if (getConnectedChannel() != null &&
+                c != getConnectedChannel()) {
+            return;
+        }
+        connect(c);
+    }
+
+    public void connect(VoiceChannel c) {
         setPaused(false);
+        this.audioManager.openAudioConnection(c);
     }
 
-    private QueueElement getNextPlayableElement() {
-        for (QueueElement e : this.queue) {
-            if (e.isPlayable()) {
-                return e;
-            }
-        }
-        return null;
-    }
-
-    public void removeElement(QueueElement element, Member member) {
-        if (this.queue.remove(element)) {
-            element.setRemoved(member);
-        }
+    public void removeElement(QueueElement element) {
+        this.queue.remove(element);
     }
 
     public QueueElement findElement(long id) {
-        if (this.currentTrack.getMessage().getIdLong() == id) {
+        if (this.currentTrack != null && this.currentTrack.getMessage().getIdLong() == id) {
             return this.currentTrack;
         }
 
@@ -196,7 +202,7 @@ public class Player implements Timer.TimerListener {
     }
 
     public QueueElement findElement(AudioTrack track) {
-        if (this.currentTrack.getTrack() == track) {
+        /*if (this.currentTrack.getTrack() == track) {
             return this.currentTrack;
         }
 
@@ -204,7 +210,7 @@ public class Player implements Timer.TimerListener {
             if (queueElement.getTrack() == track) {
                 return queueElement;
             }
-        }
+        }*/
         return null;
     }
 
@@ -238,12 +244,7 @@ public class Player implements Timer.TimerListener {
         leave();
     }
 
-    public void togglePaused(Member member) {
+    public void togglePaused() {
         setPaused(!isPaused());
-        if (isPaused()) {
-            this.currentTrack.setPaused(member);
-        } else {
-            this.currentTrack.setUnpaused(member);
-        }
     }
 }

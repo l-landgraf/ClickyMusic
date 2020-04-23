@@ -1,10 +1,7 @@
 package halleg.discordmusikbot.player.queue;
 
-import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
-import halleg.discordmusikbot.guild.GuildHandler;
 import halleg.discordmusikbot.player.Player;
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 
@@ -21,8 +18,6 @@ public abstract class QueueElement {
 
     public abstract MessageEmbed buildMessage();
 
-    public abstract boolean isPlayable();
-
     public Message getMessage() {
         return this.message;
     }
@@ -31,58 +26,24 @@ public abstract class QueueElement {
         this.message = m;
     }
 
-    public abstract AudioTrack getTrack();
 
-    public void setQueued() {
-        setWaitingEmojis();
-    }
+    public abstract void onQueued();
 
-    public void setPlaying() {
-        setPlayingEmojis();
-    }
+    public abstract void onPlaying();
 
-    public void setPlayed() {
-        setDoneEmojis();
-    }
+    public abstract void onPlayed();
 
-    public void setSkiped(Member member) {
-        setDoneEmojis();
-        //setFooter("skiped by " + member.getEffectiveName());
-    }
+    public abstract void onResumePause();
 
-    public void setRemoved(Member member) {
-        setDoneEmojis();
-        //setFooter("removed by " + member.getEffectiveName());
-    }
+    public abstract void onEnded();
 
-    public void setPaused(Member member) {
-        //setFooter("paused by " + member.getEffectiveName());
-    }
+    public abstract void onSkip();
 
-    public void setUnpaused(Member member) {
-        //setFooter("");
-    }
+    public abstract void onDelete();
 
+    public abstract void onShuffle();
 
-    protected void setWaitingEmojis() {
-        this.message.addReaction(GuildHandler.REPEAT_EMOJI).queue();
-        this.message.addReaction(GuildHandler.REMOVE_EMOJI).queue();
-    }
-
-    protected void setPlayingEmojis() {
-        this.message.clearReactions(GuildHandler.REMOVE_EMOJI).queue();
-        this.message.addReaction(GuildHandler.REPEAT_EMOJI).queue();
-        this.message.addReaction(GuildHandler.RESUME_PAUSE_EMOJI).queue();
-        this.message.addReaction(GuildHandler.SKIP_EMOJI).queue();
-    }
-
-    protected void setDoneEmojis() {
-        this.message.clearReactions(GuildHandler.SKIP_EMOJI).queue();
-        this.message.clearReactions(GuildHandler.RESUME_PAUSE_EMOJI).queue();
-        this.message.clearReactions(GuildHandler.REMOVE_EMOJI).queue();
-        this.message.clearReactions(GuildHandler.REMOVE_ALL_EMOJI).queue();
-        this.message.addReaction(GuildHandler.REPEAT_EMOJI).queue();
-    }
+    public abstract void onDeletePlaylist();
 
     public void addError(String message) {
         if (this.message.getEmbeds().get(0).getFooter() == null) {
@@ -108,21 +69,6 @@ public abstract class QueueElement {
         return min + ":" + sec;
     }
 
-    public void reactResumePause(Member member) {
-        this.player.togglePaused(member);
-    }
-
-    public void reactSkip(Member member) {
-        this.player.nextTrack(member);
-    }
-
-    public void reactDelete(Member member) {
-        this.player.removeElement(this, member);
-    }
-
-    public void reactDeletePlaylist(Member member) {
-    }
-
     protected void setFooter(String footer) {
         EmbedBuilder eb = new EmbedBuilder(this.message.getEmbeds().get(0));
         eb.setFooter(footer);
@@ -144,4 +90,5 @@ public abstract class QueueElement {
             }
         });
     }
+
 }

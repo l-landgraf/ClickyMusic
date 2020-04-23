@@ -10,12 +10,14 @@ public abstract class Button {
     protected GuildHandler handler;
     protected String emoji;
     protected String description;
+    protected boolean connectedOnly;
 
     protected abstract void run(Message message, MessageReaction react, Member member);
 
-    public Button(GuildHandler handler, String emoji, String description) {
+    public Button(GuildHandler handler, String emoji, boolean connectedOnly, String description) {
         this.handler = handler;
         this.emoji = emoji;
+        this.connectedOnly = connectedOnly;
         this.description = description;
     }
 
@@ -24,9 +26,22 @@ public abstract class Button {
             return false;
         }
 
-        //if (member.getVoiceState().getChannel().getIdLong() != this.handler.getPlayer().getConnectedChannel().getIdLong()) {
-        //   return false;
-        //}
+
+        try {
+
+            if (this.connectedOnly && this.handler.getPlayer().getConnectedChannel() == null) {
+                return false;
+            }
+
+            if (member.getVoiceState().getChannel() == null) {
+                return false;
+            }
+            if (this.handler.getPlayer().getConnectedChannel() != null && member.getVoiceState().getChannel().getIdLong() != this.handler.getPlayer().getConnectedChannel().getIdLong()) {
+                return false;
+            }
+        } catch (NullPointerException e) {
+            return false;
+        }
 
         if (emoji.equalsIgnoreCase(this.emoji)) {
             this.handler.log("executing button: " + react.getReactionEmote().getEmoji());

@@ -1,7 +1,7 @@
 package halleg.discordmusikbot.player.queue;
 
-import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackInfo;
+import halleg.discordmusikbot.guild.GuildHandler;
 import halleg.discordmusikbot.player.Player;
 import halleg.discordmusikbot.player.tracks.Track;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -33,12 +33,58 @@ public class SingleQueueElement extends QueueElement {
     }
 
     @Override
-    public boolean isPlayable() {
-        return true;
+    public void onQueued() {
+        this.message.addReaction(GuildHandler.REPEAT_EMOJI).queue();
+        this.message.addReaction(GuildHandler.REMOVE_EMOJI).queue();
     }
 
     @Override
-    public AudioTrack getTrack() {
-        return this.track.getTrack();
+    public void onPlaying() {
+        this.player.playTrack(this.track.getTrack());
+        this.message.clearReactions(GuildHandler.REMOVE_EMOJI).queue();
+        this.message.addReaction(GuildHandler.REPEAT_EMOJI).queue();
+        this.message.addReaction(GuildHandler.RESUME_PAUSE_EMOJI).queue();
+        this.message.addReaction(GuildHandler.SKIP_EMOJI).queue();
+    }
+
+    @Override
+    public void onPlayed() {
+        this.message.clearReactions(GuildHandler.SKIP_EMOJI).queue();
+        this.message.clearReactions(GuildHandler.RESUME_PAUSE_EMOJI).queue();
+        this.message.clearReactions(GuildHandler.REMOVE_EMOJI).queue();
+        this.message.clearReactions(GuildHandler.REMOVE_ALL_EMOJI).queue();
+        this.message.addReaction(GuildHandler.REPEAT_EMOJI).queue();
+    }
+
+    @Override
+    public void onResumePause() {
+        this.player.togglePaused();
+    }
+
+    @Override
+    public void onEnded() {
+        this.player.nextTrack();
+    }
+
+
+    @Override
+    public void onSkip() {
+        this.player.nextTrack();
+    }
+
+    @Override
+    public void onDelete() {
+        this.message.clearReactions(GuildHandler.REMOVE_EMOJI).queue();
+        this.player.removeElement(this);
+    }
+
+    @Override
+    public void onShuffle() {
+        throw new IllegalStateException();
+    }
+
+    @Override
+    public void onDeletePlaylist() {
+        throw new IllegalStateException();
     }
 }

@@ -32,7 +32,7 @@ public class EventListener extends AudioEventAdapter {
     @Override
     public void onTrackEnd(AudioPlayer player, AudioTrack track, AudioTrackEndReason endReason) {
         if (endReason.mayStartNext) {
-            this.handler.getPlayer().nextTrack();
+            this.handler.getPlayer().trackEnded();
         }
         // endReason == FINISHED: A track finished or died by an exception (mayStartNext
         // = true).

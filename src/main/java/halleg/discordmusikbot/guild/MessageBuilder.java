@@ -1,5 +1,6 @@
 package halleg.discordmusikbot.guild;
 
+import halleg.discordmusikbot.buttons.Button;
 import halleg.discordmusikbot.commands.Command;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Message;
@@ -46,13 +47,20 @@ public class MessageBuilder {
 
     public MessageEmbed buildHelpMessage() {
         EmbedBuilder eb = new EmbedBuilder();
-        eb.setTitle("Avilable Commands");
+        eb.setTitle("How to Use:");
         eb.setDescription("All commands have to start with `" + this.handler.getPrefix()
                 + "` and most must be in this channel.\n" + "To start a new track simply write in this channel.\n"
                 + "You can also click the reactions to perform actions.");
 
+        eb.addField("", "**Commands:**", false);
         for (Command command : this.handler.getCommands().getCommands()) {
             eb.addField(command.getTip(), command.getDescription(), false);
+        }
+
+        eb.addField("", "**Buttons:**", false);
+
+        for (Button buttton : this.handler.getButtons().getButtons()) {
+            eb.addField(buttton.getEmoji(), buttton.getDescription(), false);
         }
 
         return eb.build();
