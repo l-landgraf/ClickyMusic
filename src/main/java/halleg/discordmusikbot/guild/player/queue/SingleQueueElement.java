@@ -1,9 +1,8 @@
-package halleg.discordmusikbot.player.queue;
+package halleg.discordmusikbot.guild.player.queue;
 
-import com.sedmelluq.discord.lavaplayer.track.AudioTrackInfo;
 import halleg.discordmusikbot.guild.GuildHandler;
-import halleg.discordmusikbot.player.Player;
-import halleg.discordmusikbot.player.tracks.Track;
+import halleg.discordmusikbot.guild.player.Player;
+import halleg.discordmusikbot.guild.player.tracks.Track;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 
@@ -16,30 +15,30 @@ public class SingleQueueElement extends QueueElement {
     }
 
     @Override
-    public MessageEmbed buildMessage() {
+    public MessageEmbed buildMessage(QueueStatus status) {
+        super.buildMessage(status);
         EmbedBuilder eb = new EmbedBuilder();
-        AudioTrackInfo info = this.track.getTrack().getInfo();
 
-        eb.setTitle(info.title, info.uri);
+        eb.setTitle(this.track.getTitle(), this.track.getURI());
         eb.setDescription("Queued by " + this.track.getMember().getAsMention());
 
-        if (this.track.hasThumbnail()) {
-            eb.setThumbnail(this.track.getThumbnail());
-        }
+        eb.setThumbnail(this.track.getThumbnail());
 
-        eb.addField("By", info.author, true);
-        eb.addField("Length", toTime(info.length), true);
+        eb.addField("By", this.track.getAuthor(), true);
+        eb.addField("Length", this.track.getLength(), true);
         return eb.build();
     }
 
     @Override
     public void onQueued() {
+        super.onQueued();
         this.message.addReaction(GuildHandler.REPEAT_EMOJI).queue();
         this.message.addReaction(GuildHandler.REMOVE_EMOJI).queue();
     }
 
     @Override
     public void onPlaying() {
+        super.onPlaying();
         this.player.playTrack(this.track.getTrack());
         this.message.clearReactions(GuildHandler.REMOVE_EMOJI).queue();
         this.message.addReaction(GuildHandler.REPEAT_EMOJI).queue();
@@ -49,6 +48,7 @@ public class SingleQueueElement extends QueueElement {
 
     @Override
     public void onPlayed() {
+        super.onPlayed();
         this.message.clearReactions(GuildHandler.SKIP_EMOJI).queue();
         this.message.clearReactions(GuildHandler.RESUME_PAUSE_EMOJI).queue();
         this.message.clearReactions(GuildHandler.REMOVE_EMOJI).queue();
@@ -63,17 +63,19 @@ public class SingleQueueElement extends QueueElement {
 
     @Override
     public void onEnded() {
+        super.onEnded();
         this.player.nextTrack();
     }
 
-
     @Override
     public void onSkip() {
+        super.onSkip();
         this.player.nextTrack();
     }
 
     @Override
     public void onDelete() {
+        super.onDelete();
         this.message.clearReactions(GuildHandler.REMOVE_EMOJI).queue();
         this.player.removeElement(this);
     }

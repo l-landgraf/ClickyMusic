@@ -1,4 +1,4 @@
-package halleg.discordmusikbot.player;
+package halleg.discordmusikbot.guild.player;
 
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.player.event.AudioEventAdapter;

@@ -1,6 +1,6 @@
-package halleg.discordmusikbot.player.queue;
+package halleg.discordmusikbot.guild.player.queue;
 
-import halleg.discordmusikbot.player.Player;
+import halleg.discordmusikbot.guild.player.Player;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
@@ -11,12 +11,17 @@ import java.util.function.Consumer;
 public abstract class QueueElement {
     protected Player player;
     protected Message message;
+    protected QueueStatus status;
 
     public QueueElement(Player player) {
         this.player = player;
+        this.status = null;
     }
 
-    public abstract MessageEmbed buildMessage();
+    public MessageEmbed buildMessage(QueueStatus status) {
+        this.status = status;
+        return null;
+    }
 
     public Message getMessage() {
         return this.message;
@@ -27,23 +32,38 @@ public abstract class QueueElement {
     }
 
 
-    public abstract void onQueued();
+    public void onQueued() {
+        System.out.println("QUeued");
+        this.status = QueueStatus.QUEUED;
+    }
 
-    public abstract void onPlaying();
+    public void onPlaying() {
+        this.status = QueueStatus.PLAYING;
+    }
 
-    public abstract void onPlayed();
+    public void onPlayed() {
+        this.status = QueueStatus.PLAYED;
+    }
 
     public abstract void onResumePause();
 
-    public abstract void onEnded();
+    public void onEnded() {
+        this.status = QueueStatus.PLAYED;
+    }
 
-    public abstract void onSkip();
+    public void onSkip() {
+        this.status = QueueStatus.SKIPPED;
+    }
 
-    public abstract void onDelete();
+    public void onDelete() {
+        this.status = QueueStatus.REMOVED;
+    }
+
+    public void onDeletePlaylist() {
+        this.status = QueueStatus.SKIPPED;
+    }
 
     public abstract void onShuffle();
-
-    public abstract void onDeletePlaylist();
 
     public void addError(String message) {
         if (this.message.getEmbeds().get(0).getFooter() == null) {
@@ -54,20 +74,6 @@ public abstract class QueueElement {
         setColor(Color.RED);
     }
 
-
-    protected String toTime(long length) {
-        String sec = Long.toString((length / 1000l) % 60l);
-        if (sec.length() < 2) {
-            sec = "0" + sec;
-        }
-
-        String min = Long.toString((length / 60000));
-        if (sec.length() < 2) {
-            sec = "0" + sec;
-        }
-
-        return min + ":" + sec;
-    }
 
     protected void setFooter(String footer) {
         EmbedBuilder eb = new EmbedBuilder(this.message.getEmbeds().get(0));
@@ -91,4 +97,7 @@ public abstract class QueueElement {
         });
     }
 
+    public QueueStatus getStatus() {
+        return this.status;
+    }
 }

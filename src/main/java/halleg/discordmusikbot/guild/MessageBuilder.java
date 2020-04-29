@@ -1,7 +1,7 @@
 package halleg.discordmusikbot.guild;
 
-import halleg.discordmusikbot.buttons.Button;
-import halleg.discordmusikbot.commands.Command;
+import halleg.discordmusikbot.guild.buttons.Button;
+import halleg.discordmusikbot.guild.commands.Command;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
@@ -49,7 +49,7 @@ public class MessageBuilder {
         EmbedBuilder eb = new EmbedBuilder();
         eb.setTitle("How to Use:");
         eb.setDescription("All commands have to start with `" + this.handler.getPrefix()
-                + "` and most must be in this channel.\n" + "To start a new track simply write in this channel.\n"
+                + "` and most must be in this channel.\n" + "To start a new track simply write in the " + this.handler.getChannel().getAsMention() + " channel.\n"
                 + "You can also click the reactions to perform actions.");
 
         eb.addField("", "**Commands:**", false);

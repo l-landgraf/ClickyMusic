@@ -3,6 +3,7 @@ package halleg.discordmusikbot;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers;
+import halleg.discordmusikbot.guild.GuildConfig;
 import halleg.discordmusikbot.guild.GuildHandler;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.*;
@@ -28,7 +29,7 @@ public class MusicBot extends ListenerAdapter {
         this.jda = jda;
         this.manager = new DefaultAudioPlayerManager();
         AudioSourceManagers.registerRemoteSources(this.manager);
-        this.map = new HashMap<Long, GuildHandler>();
+        this.map = new HashMap<>();
         loadConfigs();
     }
 

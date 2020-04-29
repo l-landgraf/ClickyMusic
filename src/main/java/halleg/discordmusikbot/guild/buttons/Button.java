@@ -1,4 +1,4 @@
-package halleg.discordmusikbot.buttons;
+package halleg.discordmusikbot.guild.buttons;
 
 import halleg.discordmusikbot.guild.GuildHandler;
 import net.dv8tion.jda.api.entities.Member;

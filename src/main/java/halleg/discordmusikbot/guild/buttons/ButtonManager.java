@@ -1,7 +1,8 @@
-package halleg.discordmusikbot.buttons;
+package halleg.discordmusikbot.guild.buttons;
 
 import halleg.discordmusikbot.guild.GuildHandler;
-import halleg.discordmusikbot.player.queue.QueueElement;
+import halleg.discordmusikbot.guild.loader.SingleLoadHandler;
+import halleg.discordmusikbot.guild.player.queue.QueueElement;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageReaction;
@@ -21,7 +22,10 @@ public class ButtonManager {
                 "Queue this Song again.") {
             @Override
             protected void run(Message message, MessageReaction react, Member member) {
-                this.handler.getPlayer().loadAndQueueAndJoin(this.handler.getBuilder().getURI(message), member);
+                String search = this.handler.getBuilder().getURI(message);
+                this.handler.getPlayer().join(member.getVoiceState().getChannel());
+                SingleLoadHandler rt = new SingleLoadHandler(this.handler, search, member);
+                rt.load();
             }
         });
 
@@ -70,7 +74,7 @@ public class ButtonManager {
         });
 
         this.buttons.add(new Button(handler, GuildHandler.REMOVE_ALL_EMOJI, true,
-                "Remove all remaining Songs from this playlist from the Queue.") {
+                "Skip the entire Playlist.") {
             @Override
             protected void run(Message message, MessageReaction react, Member member) {
                 QueueElement ele = this.handler.getPlayer().findElement(message.getIdLong());

@@ -1,4 +1,4 @@
-package halleg.discordmusikbot.commands;
+package halleg.discordmusikbot.guild.commands;
 
 import halleg.discordmusikbot.guild.GuildHandler;
 import net.dv8tion.jda.api.entities.Message;
@@ -15,14 +15,16 @@ public abstract class Command {
     protected boolean textChannelOnly;
     protected boolean voiceChannelOnly;
     protected boolean connectedOnly;
+    protected boolean unlimitedArguments;
 
-    public Command(GuildHandler handler, String command, boolean textChannelOnly, boolean voiceChannelOnly, boolean connectedOnly, String description, String... tips) {
+    public Command(GuildHandler handler, String command, boolean textChannelOnly, boolean voiceChannelOnly, boolean connectedOnly, boolean unlimitedArguments, String description, String... tips) {
         this.handler = handler;
         this.command = command;
         this.atibNum = tips.length;
         this.textChannelOnly = textChannelOnly;
         this.voiceChannelOnly = voiceChannelOnly;
         this.connectedOnly = connectedOnly;
+        this.unlimitedArguments = unlimitedArguments;
         this.description = description;
         this.tips = tips;
     }
@@ -55,10 +57,18 @@ public abstract class Command {
                 return false;
             }
 
-            if ((args.size() - 1) != this.atibNum) {
-                this.handler.sendErrorMessage("Command ussage: " + getTip());
-                return false;
+            if (!this.unlimitedArguments) {
+                if ((args.size() - 1) != this.atibNum) {
+                    this.handler.sendErrorMessage("Command ussage: " + getTip());
+                    return false;
+                }
+            } else {
+                if (args.size() <= 1) {
+                    this.handler.sendErrorMessage("Command ussage: " + getTip());
+                    return false;
+                }
             }
+
             this.handler.log("executing command: " + this.command);
             run(args, message);
             return true;

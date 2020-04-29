@@ -1,6 +1,7 @@
-package halleg.discordmusikbot.commands;
+package halleg.discordmusikbot.guild.commands;
 
 import halleg.discordmusikbot.guild.GuildHandler;
+import halleg.discordmusikbot.guild.loader.SingleLoadHandler;
 import net.dv8tion.jda.api.entities.Message;
 
 import java.util.ArrayList;
@@ -15,17 +16,23 @@ public class CommandManager {
         this.commands = new ArrayList<Command>();
 
         this.commands.add(new Command(handler, "queue", false, true, false,
-                "adds a song to the queue. Alternatively you can write the source directly in the specefied channel.",
+                true, "adds a song to the queue. Alternatively you can write the source directly in the specefied channel.",
                 "[source]") {
             @Override
             protected void run(List<String> args, Message message) {
-                this.handler.getPlayer().loadAndQueueAndJoin(args.get(1), message.getMember());
+                String search = "";
+                for (int i = 1; i < args.size(); i++) {
+                    search += " " + args.get(i);
+                }
+                this.handler.getPlayer().join(message.getMember().getVoiceState().getChannel());
+                SingleLoadHandler rt = new SingleLoadHandler(this.handler, search, message.getMember());
+                rt.load();
                 this.handler.delete(message);
             }
         });
 
         this.commands.add(new Command(handler, "join", true, true, false,
-                "the bot will join your voicechannel.") {
+                false, "the bot will join your voicechannel.") {
             @Override
             protected void run(List<String> args, Message message) {
                 this.handler.getPlayer().join(message.getMember().getVoiceState().getChannel());
@@ -33,7 +40,7 @@ public class CommandManager {
         });
 
         this.commands.add(new Command(handler, "setchannel", false, false, false,
-                "sets the channel for this bot.", "[channelid]") {
+                false, "sets the channel for this bot.", "[channelid]") {
             @Override
             protected void run(List<String> args, Message message) {
                 this.handler.setChannel(this.handler.getGuild().getTextChannelById(args.get(1)));
@@ -42,7 +49,7 @@ public class CommandManager {
 
         this.commands.add(
                 new Command(handler, "setprefix", false, false, false,
-                        "sets the chracters commands have to start with.", "[prefix]") {
+                        false, "sets the chracters commands have to start with.", "[prefix]") {
                     @Override
                     protected void run(List<String> args, Message message) {
                         this.handler.setPrefix(args.get(1));
@@ -50,7 +57,7 @@ public class CommandManager {
                 });
 
         this.commands.add(new Command(handler, "pause", true, true, true,
-                "pauses the player.") {
+                false, "pauses the player.") {
             @Override
             protected void run(List<String> args, Message message) {
                 this.handler.getPlayer().setPaused(true);
@@ -58,7 +65,7 @@ public class CommandManager {
         });
 
         this.commands.add(new Command(handler, "resume", true, true, true,
-                "resumes the player.") {
+                false, "resumes the player.") {
             @Override
             protected void run(List<String> args, Message message) {
                 this.handler.getPlayer().setPaused(false);
@@ -66,7 +73,7 @@ public class CommandManager {
         });
 
         this.commands.add(new Command(handler, "skip", true, true, true,
-                "skips the current track.") {
+                false, "skips the current track.") {
             @Override
             protected void run(List<String> args, Message message) {
                 this.handler.getPlayer().nextTrack();
@@ -74,7 +81,7 @@ public class CommandManager {
         });
 
         this.commands.add(new Command(handler, "disconnect", true, true, true,
-                "the bot will disconnect from any voicechannel.") {
+                false, "the bot will disconnect from any voicechannel.") {
             @Override
             protected void run(List<String> args, Message message) {
                 this.handler.getPlayer().setPaused(true);
@@ -83,7 +90,7 @@ public class CommandManager {
         });
 
         this.commands.add(new Command(handler, "leave", true, true, true,
-                "the bot will leave any voicechannel and completly clear its Queue.") {
+                false, "the bot will leave any voicechannel and completly clear its Queue.") {
             @Override
             protected void run(List<String> args, Message message) {
                 this.handler.getPlayer().leave();
@@ -91,15 +98,27 @@ public class CommandManager {
         });
 
         this.commands.add(new Command(handler, "clear", true, true, false,
-                "clears the queue and the currently playling track.") {
+                false, "clears the queue and the currently playling track.") {
             @Override
             protected void run(List<String> args, Message message) {
                 this.handler.getPlayer().clearQueue();
             }
         });
 
+        this.commands.add(new Command(handler, "exit", true, false, false,
+                false, "terminates the bot (and hopefully restarts it).") {
+            @Override
+            protected void run(List<String> args, Message message) {
+                if (message.getGuild().getIdLong() == 283386616314068992l || message.getGuild().getIdLong() == 506930046481465355l) {
+                    System.exit(0);
+                } else {
+                    this.handler.sendErrorMessage("Not supportet on this Server.");
+                }
+            }
+        });
+
         this.commands.add(new Command(handler, "help", false, false, false,
-                "displays a help message.") {
+                false, "displays a help message.") {
             @Override
             protected void run(List<String> args, Message message) {
                 this.handler.sendHelpMessage(message.getChannel());

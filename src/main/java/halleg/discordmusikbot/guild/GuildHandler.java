@@ -1,9 +1,11 @@
 package halleg.discordmusikbot.guild;
 
+import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import halleg.discordmusikbot.MusicBot;
-import halleg.discordmusikbot.buttons.ButtonManager;
-import halleg.discordmusikbot.commands.CommandManager;
-import halleg.discordmusikbot.player.Player;
+import halleg.discordmusikbot.guild.buttons.ButtonManager;
+import halleg.discordmusikbot.guild.commands.CommandManager;
+import halleg.discordmusikbot.guild.loader.SingleLoadHandler;
+import halleg.discordmusikbot.guild.player.Player;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
@@ -22,19 +24,19 @@ public class GuildHandler {
     public static final String REMOVE_ALL_EMOJI = "❎";
     public static final String SHUFFLE_EMOJI = "\uD83D\uDD00";
 
-    private Guild guild;
+    public static final int PLAYLIST_PREVIEW_MAX = 3;
+    public static final int RETRY_AMOUNT = 5;
 
+    private Guild guild;
     private TextChannel output;
     private String prefix;
 
     private Player player;
-
     private MusicBot bot;
-
     private MessageBuilder builder;
-
     private CommandManager commands;
     private ButtonManager buttons;
+    private TrackLoader loader;
 
     public GuildHandler(MusicBot musicbot, Guild guild, long channelid, String prefix) {
         this.prefix = prefix;
@@ -42,9 +44,10 @@ public class GuildHandler {
         this.guild = guild;
         this.output = guild.getTextChannelById(channelid);
         this.builder = new MessageBuilder(this);
-        this.player = new Player(this, musicbot.getManager());
+        this.player = new Player(this);
         this.commands = new CommandManager(this);
         this.buttons = new ButtonManager(this);
+        this.loader = new TrackLoader(this);
 
         if (this.output == null) {
             setChannel(guild.getTextChannels().get(0));
@@ -112,10 +115,13 @@ public class GuildHandler {
         if (event.getMessage().getContentRaw().startsWith(this.prefix)) {
             this.commands.handleCommand(event.getMessage());
         } else {
-            this.player.loadAndQueueAndJoin(event.getMessage().getContentRaw(), event.getMember());
+            this.player.join(event.getMember().getVoiceState().getChannel());
+            SingleLoadHandler rt = new SingleLoadHandler(this, event.getMessage().getContentRaw(), event.getMember());
+            rt.load();
             delete(event.getMessage());
         }
     }
+
 
     public void handleReaction(final MessageReaction react, Message message, final Member member) {
 
@@ -145,7 +151,7 @@ public class GuildHandler {
     }
 
     public void sendInfoMessage(String message) {
-        complete(this.output, this.builder.buildInfoMessage(message));
+        queue(this.output, this.builder.buildInfoMessage(message), null);
     }
 
     public void sendHelpMessage(MessageChannel channel) {
@@ -228,5 +234,11 @@ public class GuildHandler {
         return this.buttons;
     }
 
+    public AudioPlayerManager getManager() {
+        return this.bot.getManager();
+    }
 
+    public TrackLoader getLoader() {
+        return this.loader;
+    }
 }
