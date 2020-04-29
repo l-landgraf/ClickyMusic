@@ -85,17 +85,14 @@ public class Player implements Timer.TimerListener {
     }
 
     public void nextTrack() {
-        System.out.println("1");
         if (this.currentTrack != null) {
             this.currentTrack.onPlayed();
             this.currentTrack = null;
         }
-        System.out.println("2");
         QueueElement next = null;
         if (!this.queue.isEmpty()) {
             next = this.queue.get(0);
         }
-        System.out.println("3");
         if (next == null) {
             this.player.stopTrack();
         } else {
@@ -103,7 +100,6 @@ public class Player implements Timer.TimerListener {
             this.currentTrack = next;
             this.currentTrack.onPlaying();
         }
-        System.out.println("4");
     }
 
     public void playTrack(AudioTrack track) {

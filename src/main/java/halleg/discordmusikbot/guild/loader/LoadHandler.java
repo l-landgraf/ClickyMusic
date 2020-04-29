@@ -25,14 +25,7 @@ public abstract class LoadHandler implements AudioLoadResultHandler {
     @Override
     public void trackLoaded(AudioTrack track) {
         this.handler.log("track loadet \"" + track.getInfo().title + "\"");
-        try {
-            onTrackLoaded(track);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
-
-    protected abstract void onTrackLoaded(AudioTrack track);
 
     @Override
     public void noMatches() {

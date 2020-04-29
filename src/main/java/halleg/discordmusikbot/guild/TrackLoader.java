@@ -14,6 +14,7 @@ public class TrackLoader {
     private GuildHandler handler;
     private SpotifyLinkHandler spotifyLinkHandler;
     private AudioPlayerManager manager;
+    int test = 0;
 
     public TrackLoader(GuildHandler handler) {
         this.handler = handler;
@@ -26,7 +27,10 @@ public class TrackLoader {
     }
 
     public synchronized String youtubeSearch(String query) {
-
+        this.test++;
+        if (this.test > 3) {
+            return null;
+        }
         try {
             String escape = "https://www.youtube.com/results?search_query=" + URLEncoder.encode(query, "UTF-8");
             Document doc = Jsoup.connect(escape).get();

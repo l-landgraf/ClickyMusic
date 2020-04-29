@@ -5,17 +5,15 @@ import halleg.discordmusikbot.guild.GuildHandler;
 import halleg.discordmusikbot.guild.player.queue.PlaylistQueueElement;
 import net.dv8tion.jda.api.entities.Member;
 
-class PlaylistTrackLoadHandler extends LoadHandler {
+class PlaylistTrackLoadHandler extends RetryLoadHandler {
     protected PlaylistQueueElement element;
     protected int trackNr;
-    protected int retryAmount;
     protected boolean random;
 
     public PlaylistTrackLoadHandler(GuildHandler handler, Member member, PlaylistQueueElement ele, boolean random) {
-        super(handler, null, member);
+        super(handler, null, member, GuildHandler.RETRY_AMOUNT);
         this.element = ele;
         this.trackNr = -1;
-        this.retryAmount = 5;
         this.random = random;
     }
 
@@ -63,27 +61,20 @@ class PlaylistTrackLoadHandler extends LoadHandler {
     }
 
     @Override
-    public void load() {
-        this.handler.getLoader().search(this.handler.getLoader().youtubeSearch(this.source), this, this.member);
+    protected void onTrackLoadFailed() {
+        this.element.notFound(this.trackNr);
+        this.random = !this.random;
+        try {
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        loadNext();
     }
 
     @Override
-    public void noMatches() {
-        if (this.retryAmount > 0) {
-            this.handler.log("no matches found, retrying " + this.retryAmount + " \"" + this.source + "\"");
-            this.retryAmount--;
-            load();
-        } else {
-            this.handler.log("no matches found, giving up " + this.retryAmount + " \"" + this.source + "\"");
-            this.element.notFound(this.trackNr);
-            this.random = !this.random;
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            loadNext();
-        }
+    public void load() {
+        this.handler.getLoader().search(this.handler.getLoader().youtubeSearch(this.source), this, this.member);
     }
 }
 
