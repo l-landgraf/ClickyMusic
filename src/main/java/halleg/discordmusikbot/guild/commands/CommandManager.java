@@ -25,7 +25,7 @@ public class CommandManager {
                     search += " " + args.get(i);
                 }
                 this.handler.getPlayer().join(message.getMember().getVoiceState().getChannel());
-                SingleLoadHandler rt = new SingleLoadHandler(this.handler, search, message.getMember());
+                SingleLoadHandler rt = new SingleLoadHandler(this.handler, search, message.getMember(), message);
                 rt.load();
                 this.handler.delete(message);
             }

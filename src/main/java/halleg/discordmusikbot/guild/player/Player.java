@@ -6,7 +6,6 @@ import halleg.discordmusikbot.guild.GuildHandler;
 import halleg.discordmusikbot.guild.player.queue.QueueElement;
 import halleg.discordmusikbot.guild.player.queue.QueueStatus;
 import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.VoiceChannel;
 import net.dv8tion.jda.api.managers.AudioManager;
 
@@ -59,16 +58,16 @@ public class Player implements Timer.TimerListener {
         clearQueue();
     }
 
-    public void queueComplete(QueueElement element) {
+    public void addQueue(QueueElement element) {
         try {
             if (this.currentTrack == null) {
-                MessageEmbed m = element.buildMessage(QueueStatus.PLAYING);
+                Message m = element.buildMessage(QueueStatus.PLAYING);
                 Message message = this.handler.complete(m);
                 element.setMessage(message);
                 this.currentTrack = element;
                 this.currentTrack.onPlaying();
             } else {
-                MessageEmbed m = element.buildMessage(QueueStatus.QUEUED);
+                Message m = element.buildMessage(QueueStatus.QUEUED);
                 Message message = this.handler.complete(m);
                 element.setMessage(message);
                 Player.this.queue.add(element);

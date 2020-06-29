@@ -7,12 +7,14 @@ public class LoadableTrack extends Track {
     protected boolean notFound;
     protected boolean beeingLoaded;
     protected String source;
+    protected boolean rawSource;
 
-    public LoadableTrack(Member member, String source) {
+    public LoadableTrack(Member member, String source, boolean rawSource) {
         super(null, member);
         this.notFound = false;
         this.source = source;
         this.beeingLoaded = false;
+        this.rawSource = rawSource;
     }
 
     public String getSource() {
@@ -89,5 +91,9 @@ public class LoadableTrack extends Track {
             return "";
         }
         return super.getURI();
+    }
+
+    public boolean isRawSource() {
+        return this.rawSource;
     }
 }

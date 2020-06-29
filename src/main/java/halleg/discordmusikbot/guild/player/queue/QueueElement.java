@@ -2,6 +2,7 @@ package halleg.discordmusikbot.guild.player.queue;
 
 import halleg.discordmusikbot.guild.player.Player;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 
@@ -18,9 +19,13 @@ public abstract class QueueElement {
         this.status = null;
     }
 
-    public MessageEmbed buildMessage(QueueStatus status) {
+    public MessageEmbed buildMessageEmbed(QueueStatus status) {
         this.status = status;
         return null;
+    }
+
+    public Message buildMessage(QueueStatus status) {
+        return new MessageBuilder(buildMessageEmbed(status)).build();
     }
 
     public Message getMessage() {
@@ -33,7 +38,6 @@ public abstract class QueueElement {
 
 
     public void onQueued() {
-        System.out.println("QUeued");
         this.status = QueueStatus.QUEUED;
     }
 

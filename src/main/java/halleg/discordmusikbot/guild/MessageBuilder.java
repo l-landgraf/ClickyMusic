@@ -4,7 +4,6 @@ import halleg.discordmusikbot.guild.buttons.Button;
 import halleg.discordmusikbot.guild.commands.Command;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.MessageEmbed;
 
 public class MessageBuilder {
     private GuildHandler handler;
@@ -28,12 +27,12 @@ public class MessageBuilder {
         return min + ":" + sec;
     }
 
-    public MessageEmbed buildNewErrorMessage(String error) {
+    public Message buildNewErrorMessage(String error) {
         EmbedBuilder eb = new EmbedBuilder();
         eb.setTitle("💀 Error");
         eb.setDescription(error);
 
-        return eb.build();
+        return new net.dv8tion.jda.api.MessageBuilder(eb.build()).build();
     }
 
     public String getURI(Message message) {
@@ -45,7 +44,7 @@ public class MessageBuilder {
 
     }
 
-    public MessageEmbed buildHelpMessage() {
+    public Message buildHelpMessage() {
         EmbedBuilder eb = new EmbedBuilder();
         eb.setTitle("How to Use:");
         eb.setDescription("All commands have to start with `" + this.handler.getPrefix()
@@ -63,14 +62,32 @@ public class MessageBuilder {
             eb.addField(buttton.getEmoji(), buttton.getDescription(), false);
         }
 
-        return eb.build();
+        return new net.dv8tion.jda.api.MessageBuilder(eb.build()).build();
     }
 
-    public MessageEmbed buildInfoMessage(String message) {
+    public Message buildInfoMessage(String message) {
         EmbedBuilder eb = new EmbedBuilder();
         eb.setTitle("🔔 Info");
         eb.setDescription(message);
 
-        return eb.build();
+        return new net.dv8tion.jda.api.MessageBuilder(eb.build()).build();
+    }
+
+    public void setLoading(Message message) {
+        message.addReaction(GuildHandler.LOADING_EMOJI).queue();
+    }
+
+    public void setLoadingFailed(Message message) {
+        message.clearReactions(GuildHandler.LOADING_EMOJI).queue();
+        message.addReaction(GuildHandler.LOADING_FAILED_EMOJI).queue();
+    }
+
+    public Message buildRepeatMessage(String link) {
+        net.dv8tion.jda.api.MessageBuilder mb = new net.dv8tion.jda.api.MessageBuilder();
+
+        mb.append(GuildHandler.REPEAT_EMOJI);
+        mb.appendCodeLine(link);
+
+        return mb.build();
     }
 }

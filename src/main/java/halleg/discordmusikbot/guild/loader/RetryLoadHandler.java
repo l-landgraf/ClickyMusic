@@ -1,14 +1,16 @@
 package halleg.discordmusikbot.guild.loader;
 
+import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import halleg.discordmusikbot.guild.GuildHandler;
 import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.Message;
 
 public abstract class RetryLoadHandler extends LoadHandler {
     protected int retryAmount;
 
-    public RetryLoadHandler(GuildHandler handler, String source, Member member, int retryAmount) {
-        super(handler, source, member);
+    public RetryLoadHandler(GuildHandler handler, String source, Member member, int retryAmount, Message message) {
+        super(handler, source, member, message);
         this.retryAmount = retryAmount;
     }
 
@@ -25,8 +27,12 @@ public abstract class RetryLoadHandler extends LoadHandler {
     }
 
     @Override
+    public void loadFailed(FriendlyException exception) {
+        noMatches();
+    }
+
+    @Override
     public void trackLoaded(AudioTrack track) {
-        super.trackLoaded(track);
         onTrackLoaded(track);
     }
 

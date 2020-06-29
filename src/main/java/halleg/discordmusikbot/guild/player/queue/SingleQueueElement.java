@@ -15,8 +15,8 @@ public class SingleQueueElement extends QueueElement {
     }
 
     @Override
-    public MessageEmbed buildMessage(QueueStatus status) {
-        super.buildMessage(status);
+    public MessageEmbed buildMessageEmbed(QueueStatus status) {
+        super.buildMessageEmbed(status);
         EmbedBuilder eb = new EmbedBuilder();
 
         eb.setTitle(this.track.getTitle(), this.track.getURI());

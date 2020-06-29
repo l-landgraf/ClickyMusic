@@ -1,6 +1,5 @@
-package halleg.discordmusikbot;
+package halleg.discordmusikbot.guild.player.spotify;
 
-import com.wrapper.spotify.SpotifyApi;
 import com.wrapper.spotify.exceptions.SpotifyWebApiException;
 import com.wrapper.spotify.model_objects.credentials.ClientCredentials;
 import com.wrapper.spotify.model_objects.specification.Album;
@@ -15,21 +14,21 @@ import com.wrapper.spotify.requests.data.playlists.GetPlaylistsTracksRequest;
 import java.io.IOException;
 import java.util.Calendar;
 
-public class SpotifyDings {
+public class SpotifyApi {
 
-    private static SpotifyApi spotifyApi = null;
+    private static com.wrapper.spotify.SpotifyApi spotifyApi = null;
     private static String clientSecret;
     private static String clientId;
     private static long experationDate = 0;
 
     public static void initialize(String clientId, String clientSecret) {
-        SpotifyDings.clientId = clientId;
-        SpotifyDings.clientSecret = clientSecret;
+        SpotifyApi.clientId = clientId;
+        SpotifyApi.clientSecret = clientSecret;
         getAccess();
     }
 
     public static void getAccess() {
-        spotifyApi = new SpotifyApi.Builder()
+        spotifyApi = new com.wrapper.spotify.SpotifyApi.Builder()
                 .setClientId(clientId)
                 .setClientSecret(clientSecret)
                 .build();

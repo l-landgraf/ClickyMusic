@@ -47,8 +47,8 @@ public class EventListener extends AudioEventAdapter {
 
     @Override
     public void onTrackException(AudioPlayer player, AudioTrack track, FriendlyException exception) {
-        this.handler.getPlayer().findElement(track).addError(exception.getMessage());
-        this.handler.log(exception.getCause().getMessage() + "\n" + exception.getCause().getStackTrace());
+//        this.handler.getPlayer().findElement(track).addError(exception.getMessage());
+//      this.handler.log(exception.getCause().getMessage() + "\n" + exception.getCause().getStackTrace());
     }
 
     @Override

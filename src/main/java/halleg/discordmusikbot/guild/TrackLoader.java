@@ -2,62 +2,42 @@ package halleg.discordmusikbot.guild;
 
 import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
+import halleg.discordmusikbot.guild.loader.PreLoadHandler;
+import halleg.discordmusikbot.guild.loader.SingleLoadHandler;
 import net.dv8tion.jda.api.entities.Member;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-
-import java.io.IOException;
-import java.net.URLEncoder;
+import net.dv8tion.jda.api.entities.Message;
 
 public class TrackLoader {
     private GuildHandler handler;
-    private SpotifyLinkHandler spotifyLinkHandler;
     private AudioPlayerManager manager;
+    private PlaylistPreloadManager preloader;
 
-    public TrackLoader(GuildHandler handler) {
+    public TrackLoader(GuildHandler handler, PlaylistPreloadManager preloader) {
         this.handler = handler;
-        this.spotifyLinkHandler = new SpotifyLinkHandler(handler);
         this.manager = handler.getManager();
+        this.preloader = preloader;
     }
 
     public void load(String source, AudioLoadResultHandler loader) {
         this.manager.loadItem(source, loader);
     }
 
-    public synchronized String youtubeSearch(String query) {
-        try {
-            String escape = "https://www.youtube.com/results?search_query=" + URLEncoder.encode(query, "UTF-8");
-            Document doc = Jsoup.connect(escape).get();
-            for (Element e : doc.getElementsByTag("a")) {
-                String href = e.attr("href");
-                if (href.startsWith("/watch?v=")) {
-                    this.handler.log("found Youtube link https://www.youtube.com" + href + " for \"" + query + "\"");
-                    return "https://www.youtube.com" + href;
-                }
-            }
-
-        } catch (IOException e) {
-            e.printStackTrace();
+    public void search(String source, Member member, Message message) {
+        if (source == null) {
+            return;
         }
-        this.handler.log("found nothing on Youtube for \"" + query + "\"");
-        return null;
+
+        PreLoadHandler loader = this.preloader.load(this.handler, source, member, message);
+        if (loader != null) {
+            load(loader.getInitialSource(), loader);
+            load(source, loader);
+        } else {
+            load(source, new SingleLoadHandler(this.handler, source, member, message));
+        }
+
     }
 
-    public void search(String source, AudioLoadResultHandler loader, Member member) {
-        if (source == null) {
-            loader.noMatches();
-            return;
-        }
-        if (source.startsWith("https://www.youtube.com") || source.startsWith("www.youtube.com")
-                || source.startsWith("youtube.com")) {
-            source = source.split("&")[0];
-        }
-
-        if (this.spotifyLinkHandler.handleLink(source, member)) {
-            return;
-        }
-
-        load(source, loader);
+    public interface PlaylistPreloadManager {
+        public PreLoadHandler load(GuildHandler handler, String source, Member member, Message message);
     }
 }

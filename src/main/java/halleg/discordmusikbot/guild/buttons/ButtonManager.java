@@ -9,6 +9,7 @@ import net.dv8tion.jda.api.entities.MessageReaction;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 public class ButtonManager {
     private List<Button> buttons;
@@ -24,8 +25,15 @@ public class ButtonManager {
             protected void run(Message message, MessageReaction react, Member member) {
                 String search = this.handler.getBuilder().getURI(message);
                 this.handler.getPlayer().join(member.getVoiceState().getChannel());
-                SingleLoadHandler rt = new SingleLoadHandler(this.handler, search, member);
-                rt.load();
+                this.handler.sendRepeatMessage(search, new Consumer<Message>() {
+                    @Override
+                    public void accept(Message message) {
+                        ButtonManager.this.handler.getBuilder().setLoading(message);
+                        SingleLoadHandler rt = new SingleLoadHandler(ButtonManager.this.handler, search, member, message);
+                        rt.load();
+                    }
+                });
+
             }
         });
 

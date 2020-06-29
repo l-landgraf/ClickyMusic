@@ -1,9 +1,10 @@
-package halleg.discordmusikbot.guild.player.queue;
+package halleg.discordmusikbot.guild.player.queue.playlist;
 
-import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import halleg.discordmusikbot.guild.GuildHandler;
 import halleg.discordmusikbot.guild.player.Player;
-import halleg.discordmusikbot.guild.player.tracks.LoadablePlaylist;
+import halleg.discordmusikbot.guild.player.queue.QueueElement;
+import halleg.discordmusikbot.guild.player.queue.QueueStatus;
+import halleg.discordmusikbot.guild.player.tracks.TrackPlaylist;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
@@ -14,16 +15,16 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-public class PlaylistQueueElement extends QueueElement {
-    private LoadablePlaylist playlist;
-    private List<Integer> randList;
-    private int[] plannedNormal;
-    private int[] plannedShuffle;
+public abstract class PlaylistQueueElement<L extends TrackPlaylist> extends QueueElement {
+    protected L playlist;
+    protected List<Integer> randList;
+    protected int[] plannedNormal;
+    protected int[] plannedShuffle;
 
-    private int currentTrack;
-    private boolean shuffle;
+    protected int currentTrack;
+    protected boolean shuffle;
 
-    public PlaylistQueueElement(Player player, LoadablePlaylist playlist) {
+    public PlaylistQueueElement(Player player, L playlist) {
         super(player);
         this.playlist = playlist;
         this.currentTrack = 0;
@@ -34,8 +35,8 @@ public class PlaylistQueueElement extends QueueElement {
     }
 
     @Override
-    public MessageEmbed buildMessage(QueueStatus status) {
-        super.buildMessage(status);
+    public MessageEmbed buildMessageEmbed(QueueStatus status) {
+        super.buildMessageEmbed(status);
         EmbedBuilder eb = new EmbedBuilder();
 
         eb.setTitle(this.playlist.getTitle(), this.playlist.getURI());
@@ -54,11 +55,11 @@ public class PlaylistQueueElement extends QueueElement {
         return eb.build();
     }
 
-    private void updateMessage() {
+    protected void updateMessage() {
         if (this.message == null) {
             return;
         }
-        this.message.editMessage(buildMessage(this.status)).queue(new Consumer<Message>() {
+        this.message.editMessage(buildMessageEmbed(this.status)).queue(new Consumer<Message>() {
             @Override
             public void accept(Message message) {
                 PlaylistQueueElement.this.message = message;
@@ -66,7 +67,7 @@ public class PlaylistQueueElement extends QueueElement {
         });
     }
 
-    private void checkUpdate(int t) {
+    protected void checkUpdate(int t) {
         int[] planned = getPlanedSongs();
         for (int i = 0; i < GuildHandler.PLAYLIST_PREVIEW_MAX; i++) {
             if (planned[i] == t) {
@@ -76,7 +77,7 @@ public class PlaylistQueueElement extends QueueElement {
         }
     }
 
-    private void addNowPlayingRow(EmbedBuilder eb) {
+    protected void addNowPlayingRow(EmbedBuilder eb) {
         if (this.currentTrack < this.playlist.getTotal()) {
             String title = "";
 
@@ -92,7 +93,7 @@ public class PlaylistQueueElement extends QueueElement {
         }
     }
 
-    private void addCommingUpRows(EmbedBuilder eb) {
+    protected void addCommingUpRows(EmbedBuilder eb) {
         String s = "";
         int[] plan = getPlanedSongs();
         int counter = 0;
@@ -102,7 +103,7 @@ public class PlaylistQueueElement extends QueueElement {
             }
             counter++;
             String title = this.playlist.getTrack(i).getEmbedLink();
-            s += (counter + 1) + ". " + title + "\n";
+            s += (counter) + ". " + title + "\n";
         }
 
         int songsLeft = (plan.length - GuildHandler.PLAYLIST_PREVIEW_MAX);
@@ -120,7 +121,7 @@ public class PlaylistQueueElement extends QueueElement {
         }
     }
 
-    private int[] getPlanedSongs() {
+    protected int[] getPlanedSongs() {
         int[] arr = null;
         if (this.shuffle) {
             arr = getPlanedShuffle();
@@ -156,12 +157,14 @@ public class PlaylistQueueElement extends QueueElement {
         this.plannedShuffle = this.randList.stream().mapToInt(i -> i).toArray();
     }
 
-    private void nextInternal() {
+    protected void nextInternal() {
         int[] planned = getPlanedSongs();
         if (planned.length == 0) {
             this.player.nextTrack();
+            this.status = QueueStatus.PLAYED;
             return;
         }
+        this.status = QueueStatus.PLAYING;
         this.currentTrack = planned[0];
         this.randList.remove(Integer.valueOf(this.currentTrack));
 
@@ -171,20 +174,10 @@ public class PlaylistQueueElement extends QueueElement {
             updatePlanedNormal();
         }
 
-        nextAvailable();
+        queueCurrent();
     }
 
-    private void nextAvailable() {
-        if (this.currentTrack == this.playlist.getTotal()) {
-            this.player.nextTrack();
-            return;
-        }
-
-
-        if (!this.playlist.getTrack(this.currentTrack).isReady()) {
-            nextInternal();
-            return;
-        }
+    protected void queueCurrent() {
         this.player.playTrack(this.playlist.getTrack(this.currentTrack).getTrack());
         updateMessage();
     }
@@ -209,9 +202,7 @@ public class PlaylistQueueElement extends QueueElement {
 
     @Override
     public synchronized void onPlaying() {
-        if (this.status != QueueStatus.PLAYING) {
-            nextAvailable();
-        }
+        queueCurrent();
         super.onPlaying();
         this.message.clearReactions(GuildHandler.REMOVE_EMOJI).queue();
         this.message.addReaction(GuildHandler.REPEAT_EMOJI).queue();
@@ -240,7 +231,6 @@ public class PlaylistQueueElement extends QueueElement {
 
     @Override
     public void onEnded() {
-        super.onEnded();
         nextInternal();
     }
 
@@ -268,29 +258,9 @@ public class PlaylistQueueElement extends QueueElement {
         return this.currentTrack;
     }
 
-    public boolean isBeeingLoaded(int i) {
-        return this.playlist.getTrack(i).isBeeingLoaded();
-    }
-
     public int getTotal() {
         return this.playlist.getTotal();
     }
 
-    public String getSource(int i) {
-        return this.playlist.getTrack(i).getSource();
-    }
 
-    public void startLoading(int i) {
-        this.playlist.getTrack(i).startLoading();
-    }
-
-    public void loadTrack(int i, AudioTrack track) {
-        this.playlist.getTrack(i).loadTrack(track);
-        checkUpdate(i);
-    }
-
-    public void notFound(int i) {
-        this.playlist.getTrack(i).notFound();
-        checkUpdate(i);
-    }
 }

@@ -1,47 +1,45 @@
 package halleg.discordmusikbot.guild.loader;
 
+import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import halleg.discordmusikbot.guild.GuildHandler;
-import halleg.discordmusikbot.guild.player.queue.PlaylistQueueElement;
-import halleg.discordmusikbot.guild.player.tracks.LoadablePlaylist;
+import halleg.discordmusikbot.guild.player.queue.SingleQueueElement;
+import halleg.discordmusikbot.guild.player.queue.playlist.DefaultPlaylistQueueElement;
+import halleg.discordmusikbot.guild.player.tracks.DefaultPlaylist;
+import halleg.discordmusikbot.guild.player.tracks.Track;
 import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.Message;
 
 public class PlaylistLoadHandler extends RetryLoadHandler {
-    protected LoadablePlaylist list;
-    protected int currentTrack;
+    protected String uri;
 
-    public PlaylistLoadHandler(GuildHandler handler, Member member, LoadablePlaylist list) {
-        super(handler, list.getTrack(0).getSource(), member, GuildHandler.RETRY_AMOUNT);
-        this.list = list;
-        this.currentTrack = 0;
-        this.retryAmount = GuildHandler.RETRY_AMOUNT;
+    public PlaylistLoadHandler(GuildHandler handler, String source, Member member, Message message) {
+        super(handler, source, member, GuildHandler.RETRY_AMOUNT, message);
+        this.uri = source;
     }
 
     @Override
     public void load() {
-        this.handler.getLoader().search(this.handler.getLoader().youtubeSearch(this.source), this, this.member);
+        super.load();
+    }
+
+    @Override
+    protected void retryLoad() {
+        //this.uri = this.handler.getLoader().playlistToVideoLink(this.source);
+        //this.handler.getLoader().load(this.uri, this);
     }
 
     @Override
     protected void onTrackLoaded(AudioTrack track) {
-        this.list.getTrack(this.currentTrack).loadTrack(track);
-        PlaylistQueueElement ele = new PlaylistQueueElement(this.handler.getPlayer(), this.list);
-        this.handler.getPlayer().queueComplete(ele);
-
-        PlaylistTrackLoadHandler rand = new PlaylistTrackLoadHandler(this.handler, this.member, ele, true);
-        rand.loadNext();
+        super.onTrackLoaded(track);
+        this.handler.getPlayer().addQueue(new SingleQueueElement(this.handler.getPlayer(), new Track(track, this.member)));
     }
 
     @Override
-    protected void onTrackLoadFailed() {
-        this.list.getTrack(this.currentTrack).notFound();
-        this.currentTrack++;
-        if (this.currentTrack >= this.list.getTotal()) {
-            super.onTrackLoadFailed();
-            return;
-        }
-        this.source = this.list.getTrack(this.currentTrack).getSource();
-        this.retryAmount = GuildHandler.RETRY_AMOUNT;
-        load();
+    public void playlistLoaded(AudioPlaylist playlist) {
+        super.playlistLoaded(playlist);
+        DefaultPlaylist list = new DefaultPlaylist(playlist, this.member, this.source);
+        DefaultPlaylistQueueElement element = new DefaultPlaylistQueueElement(this.handler.getPlayer(), list);
+        this.handler.getPlayer().addQueue(element);
     }
 }
