@@ -10,27 +10,16 @@ import halleg.discordmusikbot.guild.player.tracks.Track;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 
-public class SingleLoadHandler extends RetryLoadHandler {
+public class SingleLoadHandler extends LoadHandler {
 
     public SingleLoadHandler(GuildHandler handler, String source, Member member, Message message) {
-        super(handler, source, member, GuildHandler.RETRY_AMOUNT, message);
+        super(handler, source, member, message);
     }
 
     @Override
-    protected void retryLoad() {
-        onTrackLoadFailed();
-        //this.handler.getLoader().load(this.handler.getLoader().youtubeSearch(this.source), this);
-    }
-
-    @Override
-    protected void onTrackLoaded(AudioTrack track) {
-        super.onTrackLoaded(track);
+    public void trackLoaded(AudioTrack track) {
+        super.trackLoaded(track);
         this.handler.getPlayer().addQueue(new SingleQueueElement(this.handler.getPlayer(), new Track(track, this.member)));
-    }
-
-    @Override
-    protected void onTrackLoadFailed() {
-        super.onTrackLoadFailed();
     }
 
     @Override

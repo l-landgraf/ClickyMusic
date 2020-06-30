@@ -5,9 +5,12 @@ import halleg.discordmusikbot.guild.loader.SingleLoadHandler;
 import net.dv8tion.jda.api.entities.Message;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 public class CommandManager {
+    public static final String SEEK_TIPPS = "Incorrect Syntax, seek examples:\n'+10' - skips forward 10sec\n'+1:2:30' - skips forward 1h 2min 30sec\n'-20' - skips backward 20sec\n'5:30' - skips to 5min 30sec";
     private GuildHandler handler;
     private List<Command> commands;
 
@@ -17,7 +20,7 @@ public class CommandManager {
 
         this.commands.add(new Command(handler, "queue", false, true, false,
                 true, "adds a song to the queue. Alternatively you can write the source directly in the specefied channel.",
-                "[source]") {
+                "*source*") {
             @Override
             protected void run(List<String> args, Message message) {
                 String search = "";
@@ -40,7 +43,7 @@ public class CommandManager {
         });
 
         this.commands.add(new Command(handler, "setchannel", false, false, false,
-                false, "sets the channel for this bot.", "[channelid]") {
+                false, "sets the channel for this bot.", "*channelid*") {
             @Override
             protected void run(List<String> args, Message message) {
                 this.handler.setChannel(this.handler.getGuild().getTextChannelById(args.get(1)));
@@ -49,7 +52,7 @@ public class CommandManager {
 
         this.commands.add(
                 new Command(handler, "setprefix", false, false, false,
-                        false, "sets the chracters commands have to start with.", "[prefix]") {
+                        false, "sets the chracters commands have to start with.", "*prefix*") {
                     @Override
                     protected void run(List<String> args, Message message) {
                         this.handler.setPrefix(args.get(1));
@@ -77,6 +80,14 @@ public class CommandManager {
             @Override
             protected void run(List<String> args, Message message) {
                 this.handler.getPlayer().nextTrack();
+            }
+        });
+
+        this.commands.add(new Command(handler, "seek", true, true, true,
+                false, "seeks to the desired possition or skips forward the given amount of time.", "*[sign][hours:][minutes:]seconds*") {
+            @Override
+            protected void run(List<String> args, Message message) {
+                CommandManager.this.parseSeek(args, message);
             }
         });
 
@@ -139,5 +150,59 @@ public class CommandManager {
 
     public List<Command> getCommands() {
         return this.commands;
+    }
+
+    private void parseSeek(List<String> args, Message message) {
+        String arg = args.get(1);
+        arg = arg.trim();
+        String sign = null;
+        if (arg.startsWith("+")) {
+            sign = "+";
+            arg = arg.substring(1);
+        }
+        if (arg.startsWith("-")) {
+            sign = "-";
+            arg = arg.substring(1);
+        }
+
+        System.out.println(arg);
+
+        String[] times = arg.split(":");
+        Collections.reverse(Arrays.asList(times));
+
+        if (times.length == 0 || times.length > 3) {
+            this.handler.sendErrorMessage(SEEK_TIPPS);
+            return;
+        }
+        int seconds = 0;
+        int minutes = 0;
+        int hours = 0;
+        try {
+            seconds = Integer.parseInt(times[0]);
+            if (times.length > 1) {
+                minutes = Integer.parseInt(times[1]);
+                if (times.length > 2) {
+                    hours = Integer.parseInt(times[2]);
+                }
+            }
+        } catch (NumberFormatException e) {
+            this.handler.sendErrorMessage(SEEK_TIPPS);
+            return;
+        }
+
+        if (seconds < 0 || minutes < 0 || hours < 0) {
+            this.handler.sendErrorMessage(SEEK_TIPPS);
+            return;
+        }
+
+        long time = seconds * 1000 + minutes * 60000 + hours * 3600000;
+
+        if (sign == null) {
+            this.handler.getPlayer().seekTo(time);
+        } else if (sign.equals("+")) {
+            this.handler.getPlayer().seekAdd(time);
+        } else if (sign.equals("-")) {
+            this.handler.getPlayer().seekAdd(-time);
+        }
     }
 }

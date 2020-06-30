@@ -10,11 +10,11 @@ import halleg.discordmusikbot.guild.player.tracks.Track;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 
-public class PlaylistLoadHandler extends RetryLoadHandler {
+public class PlaylistLoadHandler extends LoadHandler {
     protected String uri;
 
     public PlaylistLoadHandler(GuildHandler handler, String source, Member member, Message message) {
-        super(handler, source, member, GuildHandler.RETRY_AMOUNT, message);
+        super(handler, source, member, message);
         this.uri = source;
     }
 
@@ -24,14 +24,8 @@ public class PlaylistLoadHandler extends RetryLoadHandler {
     }
 
     @Override
-    protected void retryLoad() {
-        //this.uri = this.handler.getLoader().playlistToVideoLink(this.source);
-        //this.handler.getLoader().load(this.uri, this);
-    }
-
-    @Override
-    protected void onTrackLoaded(AudioTrack track) {
-        super.onTrackLoaded(track);
+    public void trackLoaded(AudioTrack track) {
+        super.trackLoaded(track);
         this.handler.getPlayer().addQueue(new SingleQueueElement(this.handler.getPlayer(), new Track(track, this.member)));
     }
 

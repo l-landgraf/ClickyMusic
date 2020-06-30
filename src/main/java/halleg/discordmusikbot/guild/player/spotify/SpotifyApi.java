@@ -96,6 +96,13 @@ public class SpotifyApi {
                 System.out.println("Spotify Error: " + e.getMessage());
                 return null;
             }
+
+            System.out.println("Current offset: " + offset);
+            try {
+                Thread.sleep(1000l);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
         return tracks;
     }

@@ -1,7 +1,6 @@
 package halleg.discordmusikbot.guild.buttons;
 
 import halleg.discordmusikbot.guild.GuildHandler;
-import halleg.discordmusikbot.guild.loader.SingleLoadHandler;
 import halleg.discordmusikbot.guild.player.queue.QueueElement;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
@@ -29,8 +28,7 @@ public class ButtonManager {
                     @Override
                     public void accept(Message message) {
                         ButtonManager.this.handler.getBuilder().setLoading(message);
-                        SingleLoadHandler rt = new SingleLoadHandler(ButtonManager.this.handler, search, member, message);
-                        rt.load();
+                        handler.getLoader().search(search, member, message);
                     }
                 });
 

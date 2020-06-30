@@ -34,10 +34,12 @@ public class YoutubeQuerryAudioSourceManager implements AudioSourceManager {
     public AudioItem loadItem(DefaultAudioPlayerManager manager, AudioReference reference) {
 
         YoutubeSearchProvider searcher = new YoutubeSearchProvider();
-
-        BasicAudioPlaylist results = (BasicAudioPlaylist) searcher.loadSearchResult(reference.identifier, YoutubeQuerryAudioSourceManager.this::buildTrackFromInfo);
-        AudioItem item = results.getTracks().get(0);
-        return item;
+        AudioItem results = searcher.loadSearchResult(reference.identifier, YoutubeQuerryAudioSourceManager.this::buildTrackFromInfo);
+        if (results instanceof BasicAudioPlaylist) {
+            return ((BasicAudioPlaylist) results).getTracks().get(0);
+        } else {
+            return results;
+        }
     }
 
     @Override

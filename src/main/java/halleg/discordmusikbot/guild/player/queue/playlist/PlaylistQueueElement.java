@@ -4,6 +4,7 @@ import halleg.discordmusikbot.guild.GuildHandler;
 import halleg.discordmusikbot.guild.player.Player;
 import halleg.discordmusikbot.guild.player.queue.QueueElement;
 import halleg.discordmusikbot.guild.player.queue.QueueStatus;
+import halleg.discordmusikbot.guild.player.tracks.Track;
 import halleg.discordmusikbot.guild.player.tracks.TrackPlaylist;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Message;
@@ -39,14 +40,7 @@ public abstract class PlaylistQueueElement<L extends TrackPlaylist> extends Queu
         super.buildMessageEmbed(status);
         EmbedBuilder eb = new EmbedBuilder();
 
-        eb.setTitle(this.playlist.getTitle(), this.playlist.getURI());
-        eb.setDescription("Queued by " + this.playlist.getMember().getAsMention());
-        eb.setThumbnail(this.playlist.getThumbnail());
-
-        eb.addField("Playlist By", this.playlist.getAuthor(), true);
-        eb.addField("Songs", this.playlist.getTotal() + "", true);
-        eb.addField("", "", true);
-
+        addPlaylistRow(eb);
         if (status.getKeepLoading()) {
             addNowPlayingRow(eb);
             addCommingUpRows(eb);
@@ -77,6 +71,16 @@ public abstract class PlaylistQueueElement<L extends TrackPlaylist> extends Queu
         }
     }
 
+    protected void addPlaylistRow(EmbedBuilder eb) {
+        eb.setTitle(this.playlist.getTitle(), this.playlist.getURI());
+        eb.setDescription("Queued by " + this.playlist.getMember().getAsMention());
+        eb.setThumbnail(this.playlist.getThumbnail());
+
+        eb.addField("Playlist By", this.playlist.getAuthor(), true);
+        eb.addField("Songs", this.playlist.getTotal() + "", true);
+        eb.addField("", "", true);
+    }
+
     protected void addNowPlayingRow(EmbedBuilder eb) {
         if (this.currentTrack < this.playlist.getTotal()) {
             String title = "";
@@ -86,10 +90,11 @@ public abstract class PlaylistQueueElement<L extends TrackPlaylist> extends Queu
             } else {
                 title = "Now Playing";
             }
+
             String moreShuffle = "";
-            eb.addField(title, this.playlist.getTrack(this.currentTrack).getEmbedLink() + moreShuffle, true);
-            eb.addField("By", this.playlist.getTrack(this.currentTrack).getAuthor(), true);
-            eb.addField("Length", this.playlist.getTrack(this.currentTrack).getLength(), true);
+            eb.addField(title, getCurrentTrack().getEmbedLink() + moreShuffle, true);
+            eb.addField("By", getCurrentTrack().getAuthor(), true);
+            eb.addField("Length", getCurrentTrack().getLength(), true);
         }
     }
 
@@ -160,8 +165,7 @@ public abstract class PlaylistQueueElement<L extends TrackPlaylist> extends Queu
     protected void nextInternal() {
         int[] planned = getPlanedSongs();
         if (planned.length == 0) {
-            this.player.nextTrack();
-            this.status = QueueStatus.PLAYED;
+            super.onSkip();
             return;
         }
         this.status = QueueStatus.PLAYING;
@@ -178,7 +182,7 @@ public abstract class PlaylistQueueElement<L extends TrackPlaylist> extends Queu
     }
 
     protected void queueCurrent() {
-        this.player.playTrack(this.playlist.getTrack(this.currentTrack).getTrack());
+        this.player.playTrack(getCurrentTrack().getTrack());
         updateMessage();
     }
 
@@ -254,8 +258,8 @@ public abstract class PlaylistQueueElement<L extends TrackPlaylist> extends Queu
         this.player.nextTrack();
     }
 
-    public int getCurrentTrack() {
-        return this.currentTrack;
+    public Track getCurrentTrack() {
+        return this.playlist.getTrack(this.currentTrack);
     }
 
     public int getTotal() {

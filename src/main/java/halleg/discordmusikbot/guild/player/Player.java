@@ -139,17 +139,26 @@ public class Player implements Timer.TimerListener {
         return null;
     }
 
-    public QueueElement findElement(AudioTrack track) {
-        /*if (this.currentTrack.getTrack() == track) {
-            return this.currentTrack;
+    public void seekAdd(long l) {
+        seekTo(this.player.getPlayingTrack().getPosition() + l);
+    }
+
+    public void seekTo(long l) {
+        if (this.player.getPlayingTrack() == null) {
+            this.handler.sendErrorMessage("No Track is currently playing.");
+            return;
         }
 
-        for (QueueElement queueElement : this.queue) {
-            if (queueElement.getTrack() == track) {
-                return queueElement;
-            }
-        }*/
-        return null;
+        if (!this.player.getPlayingTrack().isSeekable()) {
+            this.handler.sendErrorMessage("Seeking not supportet for this type of Track.");
+            return;
+        }
+
+        if (this.player.getPlayingTrack().getDuration() < l) {
+            this.handler.sendErrorMessage("Cant seek, track end reached.");
+            return;
+        }
+        this.player.getPlayingTrack().setPosition(l);
     }
 
     public void voiceUpdate() {
