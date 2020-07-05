@@ -180,11 +180,8 @@ public abstract class PlaylistQueueElement<L extends TrackPlaylist> extends Queu
         this.currentTrack = planned;
         this.randList.remove(Integer.valueOf(this.currentTrack));
 
-        if (this.shuffle) {
-            updatePlanedShuffle();
-        } else {
-            updatePlanedNormal();
-        }
+        updatePlanedShuffle();
+        updatePlanedNormal();
 
         queueCurrent();
     }
