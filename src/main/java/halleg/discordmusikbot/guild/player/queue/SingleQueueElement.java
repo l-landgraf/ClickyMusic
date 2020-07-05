@@ -68,12 +68,6 @@ public class SingleQueueElement extends QueueElement {
     }
 
     @Override
-    public void onSkip() {
-        super.onSkip();
-        this.player.nextTrack();
-    }
-
-    @Override
     public void onDelete() {
         super.onDelete();
         this.message.clearReactions(GuildHandler.REMOVE_EMOJI).queue();

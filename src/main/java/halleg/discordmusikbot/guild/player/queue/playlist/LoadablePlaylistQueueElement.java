@@ -39,9 +39,8 @@ public class LoadablePlaylistQueueElement extends PlaylistQueueElement<LoadableP
         }
 
         for (int i = 0; i < planned.length && i < PRELOAD_MAX; i++) {
-
-            this.handler.log("checling Song Nr. " + planned[i]);
             if (!this.playlist.getTrack(planned[i]).isLoaded()) {
+                this.handler.log("preloading Song Nr. " + planned[i]);
                 LoadableTrack track = this.playlist.getTrack(planned[i]);
                 PlaylistTrackLoadHandler loader = new PlaylistTrackLoadHandler(this.handler, track.getSource(), track.getMember(), null, this, planned[i], (this.shuffle == shuffle && i < 3));
                 this.handler.getLoader().load(this.playlist.getTrack(planned[i]).getSource(), loader);

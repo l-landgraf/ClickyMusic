@@ -57,6 +57,7 @@ public abstract class QueueElement {
 
     public void onSkip() {
         this.status = QueueStatus.SKIPPED;
+        this.player.nextTrack();
     }
 
     public void onDelete() {
