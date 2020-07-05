@@ -116,18 +116,6 @@ public class CommandManager {
             }
         });
 
-        this.commands.add(new Command(handler, "exit", true, false, false,
-                false, "terminates the bot (and hopefully restarts it).") {
-            @Override
-            protected void run(List<String> args, Message message) {
-                if (message.getGuild().getIdLong() == 283386616314068992l || message.getGuild().getIdLong() == 506930046481465355l) {
-                    System.exit(0);
-                } else {
-                    this.handler.sendErrorMessage("Not supportet on this Server.");
-                }
-            }
-        });
-
         this.commands.add(new Command(handler, "help", false, false, false,
                 false, "displays a help message.") {
             @Override
