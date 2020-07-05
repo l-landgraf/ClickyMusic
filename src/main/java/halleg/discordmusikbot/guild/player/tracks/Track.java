@@ -38,7 +38,7 @@ public class Track {
     }
 
     public String getEmbedLink() {
-        return "[" + this.track.getInfo().title + "](" + this.track.getInfo().uri + ")";
+        return "[" + getTitle() + "](" + getURI() + ")";
     }
 
     public String getAuthor() {

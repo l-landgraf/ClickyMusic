@@ -6,7 +6,6 @@ import halleg.discordmusikbot.guild.GuildHandler;
 import halleg.discordmusikbot.guild.player.queue.QueueElement;
 import halleg.discordmusikbot.guild.player.queue.QueueStatus;
 import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.VoiceChannel;
 import net.dv8tion.jda.api.managers.AudioManager;
 
@@ -59,16 +58,16 @@ public class Player implements Timer.TimerListener {
         clearQueue();
     }
 
-    public void queueComplete(QueueElement element) {
+    public void addQueue(QueueElement element) {
         try {
             if (this.currentTrack == null) {
-                MessageEmbed m = element.buildMessage(QueueStatus.PLAYING);
+                Message m = element.buildMessage(QueueStatus.PLAYING);
                 Message message = this.handler.complete(m);
                 element.setMessage(message);
                 this.currentTrack = element;
                 this.currentTrack.onPlaying();
             } else {
-                MessageEmbed m = element.buildMessage(QueueStatus.QUEUED);
+                Message m = element.buildMessage(QueueStatus.QUEUED);
                 Message message = this.handler.complete(m);
                 element.setMessage(message);
                 Player.this.queue.add(element);
@@ -85,17 +84,14 @@ public class Player implements Timer.TimerListener {
     }
 
     public void nextTrack() {
-        System.out.println("1");
         if (this.currentTrack != null) {
             this.currentTrack.onPlayed();
             this.currentTrack = null;
         }
-        System.out.println("2");
         QueueElement next = null;
         if (!this.queue.isEmpty()) {
             next = this.queue.get(0);
         }
-        System.out.println("3");
         if (next == null) {
             this.player.stopTrack();
         } else {
@@ -103,7 +99,6 @@ public class Player implements Timer.TimerListener {
             this.currentTrack = next;
             this.currentTrack.onPlaying();
         }
-        System.out.println("4");
     }
 
     public void playTrack(AudioTrack track) {
@@ -144,17 +139,26 @@ public class Player implements Timer.TimerListener {
         return null;
     }
 
-    public QueueElement findElement(AudioTrack track) {
-        /*if (this.currentTrack.getTrack() == track) {
-            return this.currentTrack;
+    public void seekAdd(long l) {
+        seekTo(this.player.getPlayingTrack().getPosition() + l);
+    }
+
+    public void seekTo(long l) {
+        if (this.player.getPlayingTrack() == null) {
+            this.handler.sendErrorMessage("No Track is currently playing.");
+            return;
         }
 
-        for (QueueElement queueElement : this.queue) {
-            if (queueElement.getTrack() == track) {
-                return queueElement;
-            }
-        }*/
-        return null;
+        if (!this.player.getPlayingTrack().isSeekable()) {
+            this.handler.sendErrorMessage("Seeking not supportet for this type of Track.");
+            return;
+        }
+
+        if (this.player.getPlayingTrack().getDuration() < l) {
+            this.handler.sendErrorMessage("Cant seek, track end reached.");
+            return;
+        }
+        this.player.getPlayingTrack().setPosition(l);
     }
 
     public void voiceUpdate() {

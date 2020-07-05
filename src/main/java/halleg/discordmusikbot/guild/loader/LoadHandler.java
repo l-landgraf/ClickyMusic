@@ -6,47 +6,52 @@ import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import halleg.discordmusikbot.guild.GuildHandler;
 import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.Message;
 
 public abstract class LoadHandler implements AudioLoadResultHandler {
     protected GuildHandler handler;
     protected Member member;
     protected String source;
+    protected Message message;
 
-    public LoadHandler(GuildHandler handler, String source, Member member) {
+    public LoadHandler(GuildHandler handler, String source, Member member, Message message) {
         this.member = member;
         this.source = source;
         this.handler = handler;
+        this.message = message;
     }
 
     public void load() {
-        this.handler.getLoader().search(this.source, this, this.member);
+        this.handler.getLoader().load(this.source, this);
     }
 
     @Override
     public void trackLoaded(AudioTrack track) {
-        this.handler.log("track loadet \"" + track.getInfo().title + "\"");
-        try {
-            onTrackLoaded(track);
-        } catch (Exception e) {
-            e.printStackTrace();
+        if (this.message != null) {
+            this.handler.delete(this.message);
         }
+        this.handler.log("track loadet \"" + track.getInfo().title + "\"");
     }
-
-    protected abstract void onTrackLoaded(AudioTrack track);
 
     @Override
     public void noMatches() {
         this.handler.log("no matches found \"" + this.source + "\"");
         this.handler.sendErrorMessage("No Matches Found!");
+        if (this.message != null) {
+            this.handler.delete(this.message);
+        }
     }
 
     @Override
     public void loadFailed(FriendlyException exception) {
         this.handler.sendErrorMessage(exception.getMessage());
+        if (this.message != null) {
+            this.handler.getBuilder().setLoadingFailed(this.message);
+        }
     }
 
     @Override
     public void playlistLoaded(AudioPlaylist playlist) {
-        throw new IllegalArgumentException("Plailist loaded called!?");
+        this.handler.log("playlist loadet \"" + playlist.getName() + "\"");
     }
 }

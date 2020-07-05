@@ -1,5 +1,6 @@
 package halleg.discordmusikbot;
 
+import halleg.discordmusikbot.guild.player.spotify.SpotifyApi;
 import net.dv8tion.jda.api.AccountType;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
@@ -19,7 +20,7 @@ public class App extends ListenerAdapter {
 
 
         JDA jda = new JDABuilder(AccountType.BOT).setToken(args[0]).build().awaitReady();
-        SpotifyDings.initialize(args[1], args[2]);
+        SpotifyApi.initialize(args[1], args[2]);
         jda.addEventListener(new MusicBot(jda));
     }
 }

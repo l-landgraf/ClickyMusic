@@ -4,7 +4,6 @@ import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import halleg.discordmusikbot.MusicBot;
 import halleg.discordmusikbot.guild.buttons.ButtonManager;
 import halleg.discordmusikbot.guild.commands.CommandManager;
-import halleg.discordmusikbot.guild.loader.SingleLoadHandler;
 import halleg.discordmusikbot.guild.player.Player;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.*;
@@ -23,6 +22,8 @@ public class GuildHandler {
     public static final String SKIP_EMOJI = "⏭";
     public static final String REMOVE_ALL_EMOJI = "❎";
     public static final String SHUFFLE_EMOJI = "\uD83D\uDD00";
+    public static final String LOADING_EMOJI = "\uD83D\uDD0D";
+    public static final String LOADING_FAILED_EMOJI = "⚡";
 
     public static final int PLAYLIST_PREVIEW_MAX = 3;
     public static final int RETRY_AMOUNT = 5;
@@ -47,7 +48,7 @@ public class GuildHandler {
         this.player = new Player(this);
         this.commands = new CommandManager(this);
         this.buttons = new ButtonManager(this);
-        this.loader = new TrackLoader(this);
+        this.loader = new TrackLoader(this, musicbot.getPreloader());
 
         if (this.output == null) {
             setChannel(guild.getTextChannels().get(0));
@@ -115,10 +116,12 @@ public class GuildHandler {
         if (event.getMessage().getContentRaw().startsWith(this.prefix)) {
             this.commands.handleCommand(event.getMessage());
         } else {
+            if (event.getChannel().getIdLong() != this.output.getIdLong()) {
+                return;
+            }
             this.player.join(event.getMember().getVoiceState().getChannel());
-            SingleLoadHandler rt = new SingleLoadHandler(this, event.getMessage().getContentRaw(), event.getMember());
-            rt.load();
-            delete(event.getMessage());
+            this.builder.setLoading(event.getMessage());
+            this.loader.search(event.getMessage().getContentRaw(), event.getMember(), event.getMessage());
         }
     }
 
@@ -158,11 +161,15 @@ public class GuildHandler {
         complete(channel, this.builder.buildHelpMessage());
     }
 
-    public Message complete(MessageEmbed message) {
+    public void sendRepeatMessage(String link, Consumer<Message> c) {
+        queue(this.output, this.builder.buildRepeatMessage(link), c);
+    }
+
+    public Message complete(Message message) {
         return complete(this.output, message);
     }
 
-    private Message complete(MessageChannel channel, MessageEmbed message) {
+    private Message complete(MessageChannel channel, Message message) {
         MessageAction act = send(channel, message);
         if (act != null) {
             return act.complete();
@@ -170,18 +177,18 @@ public class GuildHandler {
         return null;
     }
 
-    public void queue(MessageEmbed message, Consumer<Message> consuber) {
-        queue(this.output, message, consuber);
+    public void queue(Message message, Consumer<Message> consumer) {
+        queue(this.output, message, consumer);
     }
 
-    private void queue(MessageChannel channel, MessageEmbed message, Consumer<Message> consuber) {
+    private void queue(MessageChannel channel, Message message, Consumer<Message> consuber) {
         MessageAction act = send(channel, message);
         if (act != null) {
             act.queue(consuber);
         }
     }
 
-    private MessageAction send(MessageChannel channel, MessageEmbed message) {
+    private MessageAction send(MessageChannel channel, Message message) {
         try {
             return channel.sendMessage(message);
         } catch (InsufficientPermissionException e) {

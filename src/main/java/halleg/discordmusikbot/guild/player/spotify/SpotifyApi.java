@@ -1,35 +1,32 @@
-package halleg.discordmusikbot;
+package halleg.discordmusikbot.guild.player.spotify;
 
-import com.wrapper.spotify.SpotifyApi;
 import com.wrapper.spotify.exceptions.SpotifyWebApiException;
 import com.wrapper.spotify.model_objects.credentials.ClientCredentials;
-import com.wrapper.spotify.model_objects.specification.Album;
-import com.wrapper.spotify.model_objects.specification.Paging;
-import com.wrapper.spotify.model_objects.specification.Playlist;
-import com.wrapper.spotify.model_objects.specification.PlaylistTrack;
+import com.wrapper.spotify.model_objects.specification.*;
 import com.wrapper.spotify.requests.authorization.client_credentials.ClientCredentialsRequest;
 import com.wrapper.spotify.requests.data.albums.GetAlbumRequest;
+import com.wrapper.spotify.requests.data.albums.GetAlbumsTracksRequest;
 import com.wrapper.spotify.requests.data.playlists.GetPlaylistRequest;
 import com.wrapper.spotify.requests.data.playlists.GetPlaylistsTracksRequest;
 
 import java.io.IOException;
 import java.util.Calendar;
 
-public class SpotifyDings {
+public class SpotifyApi {
 
-    private static SpotifyApi spotifyApi = null;
+    private static com.wrapper.spotify.SpotifyApi spotifyApi = null;
     private static String clientSecret;
     private static String clientId;
     private static long experationDate = 0;
 
     public static void initialize(String clientId, String clientSecret) {
-        SpotifyDings.clientId = clientId;
-        SpotifyDings.clientSecret = clientSecret;
+        SpotifyApi.clientId = clientId;
+        SpotifyApi.clientSecret = clientSecret;
         getAccess();
     }
 
     public static void getAccess() {
-        spotifyApi = new SpotifyApi.Builder()
+        spotifyApi = new com.wrapper.spotify.SpotifyApi.Builder()
                 .setClientId(clientId)
                 .setClientSecret(clientSecret)
                 .build();
@@ -97,6 +94,13 @@ public class SpotifyDings {
                 System.out.println("Spotify Error: " + e.getMessage());
                 return null;
             }
+
+            System.out.println("Current offset: " + offset);
+            try {
+                Thread.sleep(1000l);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
         return tracks;
     }
@@ -116,5 +120,38 @@ public class SpotifyDings {
             System.out.println("Spotify Error: " + e.getMessage());
         }
         return null;
+    }
+
+    public static TrackSimplified[] loadAlbumTracks(String s, Integer max) {
+        checkAccess();
+        System.out.println("Trying to load Album Tracks: " + s);
+
+        int offset = 0;
+        TrackSimplified[] tracks = new TrackSimplified[max];
+        while (offset < max) {
+            GetAlbumsTracksRequest getAlbumsTracksRequest = spotifyApi
+                    .getAlbumsTracks(s).offset(offset)
+                    .build();
+            try {
+                Paging<TrackSimplified> res = getAlbumsTracksRequest.execute();
+
+                for (int i = 0; i < res.getItems().length; i++) {
+                    tracks[i + offset] = res.getItems()[i];
+                }
+                offset += res.getItems().length;
+
+            } catch (IOException | SpotifyWebApiException e) {
+                System.out.println("Spotify Error: " + e.getMessage());
+                return null;
+            }
+
+            System.out.println("Current offset: " + offset);
+            try {
+                Thread.sleep(1000l);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        return tracks;
     }
 }

@@ -2,9 +2,13 @@ package halleg.discordmusikbot;
 
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
-import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers;
+import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager;
 import halleg.discordmusikbot.guild.GuildConfig;
 import halleg.discordmusikbot.guild.GuildHandler;
+import halleg.discordmusikbot.guild.TrackLoader;
+import halleg.discordmusikbot.guild.player.spotify.SpotifyAudioSourceManager;
+import halleg.discordmusikbot.guild.youtube.MyYoutubeAudioSourceManager;
+import halleg.discordmusikbot.guild.youtube.YoutubeQuerryAudioSourceManager;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.guild.GuildJoinEvent;
@@ -24,11 +28,16 @@ public class MusicBot extends ListenerAdapter {
     private JDA jda;
     private Map<Long, GuildHandler> map;
     private AudioPlayerManager manager;
+    private SpotifyAudioSourceManager preloader;
 
     public MusicBot(JDA jda) {
         this.jda = jda;
         this.manager = new DefaultAudioPlayerManager();
-        AudioSourceManagers.registerRemoteSources(this.manager);
+        YoutubeAudioSourceManager ytManager = new MyYoutubeAudioSourceManager();
+        this.manager.registerSourceManager(ytManager);
+        this.preloader = new SpotifyAudioSourceManager(ytManager);
+        this.manager.registerSourceManager(this.preloader);
+        this.manager.registerSourceManager(new YoutubeQuerryAudioSourceManager(ytManager));
         this.map = new HashMap<>();
         loadConfigs();
     }
@@ -133,5 +142,9 @@ public class MusicBot extends ListenerAdapter {
 
     public AudioPlayerManager getManager() {
         return this.manager;
+    }
+
+    public TrackLoader.PlaylistPreloadManager getPreloader() {
+        return this.preloader;
     }
 }
