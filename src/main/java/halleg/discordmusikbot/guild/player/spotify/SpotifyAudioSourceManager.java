@@ -187,11 +187,16 @@ public class SpotifyAudioSourceManager implements AudioSourceManager, TrackLoade
         }
 
         TrackSimplified t = album.getTracks().getItems()[0];
-
         String artists = getArtists(t.getArtists());
 
         String search = t.getName() + artists;
 
-        return new InititalPlaylistLoadHandler(handler, source, search, member, message, new String[]{}, album.getName(), artists, album.getImages()[0].getUrl());
+        String[] sources = new String[album.getTracks().getTotal()];
+        TrackSimplified[] tracks = SpotifyApi.loadAlbumTracks(albumId, album.getTracks().getTotal());
+        for (int i = 0; i < tracks.length; i++) {
+            sources[i] = tracks[i].getName() + getArtists(tracks[i].getArtists());
+        }
+
+        return new InititalPlaylistLoadHandler(handler, source, search, member, message, sources, album.getName(), artists, album.getImages()[0].getUrl());
     }
 }

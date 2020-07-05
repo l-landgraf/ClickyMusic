@@ -2,12 +2,10 @@ package halleg.discordmusikbot.guild.player.spotify;
 
 import com.wrapper.spotify.exceptions.SpotifyWebApiException;
 import com.wrapper.spotify.model_objects.credentials.ClientCredentials;
-import com.wrapper.spotify.model_objects.specification.Album;
-import com.wrapper.spotify.model_objects.specification.Paging;
-import com.wrapper.spotify.model_objects.specification.Playlist;
-import com.wrapper.spotify.model_objects.specification.PlaylistTrack;
+import com.wrapper.spotify.model_objects.specification.*;
 import com.wrapper.spotify.requests.authorization.client_credentials.ClientCredentialsRequest;
 import com.wrapper.spotify.requests.data.albums.GetAlbumRequest;
+import com.wrapper.spotify.requests.data.albums.GetAlbumsTracksRequest;
 import com.wrapper.spotify.requests.data.playlists.GetPlaylistRequest;
 import com.wrapper.spotify.requests.data.playlists.GetPlaylistsTracksRequest;
 
@@ -122,5 +120,38 @@ public class SpotifyApi {
             System.out.println("Spotify Error: " + e.getMessage());
         }
         return null;
+    }
+
+    public static TrackSimplified[] loadAlbumTracks(String s, Integer max) {
+        checkAccess();
+        System.out.println("Trying to load Album Tracks: " + s);
+
+        int offset = 0;
+        TrackSimplified[] tracks = new TrackSimplified[max];
+        while (offset < max) {
+            GetAlbumsTracksRequest getAlbumsTracksRequest = spotifyApi
+                    .getAlbumsTracks(s).offset(offset)
+                    .build();
+            try {
+                Paging<TrackSimplified> res = getAlbumsTracksRequest.execute();
+
+                for (int i = 0; i < res.getItems().length; i++) {
+                    tracks[i + offset] = res.getItems()[i];
+                }
+                offset += res.getItems().length;
+
+            } catch (IOException | SpotifyWebApiException e) {
+                System.out.println("Spotify Error: " + e.getMessage());
+                return null;
+            }
+
+            System.out.println("Current offset: " + offset);
+            try {
+                Thread.sleep(1000l);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        return tracks;
     }
 }
