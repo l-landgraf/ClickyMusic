@@ -62,7 +62,7 @@ public class MessageBuilder {
             eb.addField(buttton.getEmoji(), buttton.getDescription(), false);
         }
 
-        eb.addField("", "Github: [https://github.com/mrhalleg/ClickyMusic](https://github.com/mrhalleg/ClickyMusic)\"", false);
+        eb.addField("", "Github: [https://github.com/mrhalleg/ClickyMusic](https://github.com/mrhalleg/ClickyMusic)", false);
 
         return new net.dv8tion.jda.api.MessageBuilder(eb.build()).build();
     }

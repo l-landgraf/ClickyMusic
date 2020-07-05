@@ -4,6 +4,8 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import net.dv8tion.jda.api.entities.Member;
 
 public class LoadableTrack extends Track {
+
+    private static String LOADING = "**Loading...**";
     public String source;
 
     public LoadableTrack(Member member, String source) {
@@ -20,16 +22,16 @@ public class LoadableTrack extends Track {
         if (isLoaded()) {
             return super.getTitle();
         } else {
-            return "**Loading...**";
+            return LOADING;
         }
     }
 
     @Override
     public String getEmbedLink() {
         if (isLoaded()) {
-            return super.getTitle();
+            return super.getEmbedLink();
         } else {
-            return getTitle();
+            return LOADING;
         }
     }
 
