@@ -84,7 +84,7 @@ public class CommandManager {
         });
 
         this.commands.add(new Command(handler, "seek", true, true, true,
-                false, "seeks to the desired possition or skips forward the given amount of time.", "*[sign][hours:][minutes:]seconds*") {
+                false, "seeks to the desired possition or skips forward the given amount of time.", "*[sign][[hours:]minutes:]seconds*") {
             @Override
             protected void run(List<String> args, Message message) {
                 CommandManager.this.parseSeek(args, message);

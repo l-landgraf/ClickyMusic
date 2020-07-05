@@ -9,7 +9,7 @@ import com.sedmelluq.discord.lavaplayer.track.*;
 import com.wrapper.spotify.model_objects.specification.*;
 import halleg.discordmusikbot.guild.GuildHandler;
 import halleg.discordmusikbot.guild.TrackLoader;
-import halleg.discordmusikbot.guild.loader.PreLoadHandler;
+import halleg.discordmusikbot.guild.loader.InititalPlaylistLoadHandler;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 
@@ -148,7 +148,7 @@ public class SpotifyAudioSourceManager implements AudioSourceManager, TrackLoade
     }
 
     @Override
-    public PreLoadHandler load(GuildHandler handler, String source, Member member, Message message) {
+    public InititalPlaylistLoadHandler load(GuildHandler handler, String source, Member member, Message message) {
         if (source.startsWith(PLAYLIST_PREFIX)) {
             String playlistId = extractId(source);
             return preLoadPlaylist(playlistId, handler, source, member, message);
@@ -161,7 +161,7 @@ public class SpotifyAudioSourceManager implements AudioSourceManager, TrackLoade
         return null;
     }
 
-    private PreLoadHandler preLoadPlaylist(String playlistId, GuildHandler handler, String source, Member member, Message message) {
+    private InititalPlaylistLoadHandler preLoadPlaylist(String playlistId, GuildHandler handler, String source, Member member, Message message) {
         Playlist playlist = SpotifyApi.loadPlaylist(playlistId);
         if (playlist == null) {
             return null;
@@ -170,10 +170,17 @@ public class SpotifyAudioSourceManager implements AudioSourceManager, TrackLoade
         String artists = getArtists(t.getTrack().getArtists());
 
         String search = t.getTrack().getName() + artists;
-        return new PreLoadHandler(handler, source, search, member, message, playlist.getTracks().getTotal(), playlist.getName(), playlist.getOwner().getDisplayName(), playlist.getImages()[0].getUrl());
+
+        String[] sources = new String[playlist.getTracks().getTotal()];
+        PlaylistTrack[] tracks = SpotifyApi.loadPlaylistTracks(playlistId, playlist.getTracks().getTotal());
+        for (int i = 0; i < tracks.length; i++) {
+            sources[i] = tracks[i].getTrack().getName() + getArtists(tracks[i].getTrack().getArtists());
+        }
+
+        return new InititalPlaylistLoadHandler(handler, source, search, member, message, sources, playlist.getName(), playlist.getOwner().getDisplayName(), playlist.getImages()[0].getUrl());
     }
 
-    private PreLoadHandler preLoadAlbum(String albumId, GuildHandler handler, String source, Member member, Message message) {
+    private InititalPlaylistLoadHandler preLoadAlbum(String albumId, GuildHandler handler, String source, Member member, Message message) {
         Album album = SpotifyApi.loadAlbum(albumId);
         if (album == null) {
             return null;
@@ -185,6 +192,6 @@ public class SpotifyAudioSourceManager implements AudioSourceManager, TrackLoade
 
         String search = t.getName() + artists;
 
-        return new PreLoadHandler(handler, source, search, member, message, album.getTracks().getTotal(), album.getName(), artists, album.getImages()[0].getUrl());
+        return new InititalPlaylistLoadHandler(handler, source, search, member, message, new String[]{}, album.getName(), artists, album.getImages()[0].getUrl());
     }
 }

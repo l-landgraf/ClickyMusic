@@ -108,7 +108,7 @@ public abstract class PlaylistQueueElement<L extends TrackPlaylist> extends Queu
             }
             counter++;
             String title = this.playlist.getTrack(i).getEmbedLink();
-            s += (counter) + ". " + title + "\n";
+            s += i + ". " + title + "\n";
         }
 
         int songsLeft = (plan.length - GuildHandler.PLAYLIST_PREVIEW_MAX);
@@ -123,6 +123,14 @@ public abstract class PlaylistQueueElement<L extends TrackPlaylist> extends Queu
 
         if (plan.length > 0) {
             eb.addField("Coming Up", s, false);
+        }
+    }
+
+    protected int getNextPlanedSong() {
+        try {
+            return getPlanedSongs()[0];
+        } catch (ArrayIndexOutOfBoundsException e) {
+            return -1;
         }
     }
 
@@ -163,13 +171,13 @@ public abstract class PlaylistQueueElement<L extends TrackPlaylist> extends Queu
     }
 
     protected void nextInternal() {
-        int[] planned = getPlanedSongs();
-        if (planned.length == 0) {
+        int planned = getNextPlanedSong();
+        if (planned < 0) {
             super.onSkip();
             return;
         }
         this.status = QueueStatus.PLAYING;
-        this.currentTrack = planned[0];
+        this.currentTrack = planned;
         this.randList.remove(Integer.valueOf(this.currentTrack));
 
         if (this.shuffle) {
@@ -240,7 +248,6 @@ public abstract class PlaylistQueueElement<L extends TrackPlaylist> extends Queu
 
     @Override
     public void onSkip() {
-        //DONT call super.onSkip()
         nextInternal();
     }
 

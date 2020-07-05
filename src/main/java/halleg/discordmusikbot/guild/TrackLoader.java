@@ -2,7 +2,7 @@ package halleg.discordmusikbot.guild;
 
 import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
-import halleg.discordmusikbot.guild.loader.PreLoadHandler;
+import halleg.discordmusikbot.guild.loader.InititalPlaylistLoadHandler;
 import halleg.discordmusikbot.guild.loader.SingleLoadHandler;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
@@ -27,10 +27,9 @@ public class TrackLoader {
             return;
         }
 
-        PreLoadHandler loader = this.preloader.load(this.handler, source, member, message);
+        InititalPlaylistLoadHandler loader = this.preloader.load(this.handler, source, member, message);
         if (loader != null) {
             load(loader.getInitialSource(), loader);
-            load(source, loader);
         } else {
             load(source, new SingleLoadHandler(this.handler, source, member, message));
         }
@@ -38,6 +37,6 @@ public class TrackLoader {
     }
 
     public interface PlaylistPreloadManager {
-        public PreLoadHandler load(GuildHandler handler, String source, Member member, Message message);
+        public InititalPlaylistLoadHandler load(GuildHandler handler, String source, Member member, Message message);
     }
 }

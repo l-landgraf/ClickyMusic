@@ -27,7 +27,9 @@ public abstract class LoadHandler implements AudioLoadResultHandler {
 
     @Override
     public void trackLoaded(AudioTrack track) {
-        this.handler.delete(this.message);
+        if (this.message != null) {
+            this.handler.delete(this.message);
+        }
         this.handler.log("track loadet \"" + track.getInfo().title + "\"");
     }
 
@@ -35,7 +37,9 @@ public abstract class LoadHandler implements AudioLoadResultHandler {
     public void noMatches() {
         this.handler.log("no matches found \"" + this.source + "\"");
         this.handler.sendErrorMessage("No Matches Found!");
-        this.handler.delete(this.message);
+        if (this.message != null) {
+            this.handler.delete(this.message);
+        }
     }
 
     @Override
