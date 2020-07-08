@@ -15,10 +15,12 @@ public class YoutubeQuerryAudioSourceManager implements AudioSourceManager {
 
     private static final String SPOTIFY_DOMAIN = "open.spotify.com";
     private YoutubeAudioSourceManager ytManager;
+    YoutubeSearchProvider searcher;
 
 
     public YoutubeQuerryAudioSourceManager(YoutubeAudioSourceManager ytManager) {
         this.ytManager = ytManager;
+        this.searcher = new RetryYoutubeSearchProvider();
     }
 
     @Override
@@ -33,8 +35,7 @@ public class YoutubeQuerryAudioSourceManager implements AudioSourceManager {
     @Override
     public AudioItem loadItem(DefaultAudioPlayerManager manager, AudioReference reference) {
 
-        YoutubeSearchProvider searcher = new YoutubeSearchProvider();
-        AudioItem results = searcher.loadSearchResult(reference.identifier, YoutubeQuerryAudioSourceManager.this::buildTrackFromInfo);
+        AudioItem results = this.searcher.loadSearchResult(reference.identifier, YoutubeQuerryAudioSourceManager.this::buildTrackFromInfo);
         if (results instanceof BasicAudioPlaylist) {
             return ((BasicAudioPlaylist) results).getTracks().get(0);
         } else {

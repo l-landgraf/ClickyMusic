@@ -10,6 +10,7 @@ import com.wrapper.spotify.model_objects.specification.*;
 import halleg.discordmusikbot.guild.GuildHandler;
 import halleg.discordmusikbot.guild.TrackLoader;
 import halleg.discordmusikbot.guild.loader.InititalPlaylistLoadHandler;
+import halleg.discordmusikbot.guild.youtube.RetryYoutubeSearchProvider;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 
@@ -27,7 +28,7 @@ public class SpotifyAudioSourceManager implements AudioSourceManager, TrackLoade
 
     public SpotifyAudioSourceManager(YoutubeAudioSourceManager ytManager) {
         this.ytManager = ytManager;
-        this.searchProvider = new YoutubeSearchProvider();
+        this.searchProvider = new RetryYoutubeSearchProvider();
     }
 
     @Override

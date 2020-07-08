@@ -50,14 +50,13 @@ public class CommandManager {
             }
         });
 
-        this.commands.add(
-                new Command(handler, "setprefix", false, false, false,
-                        false, "sets the chracters commands have to start with.", "*prefix*") {
-                    @Override
-                    protected void run(List<String> args, Message message) {
-                        this.handler.setPrefix(args.get(1));
-                    }
-                });
+        this.commands.add(new Command(handler, "setprefix", false, false, false,
+                false, "sets the chracters commands have to start with.", "*prefix*") {
+            @Override
+            protected void run(List<String> args, Message message) {
+                this.handler.setPrefix(args.get(1));
+            }
+        });
 
         this.commands.add(new Command(handler, "pause", true, true, true,
                 false, "pauses the player.") {
