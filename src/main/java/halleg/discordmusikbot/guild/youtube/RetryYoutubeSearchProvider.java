@@ -13,6 +13,7 @@ public class RetryYoutubeSearchProvider extends YoutubeSearchProvider {
         int i = 8;
 
         while (true) {
+            System.out.println("searching youtube, attempts left: " + i);
             try {
                 return super.loadSearchResult(query, trackFactory);
             } catch (Exception e) {
@@ -20,6 +21,11 @@ public class RetryYoutubeSearchProvider extends YoutubeSearchProvider {
                 if (i < 0) {
                     throw e;
                 }
+            }
+            try {
+                Thread.sleep(1000l);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
         }
     }
