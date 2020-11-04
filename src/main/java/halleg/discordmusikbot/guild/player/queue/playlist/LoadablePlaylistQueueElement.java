@@ -11,8 +11,8 @@ public class LoadablePlaylistQueueElement extends PlaylistQueueElement<LoadableP
     private static final int PRELOAD_MAX = 5;
     protected GuildHandler handler;
 
-    public LoadablePlaylistQueueElement(GuildHandler handler, AudioTrack firstTrack, String title, String author, String thumbnail, String uri, Member member, String[] sources) {
-        super(handler.getPlayer(), new LoadablePlaylist(title, author, thumbnail, uri, member, sources));
+    public LoadablePlaylistQueueElement(GuildHandler handler, AudioTrack firstTrack, String title, String author, String thumbnail, String uri, Member member, String[] sources, String[] images) {
+        super(handler.getPlayer(), new LoadablePlaylist(title, author, thumbnail, uri, member, sources, images));
         this.handler = handler;
         this.playlist.getTrack(0).setTrack(firstTrack);
         loadPlannedTracks();

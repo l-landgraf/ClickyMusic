@@ -6,7 +6,7 @@ import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager
 import halleg.discordmusikbot.guild.GuildConfig;
 import halleg.discordmusikbot.guild.GuildHandler;
 import halleg.discordmusikbot.guild.TrackLoader;
-import halleg.discordmusikbot.guild.player.spotify.SpotifyAudioSourceManager;
+import halleg.discordmusikbot.guild.spotify.SpotifyAudioSourceManager;
 import halleg.discordmusikbot.guild.youtube.MyYoutubeAudioSourceManager;
 import halleg.discordmusikbot.guild.youtube.YoutubeQuerryAudioSourceManager;
 import net.dv8tion.jda.api.JDA;

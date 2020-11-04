@@ -1,4 +1,4 @@
-package halleg.discordmusikbot.guild.player.spotify;
+package halleg.discordmusikbot.guild.spotify;
 
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;

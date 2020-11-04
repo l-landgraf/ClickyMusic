@@ -13,7 +13,7 @@ public class RetryYoutubeSearchProvider extends YoutubeSearchProvider {
         int i = 8;
 
         while (true) {
-            System.out.println("searching youtube, attempts left: " + i);
+            System.out.println("searching youtube, attempts left: " + i + " \""+query+"\"");
             try {
                 return super.loadSearchResult(query, trackFactory);
             } catch (Exception e) {

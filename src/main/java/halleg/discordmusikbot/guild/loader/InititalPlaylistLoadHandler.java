@@ -11,14 +11,16 @@ public class InititalPlaylistLoadHandler extends LoadHandler {
     private String initialSource;
     private LoadablePlaylistQueueElement element;
     private String[] sources;
+    private String[] images;
     private String title;
     private String author;
     private String thumbnail;
 
-    public InititalPlaylistLoadHandler(GuildHandler handler, String source, String initialSource, Member member, Message message, String[] sources, String title, String author, String thumbnail) {
+    public InititalPlaylistLoadHandler(GuildHandler handler, String source, String initialSource, Member member, Message message, String[] sources,String[] images, String title, String author, String thumbnail) {
         super(handler, source, member, message);
         this.initialSource = initialSource;
         this.sources = sources;
+        this.images = images;
         this.title = title;
         this.author = author;
         this.thumbnail = thumbnail;
@@ -36,7 +38,7 @@ public class InititalPlaylistLoadHandler extends LoadHandler {
     @Override
     public void trackLoaded(AudioTrack track) {
         super.trackLoaded(track);
-        this.element = new LoadablePlaylistQueueElement(this.handler, track, this.title, this.author, this.thumbnail, this.source, this.member, this.sources);
+        this.element = new LoadablePlaylistQueueElement(this.handler, track, this.title, this.author, this.thumbnail, this.source, this.member, this.sources, this.images);
         this.handler.getPlayer().addQueue(this.element);
     }
 

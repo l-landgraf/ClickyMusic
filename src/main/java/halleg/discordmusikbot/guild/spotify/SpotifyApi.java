@@ -1,4 +1,4 @@
-package halleg.discordmusikbot.guild.player.spotify;
+package halleg.discordmusikbot.guild.spotify;
 
 import com.wrapper.spotify.exceptions.SpotifyWebApiException;
 import com.wrapper.spotify.model_objects.credentials.ClientCredentials;
