@@ -19,7 +19,7 @@ public class GuildHandler {
     public static final String REMOVE_EMOJI = "❌";
     public static final String RESUME_PAUSE_EMOJI = "⏯";
     public static final String REPEAT_EMOJI = "🔁";
-    public static final String SKIP_EMOJI = "⏭";
+    public static final String SKIP_EMOJI = "⏩";
     public static final String REMOVE_ALL_EMOJI = "❎";
     public static final String SHUFFLE_EMOJI = "\uD83D\uDD00";
     public static final String LOADING_EMOJI = "\uD83D\uDD0D";
