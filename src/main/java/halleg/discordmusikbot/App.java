@@ -9,6 +9,8 @@ import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 
+import javax.swing.*;
+
 public class App extends ListenerAdapter {
 
 	public static void main(String[] args) throws Exception {
@@ -20,12 +22,7 @@ public class App extends ListenerAdapter {
 			System.exit(1);
 		}
 
-		for (String s : args) {
-			System.out.println(s);
-		}
-
 		Collection<GatewayIntent> intents = new ArrayList<>();
-		// intents.add(GatewayIntent.GUILD_MEMBERS);
 		intents.add(GatewayIntent.GUILD_MESSAGES);
 		intents.add(GatewayIntent.GUILD_MESSAGE_REACTIONS);
 		intents.add(GatewayIntent.GUILD_VOICE_STATES);

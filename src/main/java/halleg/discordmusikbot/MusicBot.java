@@ -95,7 +95,7 @@ public class MusicBot extends ListenerAdapter {
 
     @Override
     public void onGuildMessageReactionRemove(final GuildMessageReactionRemoveEvent event) {
-        handleReaction(event.getMember(), event.getChannel(), event.getMessageIdLong(), event.getReaction());
+        //handleReaction(event.getMember(), event.getChannel(), event.getMessageIdLong(), event.getReaction());
     }
 
     @Override

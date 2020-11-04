@@ -104,6 +104,7 @@ public class ButtonManager {
 
         for (Button but : this.buttons) {
             if (but.check(message, react, member, react.getReactionEmote().getEmoji())) {
+                message.removeReaction(react.getReactionEmote().getEmoji(),member.getUser()).queue();
                 return true;
             }
         }
