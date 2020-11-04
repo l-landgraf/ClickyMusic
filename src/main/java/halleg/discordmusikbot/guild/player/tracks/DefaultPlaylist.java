@@ -25,7 +25,7 @@ public class DefaultPlaylist extends TrackPlaylist<Track> {
 	}
 
 	public DefaultPlaylist(AudioPlaylist list, Member member, String uri) {
-		super(list.getName(), "???", null, uri, member);
+		super(list.getName(), null, null, uri, member);
 		this.tracks = new Track[list.getTracks().size()];
 		for (int i = 0; i < this.tracks.length; i++) {
 			this.tracks[i] = new Track(list.getTracks().get(i), member, null,
