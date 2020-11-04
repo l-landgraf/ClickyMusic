@@ -19,7 +19,7 @@ public class CommandManager {
         this.commands = new ArrayList<Command>();
 
         this.commands.add(new Command(handler, "queue", false, true, false,
-                true, "adds a song to the queue. Alternatively you can write the source directly in the specefied channel.",
+                true,false, "adds a song to the queue. Alternatively you can write the source directly in the specefied channel.",
                 "*source*") {
             @Override
             protected void run(List<String> args, Message message) {
@@ -40,7 +40,7 @@ public class CommandManager {
         });
 
         this.commands.add(new Command(handler, "join", true, true, false,
-                false, "the bot will join your voicechannel.") {
+                false,true, "the bot will join your voicechannel.") {
             @Override
             protected void run(List<String> args, Message message) {
                 this.handler.getPlayer().join(message.getMember().getVoiceState().getChannel());
@@ -48,7 +48,7 @@ public class CommandManager {
         });
 
         this.commands.add(new Command(handler, "setchannel", false, false, false,
-                false, "sets the channel for this bot.", "*channelid*") {
+                false, true,"sets the channel for this bot.", "*channelid*") {
             @Override
             protected void run(List<String> args, Message message) {
                 this.handler.setChannel(this.handler.getGuild().getTextChannelById(args.get(1)));
@@ -56,7 +56,7 @@ public class CommandManager {
         });
 
         this.commands.add(new Command(handler, "setprefix", false, false, false,
-                false, "sets the chracters commands have to start with.", "*prefix*") {
+                false,true, "sets the chracters commands have to start with.", "*prefix*") {
             @Override
             protected void run(List<String> args, Message message) {
                 this.handler.setPrefix(args.get(1));
@@ -64,7 +64,7 @@ public class CommandManager {
         });
 
         this.commands.add(new Command(handler, "pause", true, true, true,
-                false, "pauses the player.") {
+                false,true, "pauses the player.") {
             @Override
             protected void run(List<String> args, Message message) {
                 this.handler.getPlayer().setPaused(true);
@@ -72,7 +72,7 @@ public class CommandManager {
         });
 
         this.commands.add(new Command(handler, "resume", true, true, true,
-                false, "resumes the player.") {
+                false,true, "resumes the player.") {
             @Override
             protected void run(List<String> args, Message message) {
                 this.handler.getPlayer().setPaused(false);
@@ -80,7 +80,7 @@ public class CommandManager {
         });
 
         this.commands.add(new Command(handler, "skip", true, true, true,
-                false, "skips the current track.") {
+                false,true, "skips the current track.") {
             @Override
             protected void run(List<String> args, Message message) {
                 this.handler.getPlayer().nextTrack();
@@ -88,7 +88,7 @@ public class CommandManager {
         });
 
         this.commands.add(new Command(handler, "seek", true, true, true,
-                true, "seeks to the desired possition or skips forward the given amount of time.", "*[sign][[hours:]minutes:]seconds*") {
+                true,true, "seeks to the desired possition or skips forward the given amount of time.", "*[sign][[hours:]minutes:]seconds*") {
             @Override
             protected void run(List<String> args, Message message) {
                 CommandManager.this.parseSeek(args, message);
@@ -96,7 +96,7 @@ public class CommandManager {
         });
 
         this.commands.add(new Command(handler, "disconnect", true, true, true,
-                false, "the bot will disconnect from any voicechannel.") {
+                false,true, "the bot will disconnect from any voicechannel.") {
             @Override
             protected void run(List<String> args, Message message) {
                 this.handler.getPlayer().setPaused(true);
@@ -105,7 +105,7 @@ public class CommandManager {
         });
 
         this.commands.add(new Command(handler, "leave", true, true, true,
-                false, "the bot will leave any voicechannel and completly clear its Queue.") {
+                false,true, "the bot will leave any voicechannel and completly clear its Queue.") {
             @Override
             protected void run(List<String> args, Message message) {
                 this.handler.getPlayer().leave();
@@ -113,7 +113,7 @@ public class CommandManager {
         });
 
         this.commands.add(new Command(handler, "clear", true, true, false,
-                false, "clears the queue and the currently playling track.") {
+                false,true, "clears the queue and the currently playling track.") {
             @Override
             protected void run(List<String> args, Message message) {
                 this.handler.getPlayer().clearQueue();
@@ -121,7 +121,7 @@ public class CommandManager {
         });
 
         this.commands.add(new Command(handler, "help", false, false, false,
-                false, "displays a help message.") {
+                false,true, "displays a help message.") {
             @Override
             protected void run(List<String> args, Message message) {
                 this.handler.sendHelpMessage(message.getChannel());
@@ -136,6 +136,7 @@ public class CommandManager {
                 return true;
             }
         }
+        handler.deleteLater(message);
         handler.getBuilder().setUnknownCommand(message);
         return false;
     }

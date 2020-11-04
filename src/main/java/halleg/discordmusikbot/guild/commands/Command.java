@@ -16,8 +16,9 @@ public abstract class Command {
     protected boolean voiceChannelOnly;
     protected boolean connectedOnly;
     protected boolean unlimitedArguments;
+    private final boolean deleteLater;
 
-    public Command(GuildHandler handler, String command, boolean textChannelOnly, boolean voiceChannelOnly, boolean connectedOnly, boolean unlimitedArguments, String description, String... tips) {
+    public Command(GuildHandler handler, String command, boolean textChannelOnly, boolean voiceChannelOnly, boolean connectedOnly, boolean unlimitedArguments,boolean deleteLater, String description, String... tips) {
         this.handler = handler;
         this.command = command;
         this.atibNum = tips.length;
@@ -25,12 +26,12 @@ public abstract class Command {
         this.voiceChannelOnly = voiceChannelOnly;
         this.connectedOnly = connectedOnly;
         this.unlimitedArguments = unlimitedArguments;
+        this.deleteLater = deleteLater;
         this.description = description;
         this.tips = tips;
     }
 
-    protected abstract void
-    run(List<String> args, Message message);
+    protected abstract void run(List<String> args, Message message);
 
     public boolean check(Message message) {
         if (this.textChannelOnly && message.getChannel().getIdLong() != this.handler.getChannel().getIdLong()) {
@@ -63,6 +64,10 @@ public abstract class Command {
                     this.handler.sendErrorMessage("Command ussage: " + getTip());
                     return false;
                 }
+            }
+
+            if(this.deleteLater){
+                handler.deleteLater(message);
             }
 
             this.handler.log("executing command: " + this.command);

@@ -12,6 +12,8 @@ import net.dv8tion.jda.api.exceptions.InsufficientPermissionException;
 import net.dv8tion.jda.api.requests.restaction.MessageAction;
 import net.dv8tion.jda.internal.utils.PermissionUtil;
 
+import java.time.Duration;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 public class GuildHandler {
@@ -28,6 +30,7 @@ public class GuildHandler {
 
     public static final int PLAYLIST_PREVIEW_MAX = 3;
     public static final int RETRY_AMOUNT = 5;
+    private static final long DELETE_DELAY = 30;
 
     private Guild guild;
     private TextChannel output;
@@ -151,11 +154,21 @@ public class GuildHandler {
     }
 
     public void sendErrorMessage(String error) {
-        queue(this.output, this.builder.buildNewErrorMessage(error), null);
+        queue(this.output, this.builder.buildNewErrorMessage(error), new Consumer<Message>() {
+            @Override
+            public void accept(Message message) {
+                message.delete().queueAfter(DELETE_DELAY, TimeUnit.SECONDS);
+            }
+        });
     }
 
     public void sendInfoMessage(String message) {
-        queue(this.output, this.builder.buildInfoMessage(message), null);
+        queue(this.output, this.builder.buildInfoMessage(message), new Consumer<Message>() {
+            @Override
+            public void accept(Message message) {
+                message.delete().queueAfter(DELETE_DELAY, TimeUnit.SECONDS);
+            }
+        });
     }
 
     public void sendHelpMessage(MessageChannel channel) {
@@ -187,6 +200,10 @@ public class GuildHandler {
         if (act != null) {
             act.queue(consuber);
         }
+    }
+
+    public void deleteLater(Message message){
+        message.delete().queueAfter(DELETE_DELAY, TimeUnit.SECONDS);
     }
 
     private MessageAction send(MessageChannel channel, Message message) {
