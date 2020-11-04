@@ -36,10 +36,7 @@ public abstract class LoadHandler implements AudioLoadResultHandler {
     @Override
     public void noMatches() {
         this.handler.log("no matches found \"" + this.source + "\"");
-        this.handler.sendErrorMessage("No Matches Found!");
-        if (this.message != null) {
-            this.handler.delete(this.message);
-        }
+        this.handler.getBuilder().setLoadingFailed(message);
     }
 
     @Override

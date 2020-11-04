@@ -32,10 +32,10 @@ public class CommandManager {
                 for (int i = 1; i < args.size(); i++) {
                     search += " " + args.get(i);
                 }
+                this.handler.getBuilder().setLoading(message);
                 this.handler.getPlayer().join(message.getMember().getVoiceState().getChannel());
                 SingleLoadHandler rt = new SingleLoadHandler(this.handler, search, message.getMember(), message);
                 rt.load();
-                this.handler.delete(message);
             }
         });
 
@@ -136,7 +136,7 @@ public class CommandManager {
                 return true;
             }
         }
-
+        handler.getBuilder().setUnknownCommand(message);
         return false;
     }
 
@@ -146,13 +146,18 @@ public class CommandManager {
 
     private void parseSeek(List<String> args, Message message) {
         if(args.size() == 1){
+            if(!handler.getPlayer().isPlaying()){
+                handler.sendErrorMessage("No track currently playing.");
+                return;
+            }
+
             long milliseconds=handler.getPlayer().getPosition();
 
             int seconds = (int) (milliseconds / 1000) % 60 ;
             int minutes = (int) ((milliseconds / (1000*60)) % 60);
             int hours   = (int) ((milliseconds / (1000*60*60)) % 24);
 
-            handler.sendInfoMessage("Current Time: "+String.format("%02d", hours)+":"+String.format("%02d", minutes)+":"+String.format("%02d", seconds));
+            handler.sendInfoMessage("Current Track Position: "+String.format("%02d", hours)+":"+String.format("%02d", minutes)+":"+String.format("%02d", seconds));
             return;
         }
 

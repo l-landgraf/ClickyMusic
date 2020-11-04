@@ -27,7 +27,7 @@ public class ButtonManager {
                 this.handler.sendRepeatMessage(search, new Consumer<Message>() {
                     @Override
                     public void accept(Message message) {
-                        ButtonManager.this.handler.getBuilder().setLoading(message);
+                        //ButtonManager.this.handler.getBuilder().setLoading(message);
                         handler.getLoader().search(search, member, message);
                     }
                 });

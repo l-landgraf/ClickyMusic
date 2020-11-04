@@ -92,4 +92,8 @@ public class MessageBuilder {
 
         return mb.build();
     }
+
+    public void setUnknownCommand(Message message) {
+        message.addReaction(GuildHandler.UNKNOWN_COMMAND).queue();
+    }
 }

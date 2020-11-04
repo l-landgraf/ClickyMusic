@@ -24,6 +24,7 @@ public class GuildHandler {
     public static final String SHUFFLE_EMOJI = "\uD83D\uDD00";
     public static final String LOADING_EMOJI = "\uD83D\uDD0D";
     public static final String LOADING_FAILED_EMOJI = "⚡";
+    public static final String UNKNOWN_COMMAND = "❓";
 
     public static final int PLAYLIST_PREVIEW_MAX = 3;
     public static final int RETRY_AMOUNT = 5;

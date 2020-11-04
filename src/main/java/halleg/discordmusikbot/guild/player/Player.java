@@ -199,4 +199,8 @@ public class Player implements Timer.TimerListener {
     public void onTimerEnd() {
         leave();
     }
+
+    public boolean isPlaying() {
+        return this.player.getPlayingTrack() != null;
+    }
 }

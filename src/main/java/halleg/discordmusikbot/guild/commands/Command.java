@@ -29,7 +29,8 @@ public abstract class Command {
         this.tips = tips;
     }
 
-    protected abstract void run(List<String> args, Message message);
+    protected abstract void
+    run(List<String> args, Message message);
 
     public boolean check(Message message) {
         if (this.textChannelOnly && message.getChannel().getIdLong() != this.handler.getChannel().getIdLong()) {
