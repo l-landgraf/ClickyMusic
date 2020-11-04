@@ -23,6 +23,11 @@ public class CommandManager {
                 "*source*") {
             @Override
             protected void run(List<String> args, Message message) {
+                if (args.size() <= 1) {
+                    this.handler.sendErrorMessage("Command ussage: " + getTip());
+                    return;
+                }
+
                 String search = "";
                 for (int i = 1; i < args.size(); i++) {
                     search += " " + args.get(i);
@@ -83,7 +88,7 @@ public class CommandManager {
         });
 
         this.commands.add(new Command(handler, "seek", true, true, true,
-                false, "seeks to the desired possition or skips forward the given amount of time.", "*[sign][[hours:]minutes:]seconds*") {
+                true, "seeks to the desired possition or skips forward the given amount of time.", "*[sign][[hours:]minutes:]seconds*") {
             @Override
             protected void run(List<String> args, Message message) {
                 CommandManager.this.parseSeek(args, message);
@@ -140,6 +145,17 @@ public class CommandManager {
     }
 
     private void parseSeek(List<String> args, Message message) {
+        if(args.size() == 1){
+            long milliseconds=handler.getPlayer().getPosition();
+
+            int seconds = (int) (milliseconds / 1000) % 60 ;
+            int minutes = (int) ((milliseconds / (1000*60)) % 60);
+            int hours   = (int) ((milliseconds / (1000*60*60)) % 24);
+
+            handler.sendInfoMessage("Current Time: "+String.format("%02d", hours)+":"+String.format("%02d", minutes)+":"+String.format("%02d", seconds));
+            return;
+        }
+
         String arg = args.get(1);
         arg = arg.trim();
         String sign = null;
@@ -157,7 +173,10 @@ public class CommandManager {
         String[] times = arg.split(":");
         Collections.reverse(Arrays.asList(times));
 
-        if (times.length == 0 || times.length > 3) {
+        if (times.length == 0) {
+            this.handler.sendErrorMessage(SEEK_TIPPS);
+            return;
+        } else if (times.length > 3) {
             this.handler.sendErrorMessage(SEEK_TIPPS);
             return;
         }

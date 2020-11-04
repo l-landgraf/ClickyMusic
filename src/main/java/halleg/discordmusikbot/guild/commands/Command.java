@@ -62,11 +62,6 @@ public abstract class Command {
                     this.handler.sendErrorMessage("Command ussage: " + getTip());
                     return false;
                 }
-            } else {
-                if (args.size() <= 1) {
-                    this.handler.sendErrorMessage("Command ussage: " + getTip());
-                    return false;
-                }
             }
 
             this.handler.log("executing command: " + this.command);

@@ -28,6 +28,7 @@ public class Player implements Timer.TimerListener {
     private Timer timer;
 
     public Player(GuildHandler handler) {
+
         this.handler = handler;
         this.audioManager = handler.getGuild().getAudioManager();
         this.player = handler.getManager().createPlayer();
@@ -141,6 +142,10 @@ public class Player implements Timer.TimerListener {
 
     public void seekAdd(long l) {
         seekTo(this.player.getPlayingTrack().getPosition() + l);
+    }
+
+    public long getPosition() {
+       return this.player.getPlayingTrack().getPosition();
     }
 
     public void seekTo(long l) {
