@@ -13,194 +13,207 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class Player implements Timer.TimerListener {
-    private static final long DISCONNECT_TIME = 10000l;
+	private static final long DISCONNECT_TIME = 10000l;
 
-    private List<QueueElement> queue;
-    private QueueElement currentTrack;
+	private List<QueueElement> queue;
+	private QueueElement currentTrack;
 
-    private SendHandler sender;
-    private EventListener listener;
+	private SendHandler sender;
+	private EventListener listener;
 
-    private AudioPlayer player;
-    private GuildHandler handler;
-    private AudioManager audioManager;
+	private AudioPlayer player;
+	private GuildHandler handler;
+	private AudioManager audioManager;
 
-    private Timer timer;
+	private Timer timer;
 
-    public Player(GuildHandler handler) {
+	public Player(GuildHandler handler) {
 
-        this.handler = handler;
-        this.audioManager = handler.getGuild().getAudioManager();
-        this.player = handler.getManager().createPlayer();
-        this.listener = new EventListener(handler);
-        this.player.addListener(this.listener);
-        this.sender = new SendHandler(this.player);
-        this.queue = new LinkedList<>();
-        this.timer = new Timer(DISCONNECT_TIME, this);
-        this.audioManager.setSendingHandler(this.sender);
-    }
+		this.handler = handler;
+		this.audioManager = handler.getGuild().getAudioManager();
+		this.player = handler.getManager().createPlayer();
+		this.listener = new EventListener(handler);
+		this.player.addListener(this.listener);
+		this.sender = new SendHandler(this.player);
+		this.queue = new LinkedList<>();
+		this.timer = new Timer(DISCONNECT_TIME, this);
+		this.audioManager.setSendingHandler(this.sender);
+	}
 
-    public void clearQueue() {
-        this.player.stopTrack();
-        for (QueueElement queueElement : this.queue) {
-            queueElement.onPlayed();
-        }
-        this.queue.clear();
+	public void clearQueue() {
+		this.player.stopTrack();
+		for (QueueElement queueElement : this.queue) {
+			queueElement.onPlayed();
+		}
+		this.queue.clear();
 
-        nextTrack();
-    }
+		nextTrack();
+	}
 
-    public void disconnect() {
-        this.audioManager.closeAudioConnection();
-    }
+	public void disconnect() {
+		this.audioManager.closeAudioConnection();
+	}
 
-    public void leave() {
-        disconnect();
-        clearQueue();
-    }
+	public void leave() {
+		disconnect();
+		clearQueue();
+	}
 
-    public void addQueue(QueueElement element) {
-        try {
-            if (this.currentTrack == null) {
-                Message m = element.buildMessage(QueueStatus.PLAYING);
-                Message message = this.handler.complete(m);
-                element.setMessage(message);
-                this.currentTrack = element;
-                this.currentTrack.onPlaying();
-            } else {
-                Message m = element.buildMessage(QueueStatus.QUEUED);
-                Message message = this.handler.complete(m);
-                element.setMessage(message);
-                Player.this.queue.add(element);
-                element.onQueued();
-            }
-        } catch (Exception e) {
-            System.err.println(e.getCause());
-            e.printStackTrace();
-        }
-    }
+	public void addQueue(QueueElement element) {
+		try {
+			if (this.currentTrack == null) {
+				Message m = element.buildMessage(QueueStatus.PLAYING);
+				Message message = this.handler.complete(m);
+				element.setMessage(message);
+				this.currentTrack = element;
+				this.currentTrack.onPlaying();
+			} else {
+				Message m = element.buildMessage(QueueStatus.QUEUED);
+				Message message = this.handler.complete(m);
+				element.setMessage(message);
+				Player.this.queue.add(element);
+				element.onQueued();
+			}
+		} catch (Exception e) {
+			System.err.println(e.getCause());
+			e.printStackTrace();
+		}
+	}
 
-    public void trackEnded() {
-        this.currentTrack.onEnded();
-    }
+	public void trackEnded() {
+		this.currentTrack.onEnded();
+	}
 
-    public void nextTrack() {
-        if (this.currentTrack != null) {
-            this.currentTrack.onPlayed();
-            this.currentTrack = null;
-        }
-        QueueElement next = null;
-        if (!this.queue.isEmpty()) {
-            next = this.queue.get(0);
-        }
-        if (next == null) {
-            this.player.stopTrack();
-        } else {
-            this.queue.remove(next);
-            this.currentTrack = next;
-            this.currentTrack.onPlaying();
-        }
-    }
+	public void nextTrack() {
+		if (this.currentTrack != null) {
+			this.currentTrack.onPlayed();
+			this.currentTrack = null;
+		}
+		QueueElement next = null;
+		if (!this.queue.isEmpty()) {
+			next = this.queue.get(0);
+		}
+		if (next == null) {
+			this.player.stopTrack();
+		} else {
+			this.queue.remove(next);
+			this.currentTrack = next;
+			this.currentTrack.onPlaying();
+		}
+	}
 
-    public void playTrack(AudioTrack track) {
-        this.player.playTrack(track);
-    }
+	public void playTrack(AudioTrack track) {
+		try {
+			this.player.playTrack(track.makeClone());
+		} catch (IllegalStateException e) {
+			this.handler.log("Track played twice, creating clone.");
+			this.player.playTrack(track.makeClone());
+		}
+	}
 
-    public void join(VoiceChannel c) {
-        if (c == null) {
-            return;
-        }
+	public void join(VoiceChannel c) {
+		if (c == null) {
+			return;
+		}
 
-        if (getConnectedChannel() != null &&
-                c != getConnectedChannel()) {
-            return;
-        }
-        connect(c);
-    }
+		if (getConnectedChannel() != null &&
+				c != getConnectedChannel()) {
+			return;
+		}
+		connect(c);
+	}
 
-    public void connect(VoiceChannel c) {
-        setPaused(false);
-        this.audioManager.openAudioConnection(c);
-    }
+	public void connect(VoiceChannel c) {
+		setPaused(false);
+		this.audioManager.openAudioConnection(c);
+	}
 
-    public void removeElement(QueueElement element) {
-        this.queue.remove(element);
-    }
+	public void removeElement(QueueElement element) {
+		this.queue.remove(element);
+	}
 
-    public QueueElement findElement(long id) {
-        if (this.currentTrack != null && this.currentTrack.getMessage().getIdLong() == id) {
-            return this.currentTrack;
-        }
+	public QueueElement findElement(long id) {
+		if (this.currentTrack != null && this.currentTrack.getMessage().getIdLong() == id) {
+			return this.currentTrack;
+		}
 
-        for (QueueElement queueElement : this.queue) {
-            if (queueElement.getMessage().getIdLong() == id) {
-                return queueElement;
-            }
-        }
-        return null;
-    }
+		for (QueueElement queueElement : this.queue) {
+			if (queueElement.getMessage().getIdLong() == id) {
+				return queueElement;
+			}
+		}
+		return null;
+	}
 
-    public void seekAdd(long l) {
-        seekTo(this.player.getPlayingTrack().getPosition() + l);
-    }
+	public QueueElement getCurrentElement() {
+		return this.currentTrack;
+	}
 
-    public long getPosition() {
-       return this.player.getPlayingTrack().getPosition();
-    }
+	public void seekAdd(long l) {
+		seekTo(this.player.getPlayingTrack().getPosition() + l);
+	}
 
-    public void seekTo(long l) {
-        if (this.player.getPlayingTrack() == null) {
-            this.handler.sendErrorMessage("No Track is currently playing.");
-            return;
-        }
+	public long getPosition() {
+		return this.player.getPlayingTrack().getPosition();
+	}
 
-        if (!this.player.getPlayingTrack().isSeekable()) {
-            this.handler.sendErrorMessage("Seeking not supportet for this type of Track.");
-            return;
-        }
+	public void seekTo(long l) {
+		if (this.player.getPlayingTrack() == null) {
+			this.handler.sendErrorMessage("No Track is currently playing.");
+			return;
+		}
 
-        if (this.player.getPlayingTrack().getDuration() < l) {
-            this.handler.sendErrorMessage("Cant seek, track end reached.");
-            return;
-        }
-        this.player.getPlayingTrack().setPosition(l);
-    }
+		if (!this.player.getPlayingTrack().isSeekable()) {
+			this.handler.sendErrorMessage("Seeking not supportet for this type of Track.");
+			return;
+		}
 
-    public void voiceUpdate() {
-        if (this.audioManager.isConnected()) {
-            if (this.audioManager.getConnectedChannel().getMembers().size() > 1) {
-                this.handler.log("Timer stopped.");
-                this.timer.stop();
-            }
-            if (this.audioManager.getConnectedChannel().getMembers().size() == 1) {
-                this.handler.log("Disconnecting in " + DISCONNECT_TIME / 1000 + "s...");
-                this.timer.start();
-            }
-        }
-    }
+		if (this.player.getPlayingTrack().getDuration() < l) {
+			this.handler.sendErrorMessage("Cant seek, track end reached.");
+			return;
+		}
+		this.player.getPlayingTrack().setPosition(l);
+	}
 
-    public void setPaused(boolean b) {
-        this.player.setPaused(b);
-    }
+	public void voiceUpdate() {
+		if (this.audioManager.isConnected()) {
+			if (this.audioManager.getConnectedChannel().getMembers().size() > 1) {
+				this.handler.log("Timer stopped.");
+				this.timer.stop();
+			}
+			if (this.audioManager.getConnectedChannel().getMembers().size() == 1) {
+				this.handler.log("Disconnecting in " + DISCONNECT_TIME / 1000 + "s...");
+				this.timer.start();
+			}
+		}
+	}
 
-    public boolean isPaused() {
-        return this.player.isPaused();
-    }
+	public void setPaused(boolean b) {
+		this.player.setPaused(b);
+	}
 
-    public VoiceChannel getConnectedChannel() {
-        return this.audioManager.getConnectedChannel();
-    }
+	public boolean isPaused() {
+		return this.player.isPaused();
+	}
 
-    public void togglePaused() {
-        setPaused(!isPaused());
-    }
+	public VoiceChannel getConnectedChannel() {
+		return this.audioManager.getConnectedChannel();
+	}
 
-    @Override
-    public void onTimerEnd() {
-        leave();
-    }
+	public void togglePaused() {
+		setPaused(!isPaused());
+	}
 
-    public boolean isPlaying() {
-        return this.player.getPlayingTrack() != null;
-    }
+	@Override
+	public void onTimerEnd() {
+		leave();
+	}
+
+	public boolean isPlaying() {
+		return this.player.getPlayingTrack() != null;
+	}
+
+	public GuildHandler getHandler() {
+		return this.handler;
+	}
 }

@@ -12,70 +12,70 @@ import net.dv8tion.jda.api.exceptions.InsufficientPermissionException;
 import net.dv8tion.jda.api.requests.restaction.MessageAction;
 import net.dv8tion.jda.internal.utils.PermissionUtil;
 
-import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 public class GuildHandler {
 
-    public static final String REMOVE_EMOJI = "❌";
-    public static final String RESUME_PAUSE_EMOJI = "⏯";
-    public static final String REPEAT_EMOJI = "🔁";
-    public static final String SKIP_EMOJI = "⏩";
-    public static final String REMOVE_ALL_EMOJI = "❎";
-    public static final String SHUFFLE_EMOJI = "\uD83D\uDD00";
-    public static final String LOADING_EMOJI = "\uD83D\uDD0D";
-    public static final String LOADING_FAILED_EMOJI = "⚡";
-    public static final String UNKNOWN_COMMAND = "❓";
+	public static final String REMOVE_EMOJI = "❌";
+	public static final String RESUME_PAUSE_EMOJI = "⏯";
+	public static final String REPEAT_EMOJI = "🔁";
+	public static final String SKIP_EMOJI = "⏩";
+	public static final String BACK_EMOJI = "⏪";
+	public static final String REMOVE_ALL_EMOJI = "❎";
+	public static final String SHUFFLE_EMOJI = "\uD83D\uDD00";
+	public static final String LOADING_EMOJI = "\uD83D\uDD0D";
+	public static final String LOADING_FAILED_EMOJI = "⚡";
+	public static final String UNKNOWN_COMMAND = "❓";
 
-    public static final int PLAYLIST_PREVIEW_MAX = 3;
-    public static final int RETRY_AMOUNT = 5;
-    private static final long DELETE_DELAY = 30;
+	public static final int PLAYLIST_PREVIEW_MAX = 3;
+	public static final int RETRY_AMOUNT = 5;
+	private static final long DELETE_DELAY = 30;
 
-    private Guild guild;
-    private TextChannel output;
-    private String prefix;
+	private Guild guild;
+	private TextChannel output;
+	private String prefix;
 
-    private Player player;
-    private MusicBot bot;
-    private MessageBuilder builder;
-    private CommandManager commands;
-    private ButtonManager buttons;
-    private TrackLoader loader;
+	private Player player;
+	private MusicBot bot;
+	private MessageBuilder builder;
+	private CommandManager commands;
+	private ButtonManager buttons;
+	private TrackLoader loader;
 
-    public GuildHandler(MusicBot musicbot, Guild guild, long channelid, String prefix) {
-        this.prefix = prefix;
-        this.bot = musicbot;
-        this.guild = guild;
-        this.output = guild.getTextChannelById(channelid);
-        this.builder = new MessageBuilder(this);
-        this.player = new Player(this);
-        this.commands = new CommandManager(this);
-        this.buttons = new ButtonManager(this);
-        this.loader = new TrackLoader(this, musicbot.getPreloader());
+	public GuildHandler(MusicBot musicbot, Guild guild, long channelid, String prefix) {
+		this.prefix = prefix;
+		this.bot = musicbot;
+		this.guild = guild;
+		this.output = guild.getTextChannelById(channelid);
+		this.builder = new MessageBuilder(this);
+		this.player = new Player(this);
+		this.commands = new CommandManager(this);
+		this.buttons = new ButtonManager(this);
+		this.loader = new TrackLoader(this, musicbot.getPreloader());
 
-        if (this.output == null) {
-            setChannel(guild.getTextChannels().get(0));
-        } else {
-            clearLastMessages(this.output);
-        }
-        log("initialized! outputchannel: " + this.output.getName() + " prefix: " + prefix);
-    }
+		if (this.output == null) {
+			setChannel(guild.getTextChannels().get(0));
+		} else {
+			clearLastMessages(this.output);
+		}
+		log("initialized! outputchannel: " + this.output.getName() + " prefix: " + prefix);
+	}
 
-    public void setChannel(TextChannel channel) {
-        this.output = channel;
-        log("set channel to: " + channel.getName());
-        sendInfoMessage("This is now the prefered channel.");
-        this.bot.saveConfig(this);
-    }
+	public void setChannel(TextChannel channel) {
+		this.output = channel;
+		log("set channel to: " + channel.getName());
+		sendInfoMessage("This is now the prefered channel.");
+		this.bot.saveConfig(this);
+	}
 
-    public void setPrefix(String prefix) {
-        this.prefix = prefix;
-        sendInfoMessage("Commands for this bot now have to start with `" + this.prefix + "`.");
-        this.bot.saveConfig(this);
-    }
+	public void setPrefix(String prefix) {
+		this.prefix = prefix;
+		sendInfoMessage("Commands for this bot now have to start with `" + this.prefix + "`.");
+		this.bot.saveConfig(this);
+	}
 
-    private void clearLastMessages(TextChannel channel) {
+	private void clearLastMessages(TextChannel channel) {
         /*
         if (!PermissionUtil.checkPermission(channel, this.guild.getSelfMember(), Permission.MESSAGE_HISTORY)) {
             log("not permissione to view history, cant clean up!");
@@ -114,156 +114,156 @@ public class GuildHandler {
             });
         }
         */
-    }
+	}
 
-    public void handleMessage(GuildMessageReceivedEvent event) {
-        if (event.getMessage().getContentRaw().startsWith(this.prefix)) {
-            this.commands.handleCommand(event.getMessage());
-        } else {
-            if (event.getChannel().getIdLong() != this.output.getIdLong()) {
-                return;
-            }
-            this.player.join(event.getMember().getVoiceState().getChannel());
-            this.builder.setLoading(event.getMessage());
-            this.loader.search(event.getMessage().getContentRaw(), event.getMember(), event.getMessage());
-        }
-    }
-
-
-    public void handleReaction(final MessageReaction react, Message message, final Member member) {
-
-        if (message.getChannel().getIdLong() != this.output.getIdLong()) {
-            return;
-        }
-
-        GuildHandler.this.buttons.handleReaction(message, react, member);
-    }
+	public void handleMessage(GuildMessageReceivedEvent event) {
+		if (event.getMessage().getContentRaw().startsWith(this.prefix)) {
+			this.commands.handleCommand(event.getMessage());
+		} else {
+			if (event.getChannel().getIdLong() != this.output.getIdLong()) {
+				return;
+			}
+			this.player.join(event.getMember().getVoiceState().getChannel());
+			this.builder.setLoading(event.getMessage());
+			this.loader.search(event.getMessage().getContentRaw(), event.getMember(), event.getMessage());
+		}
+	}
 
 
-    public void voiceUpdate() {
-        this.player.voiceUpdate();
-    }
+	public void handleReaction(MessageReaction react, Message message, Member member) {
 
-    public void delete(Message message) {
-        try {
-            message.delete().queue();
-        } catch (InsufficientPermissionException e) {
-            log("insuficciant permissions to delete message!");
-            return;
-        }
-    }
+		if (message.getChannel().getIdLong() != this.output.getIdLong()) {
+			return;
+		}
 
-    public void sendErrorMessage(String error) {
-        queue(this.output, this.builder.buildNewErrorMessage(error), new Consumer<Message>() {
-            @Override
-            public void accept(Message message) {
-                message.delete().queueAfter(DELETE_DELAY, TimeUnit.SECONDS);
-            }
-        });
-    }
+		GuildHandler.this.buttons.handleReaction(message, react, member);
+	}
 
-    public void sendInfoMessage(String message) {
-        queue(this.output, this.builder.buildInfoMessage(message), new Consumer<Message>() {
-            @Override
-            public void accept(Message message) {
-                message.delete().queueAfter(DELETE_DELAY, TimeUnit.SECONDS);
-            }
-        });
-    }
 
-    public void sendHelpMessage(MessageChannel channel) {
-        complete(channel, this.builder.buildHelpMessage());
-    }
+	public void voiceUpdate() {
+		this.player.voiceUpdate();
+	}
 
-    public void sendRepeatMessage(String link, Consumer<Message> c) {
-        queue(this.output, this.builder.buildRepeatMessage(link), c);
-    }
+	public void delete(Message message) {
+		try {
+			message.delete().queue();
+		} catch (InsufficientPermissionException e) {
+			log("insuficciant permissions to delete message!");
+			return;
+		}
+	}
 
-    public Message complete(Message message) {
-        return complete(this.output, message);
-    }
+	public void sendErrorMessage(String error) {
+		queue(this.output, this.builder.buildNewErrorMessage(error), new Consumer<>() {
+			@Override
+			public void accept(Message message) {
+				message.delete().queueAfter(DELETE_DELAY, TimeUnit.SECONDS);
+			}
+		});
+	}
 
-    private Message complete(MessageChannel channel, Message message) {
-        MessageAction act = send(channel, message);
-        if (act != null) {
-            return act.complete();
-        }
-        return null;
-    }
+	public void sendInfoMessage(String message) {
+		queue(this.output, this.builder.buildInfoMessage(message), new Consumer<>() {
+			@Override
+			public void accept(Message message) {
+				message.delete().queueAfter(DELETE_DELAY, TimeUnit.SECONDS);
+			}
+		});
+	}
 
-    public void queue(Message message, Consumer<Message> consumer) {
-        queue(this.output, message, consumer);
-    }
+	public void sendHelpMessage(MessageChannel channel) {
+		complete(channel, this.builder.buildHelpMessage());
+	}
 
-    private void queue(MessageChannel channel, Message message, Consumer<Message> consuber) {
-        MessageAction act = send(channel, message);
-        if (act != null) {
-            act.queue(consuber);
-        }
-    }
+	public void sendRepeatMessage(String link, Consumer<Message> c) {
+		queue(this.output, this.builder.buildRepeatMessage(link), c);
+	}
 
-    public void deleteLater(Message message){
-        message.delete().queueAfter(DELETE_DELAY, TimeUnit.SECONDS);
-    }
+	public Message complete(Message message) {
+		return complete(this.output, message);
+	}
 
-    private MessageAction send(MessageChannel channel, Message message) {
-        try {
-            return channel.sendMessage(message);
-        } catch (InsufficientPermissionException e) {
-            log("insuficciant permissions to send Message!");
-        } catch (NullPointerException e) {
-            log("output not initialized!");
-        }
+	private Message complete(MessageChannel channel, Message message) {
+		MessageAction act = send(channel, message);
+		if (act != null) {
+			return act.complete();
+		}
+		return null;
+	}
 
-        return null;
-    }
+	public void queue(Message message, Consumer<Message> consumer) {
+		queue(this.output, message, consumer);
+	}
 
-    public void log(String string) {
-        System.out.println("[" + this.guild.getName() + "] (" + Thread.currentThread().getId() + ") " + string);
-    }
+	private void queue(MessageChannel channel, Message message, Consumer<Message> consuber) {
+		MessageAction act = send(channel, message);
+		if (act != null) {
+			act.queue(consuber);
+		}
+	}
 
-    public boolean reactionPermissionCheck() {
-        boolean ret = PermissionUtil.checkPermission(this.output, this.guild.getSelfMember(),
-                Permission.MESSAGE_ADD_REACTION);
-        if (!ret) {
-            log("missing reaction manage permission, continuing anyways...");
-        }
-        return ret;
-    }
+	public void deleteLater(Message message) {
+		message.delete().queueAfter(DELETE_DELAY, TimeUnit.SECONDS);
+	}
 
-    public Guild getGuild() {
-        return this.guild;
-    }
+	private MessageAction send(MessageChannel channel, Message message) {
+		try {
+			return channel.sendMessage(message);
+		} catch (InsufficientPermissionException e) {
+			log("insuficciant permissions to send Message!");
+		} catch (NullPointerException e) {
+			log("output not initialized!");
+		}
 
-    public Player getPlayer() {
-        return this.player;
-    }
+		return null;
+	}
 
-    public TextChannel getChannel() {
-        return this.output;
-    }
+	public void log(String string) {
+		System.out.println("[" + this.guild.getName() + "] (" + Thread.currentThread().getId() + ") " + string);
+	}
 
-    public String getPrefix() {
-        return this.prefix;
-    }
+	public boolean reactionPermissionCheck() {
+		boolean ret = PermissionUtil.checkPermission(this.output, this.guild.getSelfMember(),
+				Permission.MESSAGE_ADD_REACTION);
+		if (!ret) {
+			log("missing reaction manage permission, continuing anyways...");
+		}
+		return ret;
+	}
 
-    public MessageBuilder getBuilder() {
-        return this.builder;
-    }
+	public Guild getGuild() {
+		return this.guild;
+	}
 
-    public CommandManager getCommands() {
-        return this.commands;
-    }
+	public Player getPlayer() {
+		return this.player;
+	}
 
-    public ButtonManager getButtons() {
-        return this.buttons;
-    }
+	public TextChannel getChannel() {
+		return this.output;
+	}
 
-    public AudioPlayerManager getManager() {
-        return this.bot.getManager();
-    }
+	public String getPrefix() {
+		return this.prefix;
+	}
 
-    public TrackLoader getLoader() {
-        return this.loader;
-    }
+	public MessageBuilder getBuilder() {
+		return this.builder;
+	}
+
+	public CommandManager getCommands() {
+		return this.commands;
+	}
+
+	public ButtonManager getButtons() {
+		return this.buttons;
+	}
+
+	public AudioPlayerManager getManager() {
+		return this.bot.getManager();
+	}
+
+	public TrackLoader getLoader() {
+		return this.loader;
+	}
 }

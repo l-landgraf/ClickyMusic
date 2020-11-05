@@ -42,6 +42,7 @@ public class SingleQueueElement extends QueueElement {
 		this.player.playTrack(this.track.getTrack());
 		this.message.clearReactions(GuildHandler.REMOVE_EMOJI).queue();
 		this.message.addReaction(GuildHandler.REPEAT_EMOJI).queue();
+		this.message.addReaction(GuildHandler.BACK_EMOJI).queue();
 		this.message.addReaction(GuildHandler.RESUME_PAUSE_EMOJI).queue();
 		this.message.addReaction(GuildHandler.SKIP_EMOJI).queue();
 	}
@@ -51,6 +52,7 @@ public class SingleQueueElement extends QueueElement {
 		super.onPlayed();
 		this.message.clearReactions(GuildHandler.SKIP_EMOJI).queue();
 		this.message.clearReactions(GuildHandler.RESUME_PAUSE_EMOJI).queue();
+		this.message.clearReactions(GuildHandler.BACK_EMOJI).queue();
 		this.message.clearReactions(GuildHandler.REMOVE_EMOJI).queue();
 		this.message.clearReactions(GuildHandler.REMOVE_ALL_EMOJI).queue();
 		this.message.addReaction(GuildHandler.REPEAT_EMOJI).queue();
@@ -72,6 +74,12 @@ public class SingleQueueElement extends QueueElement {
 		super.onDelete();
 		this.message.clearReactions(GuildHandler.REMOVE_EMOJI).queue();
 		this.player.removeElement(this);
+	}
+
+	@Override
+	public void onBack() {
+		super.onBack();
+		this.player.playTrack(this.track.getTrack());
 	}
 
 	@Override

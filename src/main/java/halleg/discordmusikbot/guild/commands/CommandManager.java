@@ -1,6 +1,7 @@
 package halleg.discordmusikbot.guild.commands;
 
 import halleg.discordmusikbot.guild.GuildHandler;
+import halleg.discordmusikbot.guild.player.queue.QueueElement;
 import net.dv8tion.jda.api.entities.Message;
 
 import java.util.ArrayList;
@@ -37,6 +38,28 @@ public class CommandManager {
 				this.handler.getBuilder().setLoading(message);
 				this.handler.getPlayer().join(message.getMember().getVoiceState().getChannel());
 				this.handler.getLoader().search(search, message.getMember(), message);
+			}
+		});
+
+		this.commands.add(new Command(handler, "play", true, true, true,
+				false, true, "plays the playlist song specefied by the number",
+				"*songNr*") {
+			@Override
+			protected void run(List<String> args, Message message) {
+				QueueElement ele = this.handler.getPlayer().getCurrentElement();
+
+				int i;
+				try {
+					i = Integer.parseInt(args.get(1));
+				} catch (NumberFormatException e) {
+					this.handler.sendErrorMessage("Argument has to be a Number.");
+					return;
+				}
+				if (ele == null) {
+					this.handler.sendErrorMessage("Im not playing anything currently.");
+					return;
+				}
+				ele.runPlay(i);
 			}
 		});
 
