@@ -1,32 +1,22 @@
 package halleg.discordmusikbot.guild.spotify;
 
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
-
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioTrack;
 import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeSearchProvider;
-import com.sedmelluq.discord.lavaplayer.track.AudioItem;
-import com.sedmelluq.discord.lavaplayer.track.AudioReference;
-import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
-import com.sedmelluq.discord.lavaplayer.track.AudioTrackInfo;
-import com.sedmelluq.discord.lavaplayer.track.BasicAudioPlaylist;
-import com.wrapper.spotify.model_objects.specification.Album;
-import com.wrapper.spotify.model_objects.specification.ArtistSimplified;
-import com.wrapper.spotify.model_objects.specification.Playlist;
-import com.wrapper.spotify.model_objects.specification.PlaylistTrack;
-import com.wrapper.spotify.model_objects.specification.TrackSimplified;
-import com.wrapper.spotify.model_objects.specification.User;
-
+import com.sedmelluq.discord.lavaplayer.track.*;
+import com.wrapper.spotify.model_objects.specification.*;
 import halleg.discordmusikbot.guild.GuildHandler;
 import halleg.discordmusikbot.guild.TrackLoader;
 import halleg.discordmusikbot.guild.loader.InititalPlaylistLoadHandler;
 import halleg.discordmusikbot.guild.youtube.RetryYoutubeSearchProvider;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
+
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
 
 public class SpotifyAudioSourceManager implements AudioSourceManager, TrackLoader.PlaylistPreloadManager {
 
@@ -173,7 +163,7 @@ public class SpotifyAudioSourceManager implements AudioSourceManager, TrackLoade
 	}
 
 	private InititalPlaylistLoadHandler preLoadPlaylist(String playlistId, GuildHandler handler, String source,
-			Member member, Message message) {
+														Member member, Message message) {
 		Playlist playlist = SpotifyApi.loadPlaylist(playlistId);
 		if (playlist == null) {
 			return null;
@@ -188,7 +178,11 @@ public class SpotifyAudioSourceManager implements AudioSourceManager, TrackLoade
 		PlaylistTrack[] tracks = SpotifyApi.loadPlaylistTracks(playlistId, playlist.getTracks().getTotal());
 		for (int i = 0; i < tracks.length; i++) {
 			sources[i] = tracks[i].getTrack().getName() + getArtists(tracks[i].getTrack().getArtists());
-			images[i] = tracks[i].getTrack().getAlbum().getImages()[0].getUrl();
+			try {
+				images[i] = tracks[i].getTrack().getAlbum().getImages()[0].getUrl();
+			} catch (ArrayIndexOutOfBoundsException e) {
+				System.out.println(i);
+			}
 		}
 
 		return new InititalPlaylistLoadHandler(handler, source, search, member, message, sources, images,
@@ -196,7 +190,7 @@ public class SpotifyAudioSourceManager implements AudioSourceManager, TrackLoade
 	}
 
 	private InititalPlaylistLoadHandler preLoadAlbum(String albumId, GuildHandler handler, String source, Member member,
-			Message message) {
+													 Message message) {
 		Album album = SpotifyApi.loadAlbum(albumId);
 		if (album == null) {
 			return null;
@@ -212,7 +206,11 @@ public class SpotifyAudioSourceManager implements AudioSourceManager, TrackLoade
 		TrackSimplified[] tracks = SpotifyApi.loadAlbumTracks(albumId, album.getTracks().getTotal());
 		for (int i = 0; i < tracks.length; i++) {
 			sources[i] = tracks[i].getName() + getArtists(tracks[i].getArtists());
-			images[i] = album.getImages()[0].getUrl();
+			if (tracks[i].getIsPlayable()) {
+				images[i] = album.getImages()[0].getUrl();
+			} else {
+				System.out.println("test");
+			}
 		}
 
 		return new InititalPlaylistLoadHandler(handler, source, search, member, message, sources, images,
