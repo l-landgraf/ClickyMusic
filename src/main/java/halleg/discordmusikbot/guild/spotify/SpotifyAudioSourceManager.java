@@ -22,6 +22,7 @@ public class SpotifyAudioSourceManager implements AudioSourceManager, TrackLoade
 
 	public static final String PLAYLIST_PREFIX = "https://open.spotify.com/playlist/";
 	public static final String ALBUM_PREFIX = "https://open.spotify.com/album/";
+	public static final String TRACK_PREFIX = "https://open.spotify.com/track/";
 	private YoutubeAudioSourceManager ytManager;
 	private YoutubeSearchProvider searchProvider;
 
@@ -51,6 +52,11 @@ public class SpotifyAudioSourceManager implements AudioSourceManager, TrackLoade
 			return loadAlbum(albumId);
 		}
 
+		if (reference.identifier.startsWith(TRACK_PREFIX)) {
+			String trackId = extractId(reference.identifier);
+			return loadTrack(trackId);
+		}
+
 		return null;
 	}
 
@@ -58,6 +64,7 @@ public class SpotifyAudioSourceManager implements AudioSourceManager, TrackLoade
 		url = url.split("\\?")[0];
 		url = url.replace(PLAYLIST_PREFIX, "");
 		url = url.replace(ALBUM_PREFIX, "");
+		url = url.replace(TRACK_PREFIX, "");
 		return url;
 	}
 
@@ -95,6 +102,19 @@ public class SpotifyAudioSourceManager implements AudioSourceManager, TrackLoade
 			addToList(search, list);
 		}
 		return list;
+	}
+
+	private AudioItem loadTrack(String trackId) {
+		Track track = SpotifyApi.loadTrack(trackId);
+		if (track == null) {
+			return null;
+		}
+
+		String search = track.getName() + getArtists(track.getArtists());
+		BasicAudioPlaylist results = (BasicAudioPlaylist) this.searchProvider.loadSearchResult(search,
+				SpotifyAudioSourceManager.this::buildTrackFromInfo);
+		AudioItem item = results.getTracks().get(0);
+		return item;
 	}
 
 	private void addToList(String search, SpotifyAudioPlaylist list) {
@@ -181,7 +201,7 @@ public class SpotifyAudioSourceManager implements AudioSourceManager, TrackLoade
 			try {
 				images[i] = tracks[i].getTrack().getAlbum().getImages()[0].getUrl();
 			} catch (ArrayIndexOutOfBoundsException e) {
-				System.out.println(i);
+				handler.log("cant find images for song nr " + i + " (" + tracks[i].getTrack().getName() + ")");
 			}
 		}
 
@@ -206,10 +226,10 @@ public class SpotifyAudioSourceManager implements AudioSourceManager, TrackLoade
 		TrackSimplified[] tracks = SpotifyApi.loadAlbumTracks(albumId, album.getTracks().getTotal());
 		for (int i = 0; i < tracks.length; i++) {
 			sources[i] = tracks[i].getName() + getArtists(tracks[i].getArtists());
-			if (tracks[i].getIsPlayable()) {
+			try {
 				images[i] = album.getImages()[0].getUrl();
-			} else {
-				System.out.println("test");
+			} catch (ArrayIndexOutOfBoundsException e) {
+				handler.log("cant find images for song nr " + i + " (" + tracks[i].getName() + ")");
 			}
 		}
 
@@ -220,7 +240,6 @@ public class SpotifyAudioSourceManager implements AudioSourceManager, TrackLoade
 	private String getUserLink(User own) {
 		String link = own.getHref().substring("https://api.spotify.com/v1/users/".length());
 		link = "https://open.spotify.com/user/" + link;
-		// return link;
 		return "[" + own.getDisplayName() + "](" + link + ")";
 	}
 }
