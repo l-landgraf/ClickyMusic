@@ -8,26 +8,29 @@ import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 
 public class PlaylistTrackLoadHandler extends LoadHandler {
-    private LoadablePlaylistQueueElement element;
-    private int trackNr;
-    private boolean update;
+	private LoadablePlaylistQueueElement element;
+	private int trackNr;
+	private boolean update;
+	private boolean playThis;
 
-    public PlaylistTrackLoadHandler(GuildHandler handler, String source, Member member, Message message, LoadablePlaylistQueueElement element, int trackNr, boolean update) {
-        super(handler, source, member, message);
-        this.trackNr = trackNr;
-        this.element = element;
-        this.update = update;
-    }
+	public PlaylistTrackLoadHandler(GuildHandler handler, String source, Member member, Message message,
+									LoadablePlaylistQueueElement element, int trackNr, boolean update, boolean playThis) {
+		super(handler, source, member, message);
+		this.trackNr = trackNr;
+		this.element = element;
+		this.update = update;
+		this.playThis = playThis;
+	}
 
 
-    @Override
-    public void trackLoaded(AudioTrack track) {
-        super.trackLoaded(track);
-        this.element.loadTrack(this.trackNr, track, this.update);
-    }
+	@Override
+	public void trackLoaded(AudioTrack track) {
+		super.trackLoaded(track);
+		this.element.loadTrack(this.trackNr, track, this.update, this.playThis);
+	}
 
-    @Override
-    public void playlistLoaded(AudioPlaylist playlist) {
-        throw new IllegalStateException("playlist loading not supproted");
-    }
+	@Override
+	public void playlistLoaded(AudioPlaylist playlist) {
+		throw new IllegalStateException("playlist loading not supproted");
+	}
 }

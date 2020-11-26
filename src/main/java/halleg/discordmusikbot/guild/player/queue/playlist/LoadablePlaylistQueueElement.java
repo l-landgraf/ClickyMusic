@@ -21,11 +21,14 @@ public class LoadablePlaylistQueueElement extends PlaylistQueueElement<LoadableP
 		loadPlannedTracks();
 	}
 
-	public void loadTrack(int trackNr, AudioTrack track, boolean update) {
+	public void loadTrack(int trackNr, AudioTrack track, boolean update, boolean playThis) {
 		System.out.println(track.getInfo().title + " update: " + update);
 		this.playlist.getTrack(trackNr).setTrack(track);
 		if (update) {
 			updateMessage();
+		}
+		if (playThis) {
+			runPlay(trackNr);
 		}
 	}
 
@@ -43,18 +46,24 @@ public class LoadablePlaylistQueueElement extends PlaylistQueueElement<LoadableP
 		}
 
 		for (int i = this.currentTrack + 1; i < planned.size() && i < PRELOAD_MAX + this.currentTrack + 1; i++) {
-			if (!this.playlist.getTrack(planned.get(i)).isLoaded()) {
-				loadTrack(planned.get(i), this.shuffle == shuffle && i < PRELOAD_MAX + this.currentTrack + 1);
-			}
+			loadTrack(planned.get(i), (this.shuffle == shuffle && i < PRELOAD_MAX + this.currentTrack + 1), false);
+		}
+
+		for (int i = this.currentTrack - 1; i > 0 && i > this.currentTrack - PRELOAD_MAX; i--) {
+			loadTrack(planned.get(i), false, false);
 		}
 	}
 
-	protected void loadTrack(int trackNr, boolean update) {
-		this.handler.log("preloading Song Nr. " + trackNr + " " + update);
-		LoadableTrack track = this.playlist.getTrack(trackNr);
-		PlaylistTrackLoadHandler loader = new PlaylistTrackLoadHandler(this.handler, track.getSource(), track.getMember(),
-				null, this, trackNr, update);
-		this.handler.getLoader().load(this.playlist.getTrack(trackNr).getSource(), loader);
+	protected void loadTrack(int trackNr, boolean update, boolean playThis) {
+		if (!this.playlist.getTrack(trackNr).isLoaded()) {
+			this.handler.log("preloading Song Nr. " + trackNr);
+			LoadableTrack track = this.playlist.getTrack(trackNr);
+			PlaylistTrackLoadHandler loader = new PlaylistTrackLoadHandler(this.handler, track.getSource(), track.getMember(),
+					null, this, trackNr, update, playThis);
+			this.handler.getLoader().load(this.playlist.getTrack(trackNr).getSource(), loader);
+		} else {
+			this.handler.log("Song Nr. " + trackNr + " is already Loaded.");
+		}
 	}
 
 	@Override
@@ -90,8 +99,7 @@ public class LoadablePlaylistQueueElement extends PlaylistQueueElement<LoadableP
 			return;
 		}
 		if (!this.playlist.getTrack(i).isLoaded()) {
-			this.player.getHandler().sendInfoMessage("\"" + this.playlist.getTrack(i).getSource() + "\"\nSong was not preloaded. Loading now. Please try again in a few Seconds.");
-			loadTrack(i, false);
+			loadTrack(i, false, true);
 			return;
 		}
 		this.currentTrack = i;

@@ -85,7 +85,7 @@ public abstract class PlaylistQueueElement<L extends TrackPlaylist> extends Queu
 	protected void addNowPlayingRow(EmbedBuilder eb) {
 		if (this.currentTrack < this.playlist.getTotal()) {
 			eb.setThumbnail(getCurrentTrack().getThumbnail());
-			String title = "";
+			String title;
 
 			if (this.status == QueueStatus.QUEUED) {
 				title = "First Song";
@@ -171,11 +171,8 @@ public abstract class PlaylistQueueElement<L extends TrackPlaylist> extends Queu
 		int planned = getSong(this.currentTrack);
 		if (planned < 0) {
 			this.currentTrack = 0;
-			planned = getSong(this.currentTrack);
 		}
 		this.status = QueueStatus.PLAYING;
-
-
 		playCurrent();
 	}
 
