@@ -16,12 +16,9 @@ public class MyLocalAudioSourceManager extends LocalAudioSourceManager {
 
 	@Override
 	public AudioItem loadItem(DefaultAudioPlayerManager manager, AudioReference reference) {
-		File f = new File(this.musicFodler.getPath(), reference.identifier);
-		String newIdent = f.getAbsolutePath();
-		System.out.println(newIdent);
-		AudioReference newRef = new AudioReference(newIdent, reference.title, reference.containerDescriptor);
-		AudioItem a = super.loadItem(manager, newRef);
-		System.out.println(a);
-		return a;
+		File file = new File(this.musicFodler.getPath(), reference.identifier);
+		String filePath = file.getAbsolutePath();
+		AudioReference newRef = new AudioReference(filePath, reference.title, reference.containerDescriptor);
+		return super.loadItem(manager, newRef);
 	}
 }
