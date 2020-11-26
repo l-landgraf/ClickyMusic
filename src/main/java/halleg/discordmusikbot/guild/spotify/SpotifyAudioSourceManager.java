@@ -23,6 +23,8 @@ public class SpotifyAudioSourceManager implements AudioSourceManager, TrackLoade
 	public static final String PLAYLIST_PREFIX = "https://open.spotify.com/playlist/";
 	public static final String ALBUM_PREFIX = "https://open.spotify.com/album/";
 	public static final String TRACK_PREFIX = "https://open.spotify.com/track/";
+	private static final int MAX_CHECKS = 5;
+	private static final int SONG_LENGTH_DIFFERENCE = 2;
 	private YoutubeAudioSourceManager ytManager;
 	private YoutubeSearchProvider searchProvider;
 
@@ -79,7 +81,7 @@ public class SpotifyAudioSourceManager implements AudioSourceManager, TrackLoade
 		for (PlaylistTrack t : SpotifyApi.loadPlaylistTracks(playlistId, playlist.getTracks().getTotal())) {
 			String artists = getArtists(t.getTrack().getArtists());
 			String search = t.getTrack().getName() + artists;
-			addToList(search, list);
+			addToList(search, t.getTrack().getDurationMs(), list);
 			i++;
 			System.out.println(i + "/" + playlist.getTracks().getTotal());
 		}
@@ -99,7 +101,7 @@ public class SpotifyAudioSourceManager implements AudioSourceManager, TrackLoade
 
 		for (TrackSimplified t : album.getTracks().getItems()) {
 			String search = t.getName() + artists;
-			addToList(search, list);
+			addToList(search, t.getDurationMs(), list);
 		}
 		return list;
 	}
@@ -111,21 +113,17 @@ public class SpotifyAudioSourceManager implements AudioSourceManager, TrackLoade
 		}
 
 		String search = track.getName() + getArtists(track.getArtists());
-		BasicAudioPlaylist results = (BasicAudioPlaylist) this.searchProvider.loadSearchResult(search,
-				SpotifyAudioSourceManager.this::buildTrackFromInfo);
-		AudioItem item = results.getTracks().get(0);
+		AudioItem item = getTrack(search, track.getDurationMs());
 		return item;
 	}
 
-	private void addToList(String search, SpotifyAudioPlaylist list) {
-		addToList(search, list, 5);
+	private void addToList(String search, int dirationMs, SpotifyAudioPlaylist list) {
+		addToList(search, dirationMs, list, 5);
 	}
 
-	private void addToList(String search, SpotifyAudioPlaylist list, int i) {
+	private void addToList(String search, int durationMs, SpotifyAudioPlaylist list, int i) {
 		try {
-			BasicAudioPlaylist results = (BasicAudioPlaylist) this.searchProvider.loadSearchResult(search,
-					SpotifyAudioSourceManager.this::buildTrackFromInfo);
-			AudioItem item = results.getTracks().get(0);
+			AudioItem item = getTrack(search, durationMs);
 			list.add((AudioTrack) item);
 		} catch (Exception e) {
 			if (i <= 0) {
@@ -136,8 +134,22 @@ public class SpotifyAudioSourceManager implements AudioSourceManager, TrackLoade
 			} catch (InterruptedException interruptedException) {
 				interruptedException.printStackTrace();
 			}
-			addToList(search, list, i - 1);
+			addToList(search, durationMs, list, i - 1);
 		}
+	}
+
+	private AudioItem getTrack(String search, int durationMs) {
+		BasicAudioPlaylist results = (BasicAudioPlaylist) this.searchProvider.loadSearchResult(search,
+				SpotifyAudioSourceManager.this::buildTrackFromInfo);
+
+		for (int i = 0; i < MAX_CHECKS; i++) {
+			AudioTrack item = results.getTracks().get(i);
+			if (item.getDuration() < durationMs * SONG_LENGTH_DIFFERENCE) {
+				return item;
+			}
+		}
+
+		return results.getTracks().get(0);
 	}
 
 	public String getArtists(ArtistSimplified[] arts) {

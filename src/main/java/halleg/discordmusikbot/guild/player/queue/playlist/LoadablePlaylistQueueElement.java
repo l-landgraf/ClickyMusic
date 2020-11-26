@@ -43,12 +43,17 @@ public class LoadablePlaylistQueueElement extends PlaylistQueueElement<LoadableP
 
 		for (int i = this.currentTrack + 1; i < planned.size() && i < PRELOAD_MAX + this.currentTrack + 1; i++) {
 			if (!this.playlist.getTrack(planned.get(i)).isLoaded()) {
-				this.handler.log("preloading Song Nr. " + planned.get(i));
-				LoadableTrack track = this.playlist.getTrack(planned.get(i));
-				PlaylistTrackLoadHandler loader = new PlaylistTrackLoadHandler(this.handler, track.getSource(), track.getMember(), null, this, planned.get(i), (this.shuffle == shuffle && i < 3));
-				this.handler.getLoader().load(this.playlist.getTrack(planned.get(i)).getSource(), loader);
+				loadTrack(planned.get(i), (this.shuffle == this.shuffle && i < 3));
 			}
 		}
+	}
+
+	protected void loadTrack(int trackNr, boolean update) {
+		this.handler.log("preloading Song Nr. " + trackNr);
+		LoadableTrack track = this.playlist.getTrack(trackNr);
+		PlaylistTrackLoadHandler loader = new PlaylistTrackLoadHandler(this.handler, track.getSource(), track.getMember(),
+				null, this, trackNr, update);
+		this.handler.getLoader().load(this.playlist.getTrack(trackNr).getSource(), loader);
 	}
 
 	@Override
@@ -66,7 +71,10 @@ public class LoadablePlaylistQueueElement extends PlaylistQueueElement<LoadableP
 	@Override
 	protected int getSong(int songNr) {
 		int i = super.getSong(songNr);
-		if (i != -1 && this.playlist.getTrack(i).isLoaded()) {
+		if (i < 0) {
+			return i;
+		}
+		if (this.playlist.getTrack(i).isLoaded()) {
 			return i;
 		} else {
 			return -1;
@@ -75,6 +83,17 @@ public class LoadablePlaylistQueueElement extends PlaylistQueueElement<LoadableP
 
 	@Override
 	public void runPlay(int i) {
-		super.runPlay(i);
+		int planned = super.getSong(i);
+		if (planned < 0) {
+			this.player.getHandler().sendErrorMessage("SongNr out of Bounds.");
+			return;
+		}
+		if (!this.playlist.getTrack(i).isLoaded()) {
+			this.player.getHandler().sendInfoMessage("Song was not preloaded. Loading now. Please try again in a few Seconds.");
+			loadTrack(i, false);
+			return;
+		}
+		this.currentTrack = i;
+		playCurrent();
 	}
 }

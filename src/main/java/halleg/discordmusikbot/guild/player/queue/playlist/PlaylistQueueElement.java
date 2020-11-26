@@ -113,7 +113,8 @@ public abstract class PlaylistQueueElement<L extends TrackPlaylist> extends Queu
 			s += plan.get(i) + ". " + title + "\n";
 		}
 
-		int songsLeft = (GuildHandler.PLAYLIST_PREVIEW_MAX - this.currentTrack + 1);
+		int songsLeft = (this.playlist.getTotal() - this.currentTrack + 1);
+		System.out.println(songsLeft);
 		if (songsLeft > 0) {
 			if (this.shuffle) {
 				s += "**-- Shuffling " + songsLeft + " More --**";
