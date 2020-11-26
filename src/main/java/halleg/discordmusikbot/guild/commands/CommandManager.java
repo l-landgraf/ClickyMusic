@@ -111,11 +111,54 @@ public class CommandManager {
 			}
 		});
 
+		this.commands.add(new Command(handler, "jump", true, true, true,
+				false, true, "skips the current track.", "*Nr*") {
+			@Override
+			protected void run(List<String> args, Message message) {
+				int nr;
+				try {
+					nr = Integer.parseInt(args.get(1));
+				} catch (NumberFormatException e) {
+					this.handler.sendErrorMessage("Nr is not a Number.");
+					return;
+				}
+				if (nr < 1) {
+					this.handler.sendErrorMessage("Nr cant be less than One.");
+					return;
+				}
+				if (nr > this.handler.getPlayer().queueSize()) {
+					this.handler.sendErrorMessage("Nr cant be more than queue length.");
+					return;
+				}
+				this.handler.getPlayer().jump(nr);
+			}
+		});
+
 		this.commands.add(new Command(handler, "seek", true, true, true,
-				true, true, "seeks to the desired possition or skips forward the given amount of time.", "*[sign][[hours:]minutes:]seconds*") {
+				false, true, "seeks to the desired possition or skips forward the given amount of time.", "*[sign][[hours:]minutes:]seconds*") {
 			@Override
 			protected void run(List<String> args, Message message) {
 				CommandManager.this.parseSeek(args, message);
+			}
+		});
+
+		this.commands.add(new Command(handler, "time", true, true, true,
+				false, true, "displays the time of the current Song.") {
+			@Override
+			protected void run(List<String> args, Message message) {
+				if (!this.handler.getPlayer().isPlaying()) {
+					this.handler.sendErrorMessage("No track currently playing.");
+					return;
+				}
+
+				long milliseconds = this.handler.getPlayer().getPosition();
+
+				int seconds = (int) (milliseconds / 1000) % 60;
+				int minutes = (int) ((milliseconds / (1000 * 60)) % 60);
+				int hours = (int) ((milliseconds / (1000 * 60 * 60)) % 24);
+
+				this.handler.sendInfoMessage("Current Track Position: " + String.format("%02d", hours) + ":" + String.format("%02d", minutes) + ":" + String.format("%02d", seconds));
+
 			}
 		});
 
@@ -170,21 +213,6 @@ public class CommandManager {
 	}
 
 	private void parseSeek(List<String> args, Message message) {
-		if (args.size() == 1) {
-			if (!this.handler.getPlayer().isPlaying()) {
-				this.handler.sendErrorMessage("No track currently playing.");
-				return;
-			}
-
-			long milliseconds = this.handler.getPlayer().getPosition();
-
-			int seconds = (int) (milliseconds / 1000) % 60;
-			int minutes = (int) ((milliseconds / (1000 * 60)) % 60);
-			int hours = (int) ((milliseconds / (1000 * 60 * 60)) % 24);
-
-			this.handler.sendInfoMessage("Current Track Position: " + String.format("%02d", hours) + ":" + String.format("%02d", minutes) + ":" + String.format("%02d", seconds));
-			return;
-		}
 
 		String arg = args.get(1);
 		arg = arg.trim();
@@ -197,8 +225,6 @@ public class CommandManager {
 			sign = "-";
 			arg = arg.substring(1);
 		}
-
-		System.out.println(arg);
 
 		String[] times = arg.split(":");
 		Collections.reverse(Arrays.asList(times));

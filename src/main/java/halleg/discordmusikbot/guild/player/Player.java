@@ -105,7 +105,7 @@ public class Player implements Timer.TimerListener {
 	public boolean jump(int nr) {
 		if (nr < 1) {
 			return false;
-		} else if (nr >= this.queue.size()) {
+		} else if (nr > this.queue.size()) {
 			return false;
 		}
 		if (this.currentTrack != null) {
@@ -114,6 +114,7 @@ public class Player implements Timer.TimerListener {
 		}
 		for (int i = 1; i < nr; i++) {
 			this.queue.get(0).onPlayed();
+			this.queue.remove(0);
 		}
 		nextTrack();
 		return true;
@@ -227,5 +228,9 @@ public class Player implements Timer.TimerListener {
 
 	public GuildHandler getHandler() {
 		return this.handler;
+	}
+
+	public int queueSize() {
+		return this.queue.size();
 	}
 }
