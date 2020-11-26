@@ -22,6 +22,7 @@ public class LoadablePlaylistQueueElement extends PlaylistQueueElement<LoadableP
 	}
 
 	public void loadTrack(int trackNr, AudioTrack track, boolean update) {
+		System.out.println(track.getInfo().title + " update: " + update);
 		this.playlist.getTrack(trackNr).setTrack(track);
 		if (update) {
 			updateMessage();
@@ -43,13 +44,13 @@ public class LoadablePlaylistQueueElement extends PlaylistQueueElement<LoadableP
 
 		for (int i = this.currentTrack + 1; i < planned.size() && i < PRELOAD_MAX + this.currentTrack + 1; i++) {
 			if (!this.playlist.getTrack(planned.get(i)).isLoaded()) {
-				loadTrack(planned.get(i), (this.shuffle == this.shuffle && i < 3));
+				loadTrack(planned.get(i), this.shuffle == shuffle && i < PRELOAD_MAX + this.currentTrack + 1);
 			}
 		}
 	}
 
 	protected void loadTrack(int trackNr, boolean update) {
-		this.handler.log("preloading Song Nr. " + trackNr);
+		this.handler.log("preloading Song Nr. " + trackNr + " " + update);
 		LoadableTrack track = this.playlist.getTrack(trackNr);
 		PlaylistTrackLoadHandler loader = new PlaylistTrackLoadHandler(this.handler, track.getSource(), track.getMember(),
 				null, this, trackNr, update);
@@ -89,11 +90,12 @@ public class LoadablePlaylistQueueElement extends PlaylistQueueElement<LoadableP
 			return;
 		}
 		if (!this.playlist.getTrack(i).isLoaded()) {
-			this.player.getHandler().sendInfoMessage("Song was not preloaded. Loading now. Please try again in a few Seconds.");
+			this.player.getHandler().sendInfoMessage("\"" + this.playlist.getTrack(i).getSource() + "\"\nSong was not preloaded. Loading now. Please try again in a few Seconds.");
 			loadTrack(i, false);
 			return;
 		}
 		this.currentTrack = i;
+		loadPlannedTracks();
 		playCurrent();
 	}
 }
