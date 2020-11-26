@@ -102,13 +102,25 @@ public class Player implements Timer.TimerListener {
 		}
 	}
 
-	public void playTrack(AudioTrack track) {
-		try {
-			this.player.playTrack(track.makeClone());
-		} catch (IllegalStateException e) {
-			this.handler.log("Track played twice, creating clone.");
-			this.player.playTrack(track.makeClone());
+	public boolean jump(int nr) {
+		if (nr < 1) {
+			return false;
+		} else if (nr >= this.queue.size()) {
+			return false;
 		}
+		if (this.currentTrack != null) {
+			this.currentTrack.onPlayed();
+			this.currentTrack = null;
+		}
+		for (int i = 1; i < nr; i++) {
+			this.queue.get(0).onPlayed();
+		}
+		nextTrack();
+		return true;
+	}
+
+	public void playTrack(AudioTrack track) {
+		this.player.playTrack(track.makeClone());
 	}
 
 	public void join(VoiceChannel c) {

@@ -1,15 +1,14 @@
 package halleg.discordmusikbot;
 
-import java.util.ArrayList;
-import java.util.Collection;
-
 import halleg.discordmusikbot.guild.spotify.SpotifyApi;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 
-import javax.swing.*;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Collection;
 
 public class App extends ListenerAdapter {
 
@@ -17,8 +16,14 @@ public class App extends ListenerAdapter {
 
 		// https://discordapp.com/api/oauth2/authorize?client_id=565293748309983252&permissions=36777024&scope=bot
 
-		if (args.length < 3) {
-			System.out.println("Requeired arguments: Discord-Bot-Secret, Spotify-Client-Id, Spotify-Client-Secret");
+		if (args.length < 4) {
+			System.out.println("Requeired arguments: Discord-Bot-Secret, Spotify-Client-Id, Spotify-Client-Secret, Musik-Folder");
+			System.exit(1);
+		}
+
+		File file = new File(args[3]);
+		if (!file.exists() || !file.isDirectory()) {
+			System.out.println(file.getAbsolutePath() + " does not exist or is not a direcotry.");
 			System.exit(1);
 		}
 
@@ -28,6 +33,6 @@ public class App extends ListenerAdapter {
 		intents.add(GatewayIntent.GUILD_VOICE_STATES);
 		JDA jda = JDABuilder.create(intents).setToken(args[0]).build().awaitReady();
 		SpotifyApi.initialize(args[1], args[2]);
-		jda.addEventListener(new MusicBot(jda));
+		jda.addEventListener(new MusicBot(jda, file));
 	}
 }

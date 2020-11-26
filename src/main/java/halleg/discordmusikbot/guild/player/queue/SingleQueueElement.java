@@ -18,11 +18,18 @@ public class SingleQueueElement extends QueueElement {
 	public MessageEmbed buildMessageEmbed(QueueStatus status) {
 		super.buildMessageEmbed(status);
 		EmbedBuilder eb = new EmbedBuilder();
-
-		eb.setTitle(this.track.getTitle(), this.track.getURI());
+		try {
+			eb.setTitle(this.track.getTitle(), this.track.getURI());
+		} catch (IllegalArgumentException e) {
+			eb.setTitle(this.track.getTitle());
+		}
 		eb.setDescription("Queued by " + this.track.getMember().getAsMention());
 
-		eb.setThumbnail(this.track.getThumbnail());
+		try {
+
+			eb.setThumbnail(this.track.getThumbnail());
+		} catch (IllegalArgumentException e) {
+		}
 
 		eb.addField("By", this.track.getAuthorEmbedLink(), true);
 		eb.addField("Length", this.track.getLength(), true);
