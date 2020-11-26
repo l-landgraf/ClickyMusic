@@ -6,6 +6,9 @@ import com.sedmelluq.discord.lavaplayer.track.AudioItem;
 import com.sedmelluq.discord.lavaplayer.track.AudioReference;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class MyLocalAudioSourceManager extends LocalAudioSourceManager {
 	private File musicFodler;
@@ -17,8 +20,21 @@ public class MyLocalAudioSourceManager extends LocalAudioSourceManager {
 	@Override
 	public AudioItem loadItem(DefaultAudioPlayerManager manager, AudioReference reference) {
 		File file = new File(this.musicFodler.getPath(), reference.identifier);
-		String filePath = file.getAbsolutePath();
-		AudioReference newRef = new AudioReference(filePath, reference.title, reference.containerDescriptor);
-		return super.loadItem(manager, newRef);
+		Path filePath = null;
+		Path folderPath = null;
+		try {
+			filePath = Paths.get(file.getCanonicalPath()).toAbsolutePath();
+			folderPath = Paths.get(this.musicFodler.getCanonicalPath()).toAbsolutePath();
+		} catch (IOException e) {
+			return null;
+		}
+		if (!filePath.startsWith(folderPath)) {
+			return null;
+		}
+		String stringPath = file.toURI().getPath();
+		System.out.println("filePath: " + filePath);
+		AudioReference newRef = new AudioReference(stringPath, reference.title, reference.containerDescriptor);
+		AudioItem item = super.loadItem(manager, newRef);
+		return item;
 	}
 }
