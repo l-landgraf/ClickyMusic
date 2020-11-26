@@ -112,22 +112,22 @@ public class CommandManager {
 		});
 
 		this.commands.add(new Command(handler, "jump", true, true, true,
-				false, true, "skips the current track.", "*Nr*") {
+				false, true, "skips the given amount of queue elements.", "*amount*") {
 			@Override
 			protected void run(List<String> args, Message message) {
 				int nr;
 				try {
 					nr = Integer.parseInt(args.get(1));
 				} catch (NumberFormatException e) {
-					this.handler.sendErrorMessage("Nr is not a Number.");
+					this.handler.sendErrorMessage("amount is not a Number.");
 					return;
 				}
 				if (nr < 1) {
-					this.handler.sendErrorMessage("Nr cant be less than One.");
+					this.handler.sendErrorMessage("amount cant be less than One.");
 					return;
 				}
 				if (nr > this.handler.getPlayer().queueSize()) {
-					this.handler.sendErrorMessage("Nr cant be more than queue length.");
+					this.handler.sendErrorMessage("amount cant be more than queue length.");
 					return;
 				}
 				this.handler.getPlayer().jump(nr);
