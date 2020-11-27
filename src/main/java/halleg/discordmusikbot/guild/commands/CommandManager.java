@@ -162,20 +162,21 @@ public class CommandManager {
 			}
 		});
 
-		this.commands.add(new Command(handler, "disconnect", true, true, true,
-				false, true, "the bot will disconnect from any voicechannel.") {
-			@Override
-			protected void run(List<String> args, Message message) {
-				this.handler.getPlayer().setPaused(true);
-				this.handler.getPlayer().leave();
-			}
-		});
+//		this.commands.add(new Command(handler, "disconnect", true, true, true,
+//				false, true, "the bot will disconnect from any voicechannel.") {
+//			@Override
+//			protected void run(List<String> args, Message message) {
+//				this.handler.getPlayer().setPaused(true);
+//				this.handler.getPlayer().leave();
+//			}
+//		});
 
 		this.commands.add(new Command(handler, "leave", true, true, true,
 				false, true, "the bot will leave any voicechannel and completly clear its Queue.") {
 			@Override
 			protected void run(List<String> args, Message message) {
 				this.handler.getPlayer().leave();
+				this.handler.getPlayer().clearQueue();
 			}
 		});
 
