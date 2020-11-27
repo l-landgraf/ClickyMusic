@@ -21,13 +21,17 @@ public abstract class PlaylistQueueElement<L extends TrackPlaylist> extends Queu
 	protected List<Integer> plannedShuffle;
 	protected List<Integer> plannedNormal;
 
-	protected int currentTrack;
+	//the index of the current track in the planned-lists
+	protected int currentPlanedIndex;
+	//the index of the current track in the playlist
+	protected int currentTrackIndex;
+
 	protected boolean shuffle;
 
 	public PlaylistQueueElement(Player player, L playlist) {
 		super(player);
 		this.playlist = playlist;
-		this.currentTrack = 0;
+		this.currentPlanedIndex = 0;
 
 		this.plannedShuffle = IntStream.range(0, this.playlist.getTotal()).boxed().collect(Collectors.toList());
 		Collections.shuffle(this.plannedShuffle);
@@ -83,8 +87,9 @@ public abstract class PlaylistQueueElement<L extends TrackPlaylist> extends Queu
 	}
 
 	protected void addNowPlayingRow(EmbedBuilder eb) {
-		if (this.currentTrack < this.playlist.getTotal()) {
-			eb.setThumbnail(getCurrentTrack().getThumbnail());
+		if (this.currentPlanedIndex < this.playlist.getTotal()) {
+			Track curr = this.playlist.getTrack(this.currentTrackIndex);
+			eb.setThumbnail(curr.getThumbnail());
 			String title;
 
 			if (this.status == QueueStatus.QUEUED) {
@@ -94,17 +99,17 @@ public abstract class PlaylistQueueElement<L extends TrackPlaylist> extends Queu
 			}
 
 			String moreShuffle = "";
-			eb.addField(title, getCurrentTrack().getTitleEmbedLink() + moreShuffle, true);
-			eb.addField("By", getCurrentTrack().getAuthorEmbedLink(), true);
-			eb.addField("Length", getCurrentTrack().getLength(), true);
+			eb.addField(title, curr.getTitleEmbedLink() + moreShuffle, true);
+			eb.addField("By", curr.getAuthorEmbedLink(), true);
+			eb.addField("Length", curr.getLength(), true);
 		}
 	}
 
 	protected void addCommingUpRows(EmbedBuilder eb) {
 		String s = "";
-		List<Integer> plan = getPlanedSongs();
+		List<Integer> plan = getPlanedTracks();
 		int counter = 0;
-		for (int i = this.currentTrack + 1; i < plan.size(); i++) {
+		for (int i = this.currentPlanedIndex + 1; i < plan.size(); i++) {
 			if (counter >= GuildHandler.PLAYLIST_PREVIEW_MAX) {
 				break;
 			}
@@ -113,8 +118,7 @@ public abstract class PlaylistQueueElement<L extends TrackPlaylist> extends Queu
 			s += plan.get(i) + ". " + title + "\n";
 		}
 
-		int songsLeft = (this.playlist.getTotal() - this.currentTrack + 1);
-		System.out.println(songsLeft);
+		int songsLeft = (this.playlist.getTotal() - (this.currentPlanedIndex + GuildHandler.PLAYLIST_PREVIEW_MAX + 1));
 		if (songsLeft > 0) {
 			if (this.shuffle) {
 				s += "**-- Shuffling " + songsLeft + " More --**";
@@ -129,15 +133,15 @@ public abstract class PlaylistQueueElement<L extends TrackPlaylist> extends Queu
 		}
 	}
 
-	protected int getSong(int songNr) {
+	protected int getPlanedTrack(int songNr) {
 		try {
-			return getPlanedSongs().get(songNr);
+			return getPlanedTracks().get(songNr);
 		} catch (IndexOutOfBoundsException e) {
 			return -1;
 		}
 	}
 
-	protected List<Integer> getPlanedSongs() {
+	protected List<Integer> getPlanedTracks() {
 		if (this.shuffle) {
 			return getPlanedShuffle();
 		} else {
@@ -154,9 +158,7 @@ public abstract class PlaylistQueueElement<L extends TrackPlaylist> extends Queu
 	}
 
 	protected void nextInternal() {
-		this.currentTrack++;
-		int planned = getSong(this.currentTrack);
-		if (planned < 0) {
+		if (!setCurrent(this.currentPlanedIndex + 1)) {
 			super.onSkip();
 			return;
 		}
@@ -167,17 +169,16 @@ public abstract class PlaylistQueueElement<L extends TrackPlaylist> extends Queu
 	}
 
 	protected void prevInternal() {
-		this.currentTrack--;
-		int planned = getSong(this.currentTrack);
-		if (planned < 0) {
-			this.currentTrack = 0;
+		if (!setCurrent(this.currentPlanedIndex - 1)) {
+			setCurrent(0);
 		}
 		this.status = QueueStatus.PLAYING;
 		playCurrent();
 	}
 
 	protected void playCurrent() {
-		this.player.playTrack(getCurrentTrack().getTrack());
+		this.player.playTrack(this.playlist.getTrack(this.currentTrackIndex).getTrack());
+		this.player.playTrack(this.playlist.getTrack(this.currentTrackIndex).getTrack());
 		updateMessage();
 	}
 
@@ -257,17 +258,23 @@ public abstract class PlaylistQueueElement<L extends TrackPlaylist> extends Queu
 
 	@Override
 	public void runPlay(int i) {
-		int planned = getSong(i);
+		int planned = getPlanedTrack(i);
 		if (planned < 0) {
 			this.player.getHandler().sendErrorMessage("SongNr out of Bounds.");
 			return;
 		}
-		this.currentTrack = i;
+		this.currentPlanedIndex = i;
 		playCurrent();
 	}
 
-	public Track getCurrentTrack() {
-		return this.playlist.getTrack(this.currentTrack);
+	protected boolean setCurrent(int index) {
+		try {
+			this.currentTrackIndex = getPlanedTracks().get(index);
+			this.currentPlanedIndex = index;
+		} catch (IndexOutOfBoundsException e) {
+			return false;
+		}
+		return true;
 	}
 
 	public int getTotal() {

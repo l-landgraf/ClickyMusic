@@ -30,6 +30,7 @@ public class GuildHandler {
 	public static final String CONFIRMED = "✅";
 
 	public static final int PLAYLIST_PREVIEW_MAX = 3;
+	public static final int PRELOAD_MAX = 5;
 	public static final int RETRY_AMOUNT = 5;
 	private static final long DELETE_DELAY = 60;
 

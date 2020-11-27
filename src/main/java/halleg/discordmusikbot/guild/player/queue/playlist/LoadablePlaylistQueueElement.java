@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class LoadablePlaylistQueueElement extends PlaylistQueueElement<LoadablePlaylist> {
-	private static final int PRELOAD_MAX = 5;
 	protected GuildHandler handler;
 
 	public LoadablePlaylistQueueElement(GuildHandler handler, AudioTrack firstTrack, String title, String author, String thumbnail, String uri, Member member, String[] sources, String[] images) {
@@ -22,7 +21,6 @@ public class LoadablePlaylistQueueElement extends PlaylistQueueElement<LoadableP
 	}
 
 	public void loadTrack(int trackNr, AudioTrack track, boolean update, boolean playThis) {
-		System.out.println(track.getInfo().title + " update: " + update);
 		this.playlist.getTrack(trackNr).setTrack(track);
 		if (update) {
 			updateMessage();
@@ -45,11 +43,11 @@ public class LoadablePlaylistQueueElement extends PlaylistQueueElement<LoadableP
 			planned = getPlanedNormal();
 		}
 
-		for (int i = this.currentTrack + 1; i < planned.size() && i < PRELOAD_MAX + this.currentTrack + 1; i++) {
-			loadTrack(planned.get(i), (this.shuffle == shuffle && i < PRELOAD_MAX + this.currentTrack + 1), false);
+		for (int i = this.currentPlanedIndex + 1; i < planned.size() && i < GuildHandler.PRELOAD_MAX + this.currentPlanedIndex + 1; i++) {
+			loadTrack(planned.get(i), (this.shuffle == shuffle && i < GuildHandler.PRELOAD_MAX + this.currentPlanedIndex + 1), false);
 		}
 
-		for (int i = this.currentTrack - 1; i > 0 && i > this.currentTrack - PRELOAD_MAX; i--) {
+		for (int i = this.currentPlanedIndex - 1; i >= 0 && i > this.currentPlanedIndex - GuildHandler.PRELOAD_MAX - 1; i--) {
 			loadTrack(planned.get(i), false, false);
 		}
 	}
@@ -73,14 +71,25 @@ public class LoadablePlaylistQueueElement extends PlaylistQueueElement<LoadableP
 	}
 
 	@Override
+	protected void prevInternal() {
+		super.prevInternal();
+		loadPlannedTracks();
+	}
+
+	@Override
+	protected void playCurrent() {
+		super.playCurrent();
+	}
+
+	@Override
 	public void onShuffle() {
 		super.onShuffle();
 		loadPlannedTracks();
 	}
 
 	@Override
-	protected int getSong(int songNr) {
-		int i = super.getSong(songNr);
+	protected int getPlanedTrack(int songNr) {
+		int i = super.getPlanedTrack(songNr);
 		if (i < 0) {
 			return i;
 		}
@@ -93,7 +102,7 @@ public class LoadablePlaylistQueueElement extends PlaylistQueueElement<LoadableP
 
 	@Override
 	public void runPlay(int i) {
-		int planned = super.getSong(i);
+		int planned = super.getPlanedTrack(i);
 		if (planned < 0) {
 			this.player.getHandler().sendErrorMessage("SongNr out of Bounds.");
 			return;
@@ -102,7 +111,7 @@ public class LoadablePlaylistQueueElement extends PlaylistQueueElement<LoadableP
 			loadTrack(i, false, true);
 			return;
 		}
-		this.currentTrack = i;
+		setCurrent(i);
 		loadPlannedTracks();
 		playCurrent();
 	}
