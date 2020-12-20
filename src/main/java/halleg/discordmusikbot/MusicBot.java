@@ -1,6 +1,7 @@
 package halleg.discordmusikbot;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager;
@@ -35,6 +36,8 @@ public class MusicBot extends ListenerAdapter {
 
 	public MusicBot(JDA jda, File musicFolder) {
 		this.jda = jda;
+		mapper = new ObjectMapper();
+		mapper.enable(SerializationFeature.INDENT_OUTPUT);;
 		this.manager = new DefaultAudioPlayerManager();
 		YoutubeAudioSourceManager ytManager = new MyYoutubeAudioSourceManager();
 		this.manager.registerSourceManager(ytManager);
@@ -53,14 +56,10 @@ public class MusicBot extends ListenerAdapter {
 			for (File file : filesList) {
 				System.out.println("checking file: " + file.getName());
 				if (file.getName().matches("\\d+\\.config")) {
-					System.out.println("loading file..");
-					FileInputStream in = new FileInputStream(file);
-					ObjectInputStream ois = new ObjectInputStream(in);
-					GuildConfig config = (GuildConfig) (ois.readObject());
+					GuildConfig config = mapper.readValue(file, GuildConfig.class);
 
-					this.map.put(config.getGuildid(), new GuildHandler(this, this.jda.getGuildById(config.getGuildid()),
-							config.getChannelid(), config.getPrefix()));
-					ois.close();
+					this.map.put(config.getGuildid(), new GuildHandler(this, config));
+
 				}
 			}
 		} catch (Exception e) {
@@ -134,7 +133,7 @@ public class MusicBot extends ListenerAdapter {
 	private GuildHandler getHandler(long id) {
 		GuildHandler handler = MusicBot.this.map.get(id);
 		if (handler == null) {
-			handler = new GuildHandler(MusicBot.this, this.jda.getGuildById(id), 0l, ".");
+			handler = new GuildHandler(this, new GuildConfig(id, 0l, "."));
 			MusicBot.this.map.put(id, handler);
 		}
 
@@ -147,5 +146,9 @@ public class MusicBot extends ListenerAdapter {
 
 	public TrackLoader.PlaylistPreloadManager getPreloader() {
 		return this.preloader;
+	}
+
+	public Guild getGuild(long guildid) {
+		return jda.getGuildById(guildid);
 	}
 }
