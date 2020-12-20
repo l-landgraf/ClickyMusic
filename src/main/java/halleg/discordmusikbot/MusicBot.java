@@ -1,5 +1,6 @@
 package halleg.discordmusikbot;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager;
@@ -30,6 +31,7 @@ public class MusicBot extends ListenerAdapter {
 	private Map<Long, GuildHandler> map;
 	private AudioPlayerManager manager;
 	private SpotifyAudioSourceManager preloader;
+	private ObjectMapper mapper;
 
 	public MusicBot(JDA jda, File musicFolder) {
 		this.jda = jda;
@@ -68,11 +70,8 @@ public class MusicBot extends ListenerAdapter {
 
 	public void saveConfig(GuildHandler handler) {
 		try {
-			FileOutputStream out = new FileOutputStream(handler.getGuild().getIdLong() + ".config");
-			ObjectOutputStream oos = new ObjectOutputStream(out);
-			oos.writeObject(new GuildConfig(handler));
-			oos.flush();
-			oos.close();
+			File file  = new File(handler.getGuild().getIdLong() + ".config");
+			mapper.writeValue(file,new GuildConfig(handler));
 			System.out.println("saved config file " + handler.getGuild().getIdLong() + ".config");
 		} catch (Exception e) {
 			e.printStackTrace();
