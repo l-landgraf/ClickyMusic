@@ -13,7 +13,6 @@ import halleg.discordmusikbot.guild.youtube.YoutubeQuerryAudioSourceManager;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.guild.GuildJoinEvent;
-import net.dv8tion.jda.api.events.guild.GuildLeaveEvent;
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceUpdateEvent;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.guild.react.GuildMessageReactionAddEvent;
@@ -31,9 +30,12 @@ public class MusicBot extends ListenerAdapter {
 	private Map<Long, GuildHandler> map;
 	private AudioPlayerManager manager;
 	private SpotifyAudioSourceManager preloader;
+	private ObjectMapper mapper;
 
 	public MusicBot(JDA jda, File musicFolder) {
 		this.jda = jda;
+		mapper = new ObjectMapper();
+		mapper.enable(SerializationFeature.INDENT_OUTPUT);;
 		this.manager = new DefaultAudioPlayerManager();
 		YoutubeAudioSourceManager ytManager = new MyYoutubeAudioSourceManager();
 		this.manager.registerSourceManager(ytManager);
@@ -46,44 +48,28 @@ public class MusicBot extends ListenerAdapter {
 	}
 
 	private void loadConfigs() {
-		for (Guild g : this.jda.getGuilds()) {
-			System.out.println("loading config for " + g.getIdLong());
-			File file = new File("./" + getFilename(g.getIdLong()));
-			if (!file.exists()) {
-				System.out.println("no file found, using default settings");
-				GuildHandler guildHandler = new GuildHandler(this, g);
-				this.map.put(g.getIdLong(), guildHandler);
-			} else {
-				System.out.println("loading file...");
-				try {
-					GuildConfig config = loadConfig(file);
-					this.map.put(config.getGuildid(), new GuildHandler(this, g, config.getChannelid(), config.getPrefix()));
-				} catch (IOException | ClassNotFoundException e) {
-					e.printStackTrace();
+		try {
+			File dir = new File(".");
+			File[] filesList = dir.listFiles();
+			for (File file : filesList) {
+				System.out.println("checking file: " + file.getName());
+				if (file.getName().matches("\\d+\\.config")) {
+					GuildConfig config = mapper.readValue(file, GuildConfig.class);
+
+					this.map.put(config.getGuildid(), new GuildHandler(this, config));
+
 				}
 			}
-
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 	}
 
-	public GuildConfig loadConfig(File file) throws IOException, ClassNotFoundException {
-		FileInputStream in = new FileInputStream(file);
-		ObjectInputStream ois = new ObjectInputStream(in);
-		GuildConfig config = (GuildConfig) (ois.readObject());
-		ois.close();
-		System.out.println("successfully loaded");
-
-		return config;
-	}
-
-	public void saveGuildHandler(GuildHandler handler) {
+	public void saveConfig(GuildHandler handler) {
 		try {
-			FileOutputStream out = new FileOutputStream(getFilename(handler.getGuild().getIdLong()));
-			ObjectOutputStream oos = new ObjectOutputStream(out);
-			oos.writeObject(new GuildConfig(handler));
-			oos.flush();
-			oos.close();
-			System.out.println("saved config file " + getFilename(handler.getGuild().getIdLong()));
+			File file  = new File(handler.getGuild().getIdLong() + ".config");
+			mapper.writeValue(file,new GuildConfig(handler));
+			System.out.println("saved config file " + handler.getGuild().getIdLong() + ".config");
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -96,7 +82,7 @@ public class MusicBot extends ListenerAdapter {
 			return;
 		}
 
-		this.map.get(event.getGuild().getIdLong()).handleMessage(event);
+		getHandler(event.getGuild().getIdLong()).handleMessage(event);
 
 	}
 
@@ -148,7 +134,7 @@ public class MusicBot extends ListenerAdapter {
 		channel.retrieveMessageById(messageid).queue(new Consumer<>() {
 			@Override
 			public void accept(Message message) {
-				MusicBot.this.map.get(message.getGuild().getIdLong()).handleReaction(react, message, member);
+				getHandler(message.getGuild().getIdLong()).handleReaction(react, message, member);
 			}
 		});
 	}
@@ -163,5 +149,9 @@ public class MusicBot extends ListenerAdapter {
 
 	public TrackLoader.PlaylistPreloadManager getPreloader() {
 		return this.preloader;
+	}
+
+	public Guild getGuild(long guildid) {
+		return jda.getGuildById(guildid);
 	}
 }

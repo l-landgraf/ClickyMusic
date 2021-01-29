@@ -45,15 +45,11 @@ public class GuildHandler {
 	private ButtonManager buttons;
 	private TrackLoader loader;
 
-	public GuildHandler(MusicBot musicbot, Guild guild) {
-		this(musicbot, guild, -1, ".");
-	}
-
-	public GuildHandler(MusicBot musicbot, Guild guild, long channelid, String prefix) {
-		this.prefix = prefix;
+	public GuildHandler(MusicBot musicbot, GuildConfig config) {
+		this.prefix = config.getPrefix();
 		this.bot = musicbot;
-		this.guild = guild;
-		this.output = guild.getTextChannelById(channelid);
+		this.guild = musicbot.getGuild(config.getGuildid());
+		this.output = guild.getTextChannelById(config.getChannelid());
 		this.builder = new MessageBuilder(this);
 		this.player = new Player(this);
 		this.commands = new CommandManager(this);
@@ -72,13 +68,17 @@ public class GuildHandler {
 		this.output = channel;
 		log("set channel to: " + channel.getName());
 		sendInfoMessage("This is now the prefered channel.");
-		this.bot.saveGuildHandler(this);
+		this.bot.saveConfig(this);
 	}
 
 	public void setPrefix(String prefix) {
 		this.prefix = prefix;
 		sendInfoMessage("Commands for this bot now have to start with `" + this.prefix + "`.");
-		this.bot.saveGuildHandler(this);
+		this.bot.saveConfig(this);
+	}
+
+	public void saveConfig(){
+		this.bot.saveConfig(this);
 	}
 
 	private void clearLastMessages(TextChannel channel) {
