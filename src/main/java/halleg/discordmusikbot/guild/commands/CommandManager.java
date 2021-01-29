@@ -3,6 +3,7 @@ package halleg.discordmusikbot.guild.commands;
 import halleg.discordmusikbot.guild.GuildHandler;
 import halleg.discordmusikbot.guild.player.queue.QueueElement;
 import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.TextChannel;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -72,12 +73,23 @@ public class CommandManager {
 		});
 
 		this.commands.add(new Command(handler, "setchannel", false, false, false,
-				false, true, "sets the channel for this bot.", "*channelid*") {
+				true, true, "sets the channel for this bot.", "[channelid]") {
 			@Override
 			protected void run(List<String> args, Message message) {
-				this.handler.setChannel(this.handler.getGuild().getTextChannelById(args.get(1)));
+				if (args.size() == 1) {
+					this.handler.setChannel((TextChannel) message.getChannel());
+				}
+				if (args.size() == 2) {
+					try {
+
+						this.handler.setChannel(this.handler.getGuild().getTextChannelById(args.get(1)));
+					} catch (NumberFormatException e) {
+						this.handler.sendErrorMessage("invalid id");
+					}
+				}
 			}
 		});
+
 
 		this.commands.add(new Command(handler, "setprefix", false, false, false,
 				false, true, "sets the chracters commands have to start with.", "*prefix*") {
