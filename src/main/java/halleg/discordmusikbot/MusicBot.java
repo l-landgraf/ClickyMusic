@@ -1,5 +1,7 @@
 package halleg.discordmusikbot;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager;
@@ -13,6 +15,7 @@ import halleg.discordmusikbot.guild.youtube.YoutubeQuerryAudioSourceManager;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.guild.GuildJoinEvent;
+import net.dv8tion.jda.api.events.guild.GuildLeaveEvent;
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceUpdateEvent;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.guild.react.GuildMessageReactionAddEvent;
@@ -20,7 +23,8 @@ import net.dv8tion.jda.api.events.message.guild.react.GuildMessageReactionRemove
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
 import javax.annotation.Nonnull;
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -34,8 +38,8 @@ public class MusicBot extends ListenerAdapter {
 
 	public MusicBot(JDA jda, File musicFolder) {
 		this.jda = jda;
-		mapper = new ObjectMapper();
-		mapper.enable(SerializationFeature.INDENT_OUTPUT);;
+		this.mapper = new ObjectMapper();
+		this.mapper.enable(SerializationFeature.INDENT_OUTPUT);
 		this.manager = new DefaultAudioPlayerManager();
 		YoutubeAudioSourceManager ytManager = new MyYoutubeAudioSourceManager();
 		this.manager.registerSourceManager(ytManager);
@@ -48,31 +52,36 @@ public class MusicBot extends ListenerAdapter {
 	}
 
 	private void loadConfigs() {
-		try {
-			File dir = new File(".");
-			File[] filesList = dir.listFiles();
-			for (File file : filesList) {
-				System.out.println("checking file: " + file.getName());
-				if (file.getName().matches("\\d+\\.config")) {
-					GuildConfig config = mapper.readValue(file, GuildConfig.class);
+		for (Guild g : this.jda.getGuilds()) {
+			File file = new File(getFilename(g.getIdLong()));
+			GuildHandler handler = null;
 
-					this.map.put(config.getGuildid(), new GuildHandler(this, config));
-
-				}
+			System.out.println("initializing guild " + g.getName() + " (" + g.getIdLong() + ")");
+			try {
+				handler = new GuildHandler(this, loadConfig(file), g);
+			} catch (Exception e) {
+				System.out.println("failed to load, using default");
+				handler = new GuildHandler(this, new GuildConfig(), g);
 			}
+			this.map.put(g.getIdLong(), handler);
+		}
+	}
+
+
+	public void saveGuildHandler(GuildHandler handler) {
+		try {
+			File file = new File(getFilename(handler.getGuild().getIdLong()));
+			this.mapper.writeValue(file, new GuildConfig(handler));
+			System.out.println("saved config file " + file.getAbsolutePath());
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 
-	public void saveConfig(GuildHandler handler) {
-		try {
-			File file  = new File(handler.getGuild().getIdLong() + ".config");
-			mapper.writeValue(file,new GuildConfig(handler));
-			System.out.println("saved config file " + handler.getGuild().getIdLong() + ".config");
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+	public GuildConfig loadConfig(File file) throws IOException {
+		System.out.println("loading file " + file.getAbsolutePath());
+		return this.mapper.readValue(file, GuildConfig.class);
+
 	}
 
 	@Override
@@ -82,7 +91,7 @@ public class MusicBot extends ListenerAdapter {
 			return;
 		}
 
-		getHandler(event.getGuild().getIdLong()).handleMessage(event);
+		this.map.get(event.getGuild().getIdLong()).handleMessage(event);
 
 	}
 
@@ -112,7 +121,7 @@ public class MusicBot extends ListenerAdapter {
 	@Override
 	public void onGuildJoin(GuildJoinEvent event) {
 		System.out.println("joined new server " + event.getGuild().getIdLong());
-		GuildHandler guildHandler = new GuildHandler(this, event.getGuild());
+		GuildHandler guildHandler = new GuildHandler(this, new GuildConfig(), event.getGuild());
 		this.map.put(event.getGuild().getIdLong(), guildHandler);
 		saveGuildHandler(guildHandler);
 	}
@@ -134,7 +143,7 @@ public class MusicBot extends ListenerAdapter {
 		channel.retrieveMessageById(messageid).queue(new Consumer<>() {
 			@Override
 			public void accept(Message message) {
-				getHandler(message.getGuild().getIdLong()).handleReaction(react, message, member);
+				MusicBot.this.map.get(message.getGuild().getIdLong()).handleReaction(react, message, member);
 			}
 		});
 	}
@@ -152,6 +161,6 @@ public class MusicBot extends ListenerAdapter {
 	}
 
 	public Guild getGuild(long guildid) {
-		return jda.getGuildById(guildid);
+		return this.jda.getGuildById(guildid);
 	}
 }

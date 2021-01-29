@@ -45,11 +45,11 @@ public class GuildHandler {
 	private ButtonManager buttons;
 	private TrackLoader loader;
 
-	public GuildHandler(MusicBot musicbot, GuildConfig config) {
+	public GuildHandler(MusicBot musicbot, GuildConfig config, Guild g) {
 		this.prefix = config.getPrefix();
 		this.bot = musicbot;
-		this.guild = musicbot.getGuild(config.getGuildid());
-		this.output = guild.getTextChannelById(config.getChannelid());
+		this.guild = g;
+		this.output = this.guild.getTextChannelById(config.getChannelid());
 		this.builder = new MessageBuilder(this);
 		this.player = new Player(this);
 		this.commands = new CommandManager(this);
@@ -57,28 +57,28 @@ public class GuildHandler {
 		this.loader = new TrackLoader(this, musicbot.getPreloader());
 
 		if (this.output == null) {
-			setChannel(guild.getTextChannels().get(0));
+			setChannel(this.guild.getTextChannels().get(0));
 		} else {
 			clearLastMessages(this.output);
 		}
-		log("initialized! outputchannel: " + this.output.getName() + " prefix: " + prefix);
+		log("initialized! outputchannel: " + this.output.getName() + " prefix: " + this.prefix);
 	}
 
 	public void setChannel(TextChannel channel) {
 		this.output = channel;
 		log("set channel to: " + channel.getName());
 		sendInfoMessage("This is now the prefered channel.");
-		this.bot.saveConfig(this);
+		this.bot.saveGuildHandler(this);
 	}
 
 	public void setPrefix(String prefix) {
 		this.prefix = prefix;
 		sendInfoMessage("Commands for this bot now have to start with `" + this.prefix + "`.");
-		this.bot.saveConfig(this);
+		this.bot.saveGuildHandler(this);
 	}
 
-	public void saveConfig(){
-		this.bot.saveConfig(this);
+	public void saveConfig() {
+		this.bot.saveGuildHandler(this);
 	}
 
 	private void clearLastMessages(TextChannel channel) {
