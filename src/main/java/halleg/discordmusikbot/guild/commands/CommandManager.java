@@ -195,13 +195,6 @@ public class CommandManager {
 				this.handler.sendHelpMessage(message.getChannel());
 			}
 		});
-		this.commands.add(new Command(handler, "updateConfig", false, false, false,
-				false, true, "recreates the config-file for this Server.") {
-			@Override
-			protected void run(List<String> args, Message message) {
-				handler.saveConfig();
-			}
-		});
 	}
 
 	public boolean handleCommand(Message message) {
