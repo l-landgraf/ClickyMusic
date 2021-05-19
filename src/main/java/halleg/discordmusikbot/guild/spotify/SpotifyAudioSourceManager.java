@@ -1,11 +1,12 @@
 package halleg.discordmusikbot.guild.spotify;
 
-import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
+import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioTrack;
 import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeSearchProvider;
 import com.sedmelluq.discord.lavaplayer.track.*;
+import com.wrapper.spotify.model_objects.IPlaylistItem;
 import com.wrapper.spotify.model_objects.specification.*;
 import halleg.discordmusikbot.guild.GuildHandler;
 import halleg.discordmusikbot.guild.TrackLoader;
@@ -43,7 +44,7 @@ public class SpotifyAudioSourceManager implements AudioSourceManager, TrackLoade
 	}
 
 	@Override
-	public AudioItem loadItem(DefaultAudioPlayerManager manager, AudioReference reference) {
+	public AudioItem loadItem(AudioPlayerManager manager, AudioReference reference) {
 		if (reference.identifier.startsWith(PLAYLIST_PREFIX)) {
 			String playlistId = extractId(reference.identifier);
 			return loadPlaylist(playlistId);
@@ -79,7 +80,7 @@ public class SpotifyAudioSourceManager implements AudioSourceManager, TrackLoade
 				playlist.getImages()[0].getUrl());
 		int i = 0;
 		for (PlaylistTrack t : SpotifyApi.loadPlaylistTracks(playlistId, playlist.getTracks().getTotal())) {
-			String artists = getArtists(t.getTrack().getArtists());
+			String artists = getArtists(t.getTrack());
 			String search = t.getTrack().getName() + artists;
 			addToList(search, t.getTrack().getDurationMs(), list);
 			i++;
@@ -112,7 +113,7 @@ public class SpotifyAudioSourceManager implements AudioSourceManager, TrackLoade
 			return null;
 		}
 
-		String search = track.getName() + getArtists(track.getArtists());
+		String search = track.getName() + getArtists(track);
 		AudioItem item = getTrack(search, track.getDurationMs());
 		return item;
 	}
@@ -160,6 +161,24 @@ public class SpotifyAudioSourceManager implements AudioSourceManager, TrackLoade
 		return artists;
 	}
 
+	public String getArtists(IPlaylistItem item) {
+		String artists = "";
+		if (item instanceof Track) {
+			return getArtists(((Track) item).getArtists());
+		}
+
+		return artists;
+	}
+
+	public String getImage(IPlaylistItem item) {
+		String artists = "";
+		if (item instanceof Track) {
+			return ((Track) item).getAlbum().getImages()[0].getUrl();
+		}
+
+		return artists;
+	}
+
 	@Override
 	public boolean isTrackEncodable(AudioTrack track) {
 		return false;
@@ -201,7 +220,7 @@ public class SpotifyAudioSourceManager implements AudioSourceManager, TrackLoade
 			return null;
 		}
 		PlaylistTrack t = playlist.getTracks().getItems()[0];
-		String artists = getArtists(t.getTrack().getArtists());
+		String artists = getArtists(t.getTrack());
 
 		String search = t.getTrack().getName() + artists;
 
@@ -209,9 +228,9 @@ public class SpotifyAudioSourceManager implements AudioSourceManager, TrackLoade
 		String[] sources = new String[playlist.getTracks().getTotal()];
 		PlaylistTrack[] tracks = SpotifyApi.loadPlaylistTracks(playlistId, playlist.getTracks().getTotal());
 		for (int i = 0; i < tracks.length; i++) {
-			sources[i] = tracks[i].getTrack().getName() + getArtists(tracks[i].getTrack().getArtists());
+			sources[i] = tracks[i].getTrack().getName() + getArtists(tracks[i].getTrack());
 			try {
-				images[i] = tracks[i].getTrack().getAlbum().getImages()[0].getUrl();
+				images[i] = getImage(tracks[i].getTrack());
 			} catch (ArrayIndexOutOfBoundsException e) {
 				handler.log("cant find images for song nr " + i + " (" + tracks[i].getTrack().getName() + ")");
 			}

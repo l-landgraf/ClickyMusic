@@ -1,13 +1,13 @@
 package halleg.discordmusikbot.guild.youtube;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
+import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.track.AudioItem;
 import com.sedmelluq.discord.lavaplayer.track.AudioReference;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Extends the {@link YoutubeAudioSourceManager} by removing all parameters
@@ -18,7 +18,7 @@ public class MyYoutubeAudioSourceManager extends YoutubeAudioSourceManager {
 	public static String IDENT_PREFIX = "https://www.youtube.com/watch";
 
 	@Override
-	public AudioItem loadItem(DefaultAudioPlayerManager manager, AudioReference reference) {
+	public AudioItem loadItem(AudioPlayerManager manager, AudioReference reference) {
 
 		String[] slpit = reference.identifier.split("\\?");
 		if (IDENT_PREFIX.equals(slpit[0])) {

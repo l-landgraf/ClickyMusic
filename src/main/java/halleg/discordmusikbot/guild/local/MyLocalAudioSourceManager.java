@@ -1,6 +1,6 @@
 package halleg.discordmusikbot.guild.local;
 
-import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
+import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.source.local.LocalAudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.track.AudioItem;
 import com.sedmelluq.discord.lavaplayer.track.AudioReference;
@@ -18,7 +18,7 @@ public class MyLocalAudioSourceManager extends LocalAudioSourceManager {
 	}
 
 	@Override
-	public AudioItem loadItem(DefaultAudioPlayerManager manager, AudioReference reference) {
+	public AudioItem loadItem(AudioPlayerManager manager, AudioReference reference) {
 		File file = new File(this.musicFodler.getPath(), reference.identifier);
 		Path filePath = null;
 		Path folderPath = null;

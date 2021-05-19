@@ -33,6 +33,8 @@ public class App extends ListenerAdapter {
 		intents.add(GatewayIntent.GUILD_VOICE_STATES);
 		JDA jda = JDABuilder.create(intents).setToken(args[0]).build().awaitReady();
 		SpotifyApi.initialize(args[1], args[2]);
+
 		jda.addEventListener(new MusicBot(jda, file));
+		jda.addEventListener(new DisconnectListener());
 	}
 }

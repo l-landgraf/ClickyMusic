@@ -7,8 +7,9 @@ import com.wrapper.spotify.requests.authorization.client_credentials.ClientCrede
 import com.wrapper.spotify.requests.data.albums.GetAlbumRequest;
 import com.wrapper.spotify.requests.data.albums.GetAlbumsTracksRequest;
 import com.wrapper.spotify.requests.data.playlists.GetPlaylistRequest;
-import com.wrapper.spotify.requests.data.playlists.GetPlaylistsTracksRequest;
+import com.wrapper.spotify.requests.data.playlists.GetPlaylistsItemsRequest;
 import com.wrapper.spotify.requests.data.tracks.GetTrackRequest;
+import org.apache.hc.core5.http.ParseException;
 
 import java.io.IOException;
 import java.util.Calendar;
@@ -31,7 +32,6 @@ public class SpotifyApi {
 				.setClientId(clientId)
 				.setClientSecret(clientSecret)
 				.build();
-
 		ClientCredentialsRequest clientCredentialsRequest = spotifyApi.clientCredentials()
 				.build();
 
@@ -45,7 +45,7 @@ public class SpotifyApi {
 			Calendar calendar = Calendar.getInstance();
 			calendar.setTimeInMillis(experationDate);
 			System.out.println("New Spotify Experation Date: " + calendar.getTime().toString());
-		} catch (IOException | SpotifyWebApiException e) {
+		} catch (IOException | SpotifyWebApiException | ParseException e) {
 			System.out.println("Error: " + e.getMessage());
 		}
 	}
@@ -67,7 +67,7 @@ public class SpotifyApi {
 		try {
 			Playlist playlist = getPlaylistRequest.execute();
 			return playlist;
-		} catch (IOException | SpotifyWebApiException e) {
+		} catch (IOException | SpotifyWebApiException | ParseException e) {
 			System.out.println("Spotify Error: " + e.getMessage());
 		}
 		return null;
@@ -80,8 +80,8 @@ public class SpotifyApi {
 		int offset = 0;
 		PlaylistTrack[] tracks = new PlaylistTrack[max];
 		while (offset < max) {
-			GetPlaylistsTracksRequest getPlaylistRequest = spotifyApi
-					.getPlaylistsTracks(s).offset(offset)
+			GetPlaylistsItemsRequest getPlaylistRequest = spotifyApi
+					.getPlaylistsItems(s).offset(offset)
 					.build();
 			try {
 				Paging<PlaylistTrack> res = getPlaylistRequest.execute();
@@ -91,7 +91,7 @@ public class SpotifyApi {
 				}
 				offset += res.getItems().length;
 
-			} catch (IOException | SpotifyWebApiException e) {
+			} catch (IOException | SpotifyWebApiException | ParseException e) {
 				System.out.println("Spotify Error: " + e.getMessage());
 				return null;
 			}
@@ -117,7 +117,7 @@ public class SpotifyApi {
 			Album album = getAlbumRequest.execute();
 			return album;
 
-		} catch (IOException | SpotifyWebApiException e) {
+		} catch (IOException | SpotifyWebApiException | ParseException e) {
 			System.out.println("Spotify Error: " + e.getMessage());
 		}
 		return null;
@@ -133,7 +133,7 @@ public class SpotifyApi {
 		try {
 			Track album = getTrackRequest.execute();
 			return album;
-		} catch (IOException | SpotifyWebApiException e) {
+		} catch (IOException | SpotifyWebApiException | ParseException e) {
 			System.out.println("Spotify Error: " + e.getMessage());
 		}
 		return null;
@@ -157,7 +157,7 @@ public class SpotifyApi {
 				}
 				offset += res.getItems().length;
 
-			} catch (IOException | SpotifyWebApiException e) {
+			} catch (IOException | SpotifyWebApiException | ParseException e) {
 				System.out.println("Spotify Error: " + e.getMessage());
 				return null;
 			}
