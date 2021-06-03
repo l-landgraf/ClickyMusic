@@ -129,7 +129,13 @@ public class GuildHandler {
 			if (event.getChannel().getIdLong() != this.output.getIdLong()) {
 				return;
 			}
-			this.player.join(event.getMember().getVoiceState().getChannel());
+			VoiceChannel c = event.getMember().getVoiceState().getChannel();
+			if(c == null) {
+				delete(event.getMessage());
+				log("deleting message, " + event.getMember().getEffectiveName() + " is not in voice");
+				return;
+			}
+			this.player.join(c);
 			this.builder.setLoading(event.getMessage());
 			this.loader.search(event.getMessage().getContentRaw(), event.getMember(), event.getMessage());
 		}
