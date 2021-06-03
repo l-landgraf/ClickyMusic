@@ -11,14 +11,14 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-public class YoutubeQuerryAudioSourceManager implements AudioSourceManager {
+public class YoutubeQueryAudioSourceManager implements AudioSourceManager {
 
 	private static final String SPOTIFY_DOMAIN = "open.spotify.com";
 	private YoutubeAudioSourceManager ytManager;
 	YoutubeSearchProvider searcher;
 
 
-	public YoutubeQuerryAudioSourceManager(YoutubeAudioSourceManager ytManager) {
+	public YoutubeQueryAudioSourceManager(YoutubeAudioSourceManager ytManager) {
 		this.ytManager = ytManager;
 		this.searcher = new RetryYoutubeSearchProvider();
 	}
@@ -35,7 +35,7 @@ public class YoutubeQuerryAudioSourceManager implements AudioSourceManager {
 	@Override
 	public AudioItem loadItem(AudioPlayerManager manager, AudioReference reference) {
 
-		AudioItem results = this.searcher.loadSearchResult(reference.identifier, YoutubeQuerryAudioSourceManager.this::buildTrackFromInfo);
+		AudioItem results = this.searcher.loadSearchResult(reference.identifier, YoutubeQueryAudioSourceManager.this::buildTrackFromInfo);
 		if (results instanceof BasicAudioPlaylist) {
 			return ((BasicAudioPlaylist) results).getTracks().get(0);
 		} else {

@@ -11,7 +11,7 @@ import halleg.discordmusikbot.guild.TrackLoader;
 import halleg.discordmusikbot.guild.local.MyLocalAudioSourceManager;
 import halleg.discordmusikbot.guild.spotify.SpotifyAudioSourceManager;
 import halleg.discordmusikbot.guild.youtube.MyYoutubeAudioSourceManager;
-import halleg.discordmusikbot.guild.youtube.YoutubeQuerryAudioSourceManager;
+import halleg.discordmusikbot.guild.youtube.YoutubeQueryAudioSourceManager;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.guild.GuildJoinEvent;
@@ -46,7 +46,7 @@ public class MusicBot extends ListenerAdapter {
 		this.preloader = new SpotifyAudioSourceManager(ytManager);
 		this.manager.registerSourceManager(this.preloader);
 		this.manager.registerSourceManager(new MyLocalAudioSourceManager(musicFolder));
-		this.manager.registerSourceManager(new YoutubeQuerryAudioSourceManager(ytManager));
+		this.manager.registerSourceManager(new YoutubeQueryAudioSourceManager(ytManager));
 		this.map = new HashMap<>();
 		loadConfigs();
 	}
