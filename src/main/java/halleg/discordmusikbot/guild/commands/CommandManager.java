@@ -2,8 +2,10 @@ package halleg.discordmusikbot.guild.commands;
 
 import halleg.discordmusikbot.guild.GuildHandler;
 import halleg.discordmusikbot.guild.player.queue.QueueElement;
+import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.TextChannel;
+import net.dv8tion.jda.api.managers.GuildManager;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -171,6 +173,14 @@ public class CommandManager {
 
 				this.handler.sendInfoMessage("Current Track Position: " + String.format("%02d", hours) + ":" + String.format("%02d", minutes) + ":" + String.format("%02d", seconds));
 
+			}
+		});
+
+		this.commands.add(new Command(handler, "ripclicky", true, false, false,
+				false, true, "terminates the bot and hopefully restarts it.") {
+			@Override
+			protected void run(List<String> args, Message message) {
+				message.addReaction(GuildHandler.RIP).queue();
 			}
 		});
 

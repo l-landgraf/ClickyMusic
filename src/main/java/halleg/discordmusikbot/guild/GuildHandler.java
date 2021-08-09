@@ -28,6 +28,7 @@ public class GuildHandler {
 	public static final String LOADING_FAILED_EMOJI = "⚡";
 	public static final String UNKNOWN_COMMAND = "❓";
 	public static final String CONFIRMED = "✅";
+	public static final String RIP = "\uD83D\uDC80";
 
 	public static final int PLAYLIST_PREVIEW_MAX = 3;
 	public static final int PRELOAD_MAX = 5;

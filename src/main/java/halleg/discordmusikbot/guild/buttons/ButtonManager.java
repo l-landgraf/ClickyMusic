@@ -100,6 +100,14 @@ public class ButtonManager {
 				}
 			}
 		});
+
+		this.buttons.add(new Button(handler, GuildHandler.RIP, false,
+				"Kills the Bot.") {
+			@Override
+			protected void run(Message message, MessageReaction react, Member member) {
+				System.exit(1);
+			}
+		});
 	}
 
 	public boolean handleReaction(Message message, MessageReaction react, Member member) {
