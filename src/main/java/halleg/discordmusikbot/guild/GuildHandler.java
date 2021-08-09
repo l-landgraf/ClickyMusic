@@ -131,7 +131,7 @@ public class GuildHandler {
 				return;
 			}
 			VoiceChannel c = event.getMember().getVoiceState().getChannel();
-			if(c == null) {
+			if(c == null ||(player.getConnectedChannel() != null && c.getIdLong() != player.getConnectedChannel().getIdLong())) {
 				delete(event.getMessage());
 				log("deleting message, " + event.getMember().getEffectiveName() + " is not in voice");
 				return;
