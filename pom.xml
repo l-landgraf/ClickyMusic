@@ -11,9 +11,9 @@
     <url>http://maven.apache.org</url>
 
     <properties>
-        <java.version>1.11</java.version>
-        <maven.compiler.source>1.11</maven.compiler.source>
-        <maven.compiler.target>1.11</maven.compiler.target>
+        <java.version>11</java.version>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
@@ -72,4 +72,29 @@
             <url>https://m2.dv8tion.net/releases</url>
         </repository>
     </repositories>
+         
+    <build>
+    <plugins>
+         <plugin>
+             <groupId>org.apache.maven.plugins</groupId>
+             <artifactId>maven-shade-plugin</artifactId>
+             <executions>
+                 <execution>
+                     <goals>
+                         <goal>shade</goal>
+                     </goals>
+                     <configuration>
+                         <shadedArtifactAttached>true</shadedArtifactAttached>
+                         <transformers>
+                             <transformer implementation=
+                               "org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                 <mainClass>com.baeldung.executable.ExecutableMavenJar</mainClass>
+                         </transformer>
+                     </transformers>
+                 </configuration>
+                 </execution>
+             </executions>
+         </plugin>
+    </plugins>
+    </build>
 </project>
