@@ -77,7 +77,7 @@
         <repository>
             <id>internal.repo</id>
             <name>Internal repo</name>
-            <url>file:///home/pi/</url>
+            <url>file:///var/lib/jenkins/deploy</url>
         </repository>
     </distributionManagement>
 </project>
