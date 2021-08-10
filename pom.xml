@@ -72,4 +72,12 @@
             <url>https://m2.dv8tion.net/releases</url>
         </repository>
     </repositories>
+
+    <distributionManagement>
+        <repository>
+            <id>internal.repo</id>
+            <name>Internal repo</name>
+            <url>file:///home/pi/</url>
+        </repository>
+    </distributionManagement>
 </project>
