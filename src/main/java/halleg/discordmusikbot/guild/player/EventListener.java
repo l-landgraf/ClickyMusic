@@ -9,9 +9,11 @@ import halleg.discordmusikbot.guild.GuildHandler;
 
 public class EventListener extends AudioEventAdapter {
     private GuildHandler handler;
+    private Player player;
 
-    public EventListener(GuildHandler handler) {
+    public EventListener(GuildHandler handler, Player player) {
         this.handler = handler;
+        this.player = player;
     }
 
     @Override
@@ -32,7 +34,7 @@ public class EventListener extends AudioEventAdapter {
     @Override
     public void onTrackEnd(AudioPlayer player, AudioTrack track, AudioTrackEndReason endReason) {
         if (endReason.mayStartNext) {
-            this.handler.getPlayer().trackEnded();
+            this.player.trackEnded();
         }
         // endReason == FINISHED: A track finished or died by an exception (mayStartNext
         // = true).

@@ -4,6 +4,7 @@ import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import halleg.discordmusikbot.guild.loader.InititalPlaylistLoadHandler;
 import halleg.discordmusikbot.guild.loader.SingleLoadHandler;
+import halleg.discordmusikbot.guild.player.Player;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 
@@ -22,7 +23,7 @@ public class TrackLoader {
         this.manager.loadItem(source, loader);
     }
 
-    public void search(String source, Member member, Message message) {
+    public void search(String source, Player player, Member member, Message message) {
         if (source == null) {
             return;
         }
@@ -31,7 +32,7 @@ public class TrackLoader {
         if (loader != null) {
             load(loader.getInitialSource(), loader);
         } else {
-            load(source, new SingleLoadHandler(this.handler, source, member, message));
+            load(source, new SingleLoadHandler(this.handler, player, source, member, message));
         }
 
     }

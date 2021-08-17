@@ -5,17 +5,20 @@ import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import halleg.discordmusikbot.guild.GuildHandler;
+import halleg.discordmusikbot.guild.player.Player;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 
 public abstract class LoadHandler implements AudioLoadResultHandler {
 	protected GuildHandler handler;
+	protected Player player;
 	protected Member member;
 	protected String source;
 	protected Message message;
 
-	public LoadHandler(GuildHandler handler, String source, Member member, Message message) {
+	public LoadHandler(GuildHandler handler,Player player, String source, Member member, Message message) {
 		this.member = member;
+		this.player = player;
 		this.source = source;
 		this.handler = handler;
 		this.message = message;

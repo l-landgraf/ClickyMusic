@@ -1,6 +1,7 @@
 package halleg.discordmusikbot.guild.commands;
 
 import halleg.discordmusikbot.guild.GuildHandler;
+import halleg.discordmusikbot.guild.player.Player;
 import net.dv8tion.jda.api.entities.Message;
 
 import java.util.Arrays;
@@ -18,7 +19,7 @@ public abstract class Command {
     protected boolean unlimitedArguments;
     private final boolean deleteLater;
 
-    public Command(GuildHandler handler, String command, boolean textChannelOnly, boolean voiceChannelOnly, boolean connectedOnly, boolean unlimitedArguments,boolean deleteLater, String description, String... tips) {
+    public Command(GuildHandler handler, String command, boolean textChannelOnly, boolean voiceChannelOnly, boolean connectedOnly, boolean unlimitedArguments, boolean deleteLater, String description, String... tips) {
         this.handler = handler;
         this.command = command;
         this.atibNum = tips.length;
@@ -31,7 +32,7 @@ public abstract class Command {
         this.tips = tips;
     }
 
-    protected abstract void run(List<String> args, Message message);
+    protected abstract void run(List<String> args, Player player, Message message);
 
     public boolean check(Message message) {
         if (this.textChannelOnly && message.getChannel().getIdLong() != this.handler.getChannel().getIdLong()) {
@@ -40,41 +41,33 @@ public abstract class Command {
 
 
         List<String> args = Arrays.asList(message.getContentRaw().split(" "));
-        if (args.get(0).equalsIgnoreCase(this.handler.getPrefix() + this.command)) {
-            if (this.voiceChannelOnly) {
-                if (message.getMember().getVoiceState().getChannel() == null) {
-                    this.handler.sendErrorMessage("Cant find your Voicechannel.");
-                    return false;
-                }
+        if (!args.get(0).equalsIgnoreCase(this.handler.getPrefix() + this.command)) {
 
-                if (this.handler.getPlayer().getConnectedChannel() != null &&
-                        message.getMember().getVoiceState().getChannel() != this.handler.getPlayer().getConnectedChannel()) {
-                    this.handler.sendErrorMessage("Im bussy in a diffrent Voicechanel.");
-                    return false;
-                }
-            }
+            return false;
+        }
 
-            if (this.connectedOnly && this.handler.getPlayer().getConnectedChannel() == null) {
-                this.handler.sendErrorMessage("Im not connected to any Voicechanel.");
+
+        Player player = this.handler.getPlayer(message.getMember().getVoiceState().getChannel());
+        if (this.voiceChannelOnly && player == null) {
+            this.handler.sendErrorMessage("Im bussy in a diffrent Voicechanel.");
+            return false;
+        }
+
+        if (!this.unlimitedArguments) {
+            if ((args.size() - 1) != this.atibNum) {
+                this.handler.sendErrorMessage("Command ussage: " + getTip());
                 return false;
             }
-
-            if (!this.unlimitedArguments) {
-                if ((args.size() - 1) != this.atibNum) {
-                    this.handler.sendErrorMessage("Command ussage: " + getTip());
-                    return false;
-                }
-            }
-
-            if(this.deleteLater){
-                handler.deleteLater(message);
-            }
-
-            this.handler.log("executing command: " + this.command);
-            run(args, message);
-            return true;
         }
-        return false;
+
+        if (this.deleteLater) {
+            this.handler.deleteLater(message);
+        }
+
+        this.handler.log("executing command: " + this.command);
+        run(args, player, message);
+        return true;
+
     }
 
     public GuildHandler getHandler() {

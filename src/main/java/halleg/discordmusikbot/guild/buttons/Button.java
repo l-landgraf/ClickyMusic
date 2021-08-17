@@ -1,6 +1,7 @@
 package halleg.discordmusikbot.guild.buttons;
 
 import halleg.discordmusikbot.guild.GuildHandler;
+import halleg.discordmusikbot.guild.player.Player;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageReaction;
@@ -12,7 +13,7 @@ public abstract class Button {
     protected String description;
     protected boolean connectedOnly;
 
-    protected abstract void run(Message message, MessageReaction react, Member member);
+    protected abstract void run(Message message, Player player, MessageReaction react, Member member);
 
     public Button(GuildHandler handler, String emoji, boolean connectedOnly, String description) {
         this.handler = handler;
@@ -26,26 +27,14 @@ public abstract class Button {
             return false;
         }
 
-
-        try {
-
-            if (this.connectedOnly && this.handler.getPlayer().getConnectedChannel() == null) {
-                return false;
-            }
-
-            if (member.getVoiceState().getChannel() == null) {
-                return false;
-            }
-            if (this.handler.getPlayer().getConnectedChannel() != null && member.getVoiceState().getChannel().getIdLong() != this.handler.getPlayer().getConnectedChannel().getIdLong()) {
-                return false;
-            }
-        } catch (NullPointerException e) {
+        Player player = this.handler.getPlayer(member.getVoiceState().getChannel());
+        if (this.connectedOnly && player == null) {
             return false;
         }
 
         if (emoji.equalsIgnoreCase(this.emoji)) {
             this.handler.log("executing button: " + react.getReactionEmote().getEmoji());
-            run(message, react, member);
+            run(message, player, react, member);
             return true;
         }
         return false;
