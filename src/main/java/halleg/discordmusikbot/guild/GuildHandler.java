@@ -281,7 +281,7 @@ public class GuildHandler {
 
 
             if (event.getChannel() != this.output) {
-                if (this.linkedBots.values().contains(event.getChannel().getIdLong())) {
+                if (player.isConnected() && this.linkedBots.values().contains(event.getChannel().getIdLong())) {
                     sendLostMessage(event.getMember(), event.getChannel());
                 } else {
                     return;
@@ -345,7 +345,7 @@ public class GuildHandler {
     }
 
     public void setBusy(boolean busy) {
-        
+
     }
 
     public void sendHelpMessage(MessageChannel channel) {
@@ -387,7 +387,7 @@ public class GuildHandler {
         try {
             return channel.sendMessage(message);
         } catch (InsufficientPermissionException e) {
-            log("insuficciant permissions to send Message!");
+            log("insufficient permissions to send Message!");
         } catch (NullPointerException e) {
             log("output not initialized!");
         }
