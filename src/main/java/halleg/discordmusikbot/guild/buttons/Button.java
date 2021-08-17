@@ -23,7 +23,7 @@ public abstract class Button {
     }
 
     public boolean check(Message message, MessageReaction react, Member member, String emoji) {
-        if (message.getChannel().getIdLong() != this.handler.getChannel().getIdLong()) {
+        if (!emoji.equalsIgnoreCase(this.emoji)) {
             return false;
         }
 
@@ -32,12 +32,15 @@ public abstract class Button {
             return false;
         }
 
-        if (emoji.equalsIgnoreCase(this.emoji)) {
-            this.handler.log("executing button: " + react.getReactionEmote().getEmoji());
-            run(message, player, react, member);
-            return true;
+        if (player != null && message.getChannel().getIdLong() != this.handler.getChannel().getIdLong()) {
+            this.handler.sendLostMessage(member, message.getChannel());
         }
-        return false;
+
+
+        this.handler.log("executing button: " + react.getReactionEmote().getEmoji());
+        run(message, player, react, member);
+        return true;
+
     }
 
     public GuildHandler getHandler() {

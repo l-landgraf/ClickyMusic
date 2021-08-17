@@ -42,7 +42,6 @@ public abstract class Command {
 
         List<String> args = Arrays.asList(message.getContentRaw().split(" "));
         if (!args.get(0).equalsIgnoreCase(this.handler.getPrefix() + this.command)) {
-
             return false;
         }
 

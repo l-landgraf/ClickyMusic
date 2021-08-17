@@ -6,6 +6,7 @@ import halleg.discordmusikbot.guild.player.queue.QueueElement;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageReaction;
+import net.dv8tion.jda.api.entities.User;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,7 +20,7 @@ public class ButtonManager {
         this.handler = handler;
         this.buttons = new ArrayList<>();
 
-        this.buttons.add(new Button(handler, GuildHandler.REPEAT_EMOJI, false,
+        this.buttons.add(new Button(handler, GuildHandler.REPEAT_EMOJI, true,
                 "Queue this Song again.") {
             @Override
             protected void run(Message message, Player player, MessageReaction react, Member member) {
@@ -111,24 +112,27 @@ public class ButtonManager {
         });
     }
 
-    public boolean handleReaction(Message message, MessageReaction react, Member member) {
-        for (MessageReaction r : message.getReactions()) {
-            if (r.getReactionEmote().getEmoji().equalsIgnoreCase(react.getReactionEmote().getEmoji())) {
-                if (!r.isSelf()) {
-                    return false;
-                } else {
-                    break;
-                }
-            }
-        }
+    public void handleReaction(Message message, MessageReaction react, Member member) {
+        if (this.handler.getPlayer(member.getVoiceState().getChannel()) == null) {
 
-        for (Button but : this.buttons) {
-            message.removeReaction(react.getReactionEmote().getEmoji(), member.getUser()).queue();
-            if (but.check(message, react, member, react.getReactionEmote().getEmoji())) {
-                return true;
-            }
         }
-        return false;
+        react.retrieveUsers()
+             .queue(
+                     new Consumer<List<User>>() {
+                         @Override
+                         public void accept(List<User> users) {
+                             for (User r : users) {
+                                 if (react.getJDA().getSelfUser() == r || ButtonManager.this.handler.isLinkedBot(r)) {
+                                     message.removeReaction(react.getReactionEmote().getEmoji(), member.getUser()).queue();
+                                     for (Button but : ButtonManager.this.buttons) {
+                                         if (but.check(message, react, member, react.getReactionEmote().getEmoji())) {
+                                             return;
+                                         }
+                                     }
+                                 }
+                             }
+                         }
+                     }, null);
     }
 
     public List<Button> getButtons() {

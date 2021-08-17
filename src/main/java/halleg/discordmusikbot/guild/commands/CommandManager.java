@@ -3,6 +3,7 @@ package halleg.discordmusikbot.guild.commands;
 import halleg.discordmusikbot.guild.GuildHandler;
 import halleg.discordmusikbot.guild.player.Player;
 import halleg.discordmusikbot.guild.player.queue.QueueElement;
+import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.TextChannel;
 
@@ -175,23 +176,6 @@ public class CommandManager {
             }
         });
 
-        this.commands.add(new Command(handler, "ripclicky", true, false, false,
-                false, true, "terminates the bot and hopefully restarts it.") {
-            @Override
-            protected void run(List<String> args, Player player, Message message) {
-                message.addReaction(GuildHandler.RIP).queue();
-            }
-        });
-
-//		this.commands.add(new Command(handler, "disconnect", true, true, true,
-//				false, true, "the bot will disconnect from any voicechannel.") {
-//			@Override
-//			protected void run(List<String> args, Message message) {
-//				player.setPaused(true);
-//				player.leave();
-//			}
-//		});
-
         this.commands.add(new Command(handler, "leave", true, true, true,
                 false, true, "the bot will leave any voicechannel and completly clear its Queue.") {
             @Override
@@ -206,6 +190,70 @@ public class CommandManager {
             @Override
             protected void run(List<String> args, Player player, Message message) {
                 player.clearQueue();
+            }
+        });
+
+        this.commands.add(new Command(handler, "ripclicky", true, false, false,
+                false, true, "terminates the bot and hopefully restarts it.") {
+            @Override
+            protected void run(List<String> args, Player player, Message message) {
+                message.addReaction(GuildHandler.RIP).queue();
+            }
+        });
+
+        this.commands.add(new Command(handler, "linkbots", false, false, false,
+                true, true, "links multible clickymusik bots.") {
+            @Override
+            protected void run(List<String> args, Player player, Message message) {
+                boolean skip = true;
+                String overview = "";
+                for (String s : args) {
+                    if (skip) {
+                        skip = false;
+                        continue;
+                    }
+                    Member bot;
+                    TextChannel channel;
+
+                    String[] split = s.split("\\;");
+                    if (split.length != 2) {
+                        error();
+                        return;
+                    }
+
+                    try {
+                        bot = this.handler.getGuild().retrieveMemberById(Long.parseLong(split[0])).complete();
+                        channel = this.handler.getGuild().getTextChannelById(Long.parseLong(split[1]));
+                    } catch (NumberFormatException e) {
+                        error();
+                        return;
+                    }
+
+                    if (bot == null || channel == null) {
+                        error();
+                        return;
+                    }
+
+                    if (!bot.getUser().isBot()) {
+                        error();
+                        return;
+                    }
+
+                    if (bot.getIdLong() == this.handler.getGuild().getSelfMember().getIdLong()) {
+                        this.handler.setChannel(channel);
+                        continue;
+                    }
+
+                    this.handler.addLikedBot(bot, channel);
+                    this.handler.log("added linked bot " + bot.getEffectiveName() + " with channel " + channel.getName());
+                    overview += "added linked bot " + bot.getAsMention() + " with channel " + channel.getAsMention();
+                }
+
+                this.handler.sendInfoMessage(overview);
+            }
+
+            private void error() {
+                this.handler.sendErrorMessage("syntax: linkbots bot1Id;bot1TextChannelTd bot2Id;bot2TextChannelTd ...");
             }
         });
 

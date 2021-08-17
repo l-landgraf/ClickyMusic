@@ -7,6 +7,7 @@ import halleg.discordmusikbot.guild.player.queue.QueueElement;
 import halleg.discordmusikbot.guild.player.queue.QueueStatus;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.VoiceChannel;
+import net.dv8tion.jda.api.exceptions.InsufficientPermissionException;
 import net.dv8tion.jda.api.managers.AudioManager;
 
 import java.util.LinkedList;
@@ -24,8 +25,6 @@ public class Player implements Timer.TimerListener {
     private AudioPlayer player;
     private GuildHandler handler;
     private AudioManager audioManager;
-
-    private boolean isBusy;
 
     private Timer timer;
 
@@ -53,6 +52,7 @@ public class Player implements Timer.TimerListener {
     }
 
     public void disconnect() {
+        busy(false);
         this.audioManager.closeAudioConnection();
     }
 
@@ -123,24 +123,23 @@ public class Player implements Timer.TimerListener {
     }
 
     public void playTrack(AudioTrack track) {
+        busy(true);
         this.player.playTrack(track.makeClone());
     }
 
     public void join(VoiceChannel c) {
-        if (c == null) {
-            return;
-        }
-
-        if (getConnectedChannel() != null &&
-                c != getConnectedChannel()) {
-            return;
-        }
         connect(c);
     }
 
     public void connect(VoiceChannel c) {
+        busy(true);
         setPaused(false);
-        this.audioManager.openAudioConnection(c);
+        try {
+            this.audioManager.openAudioConnection(c);
+        } catch (InsufficientPermissionException e) {
+            this.handler.log("insufficient permission to connect to voicechannel " + c.getName());
+            this.handler.sendErrorMessage("insufficient permission to connect to voicechannel " + c.getAsMention());
+        }
     }
 
     public void removeElement(QueueElement element) {
@@ -215,10 +214,6 @@ public class Player implements Timer.TimerListener {
         return this.audioManager.getConnectedChannel();
     }
 
-    public boolean isBusy() {
-        return this.isBusy;
-    }
-
     public void togglePaused() {
         setPaused(!isPaused());
     }
@@ -238,5 +233,13 @@ public class Player implements Timer.TimerListener {
 
     public int queueSize() {
         return this.queue.size();
+    }
+
+    public boolean isConnected() {
+        return this.audioManager.getConnectedChannel() != null;
+    }
+
+    private void busy(boolean b) {
+        this.handler.setBusy(b);
     }
 }

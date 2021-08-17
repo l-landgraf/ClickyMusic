@@ -30,137 +30,138 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 public class MusicBot extends ListenerAdapter {
-	private JDA jda;
-	private Map<Long, GuildHandler> map;
-	private AudioPlayerManager manager;
-	private SpotifyAudioSourceManager preloader;
-	private ObjectMapper mapper;
+    private JDA jda;
+    private Map<Long, GuildHandler> map;
+    private AudioPlayerManager manager;
+    private SpotifyAudioSourceManager preloader;
+    private ObjectMapper mapper;
 
-	public MusicBot(JDA jda, File musicFolder) {
-		this.jda = jda;
-		this.mapper = new ObjectMapper();
-		this.mapper.enable(SerializationFeature.INDENT_OUTPUT);
-		this.manager = new DefaultAudioPlayerManager();
-		YoutubeAudioSourceManager ytManager = new MyYoutubeAudioSourceManager();
-		this.manager.registerSourceManager(ytManager);
-		this.preloader = new SpotifyAudioSourceManager(ytManager);
-		this.manager.registerSourceManager(this.preloader);
-		this.manager.registerSourceManager(new MyLocalAudioSourceManager(musicFolder));
-		this.manager.registerSourceManager(new YoutubeQueryAudioSourceManager(ytManager));
-		this.map = new HashMap<>();
-		loadConfigs();
-	}
+    public MusicBot(JDA jda, File musicFolder) {
+        this.jda = jda;
+        this.mapper = new ObjectMapper();
+        this.mapper.enable(SerializationFeature.INDENT_OUTPUT);
+        this.manager = new DefaultAudioPlayerManager();
+        YoutubeAudioSourceManager ytManager = new MyYoutubeAudioSourceManager();
+        this.manager.registerSourceManager(ytManager);
+        this.preloader = new SpotifyAudioSourceManager(ytManager);
+        this.manager.registerSourceManager(this.preloader);
+        this.manager.registerSourceManager(new MyLocalAudioSourceManager(musicFolder));
+        this.manager.registerSourceManager(new YoutubeQueryAudioSourceManager(ytManager));
+        this.map = new HashMap<>();
+        loadConfigs();
+    }
 
-	private void loadConfigs() {
-		for (Guild g : this.jda.getGuilds()) {
-			File file = new File(getFilename(g.getIdLong()));
-			GuildHandler handler = null;
+    private void loadConfigs() {
+        for (Guild g : this.jda.getGuilds()) {
+            File file = new File(getFilename(g.getIdLong()));
+            GuildHandler handler = null;
 
-			System.out.println("initializing guild " + g.getName() + " (" + g.getIdLong() + ")");
-			try {
-				handler = new GuildHandler(this, loadConfig(file), g);
-			} catch (Exception e) {
-				System.out.println("failed to load, using default");
-				handler = new GuildHandler(this, new GuildConfig(), g);
-			}
-			this.map.put(g.getIdLong(), handler);
-		}
-	}
+            System.out.println("initializing guild " + g.getName() + " (" + g.getIdLong() + ")");
+            try {
+                handler = new GuildHandler(this, loadConfig(file), g);
+            } catch (Exception e) {
+                e.printStackTrace();
+                System.out.println("failed to load, using default");
+                handler = new GuildHandler(this, g);
+            }
+            this.map.put(g.getIdLong(), handler);
+        }
+    }
 
 
-	public void saveGuildHandler(GuildHandler handler) {
-		try {
-			File file = new File(getFilename(handler.getGuild().getIdLong()));
-			this.mapper.writeValue(file, new GuildConfig(handler));
-			System.out.println("saved config file " + file.getAbsolutePath());
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
+    public void saveGuildHandler(GuildHandler handler) {
+        try {
+            File file = new File(getFilename(handler.getGuild().getIdLong()));
+            this.mapper.writeValue(file, new GuildConfig(handler));
+            System.out.println("saved config file " + file.getAbsolutePath());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
-	public GuildConfig loadConfig(File file) throws IOException {
-		System.out.println("loading file " + file.getAbsolutePath());
-		return this.mapper.readValue(file, GuildConfig.class);
+    public GuildConfig loadConfig(File file) throws IOException {
+        System.out.println("loading file " + file.getAbsolutePath());
+        return this.mapper.readValue(file, GuildConfig.class);
 
-	}
+    }
 
-	@Override
-	public void onGuildMessageReceived(GuildMessageReceivedEvent event) {
+    @Override
+    public void onGuildMessageReceived(GuildMessageReceivedEvent event) {
 
-		if (event.getAuthor().isBot()) {
-			return;
-		}
+        if (event.getAuthor().isBot()) {
+            return;
+        }
 
-		this.map.get(event.getGuild().getIdLong()).handleMessage(event);
+        this.map.get(event.getGuild().getIdLong()).handleMessage(event);
 
-	}
+    }
 
-	@Override
-	public void onGuildMessageReactionAdd(GuildMessageReactionAddEvent event) {
-		handleReaction(event.getMember(), event.getChannel(), event.getMessageIdLong(), event.getReaction());
-	}
+    @Override
+    public void onGuildMessageReactionAdd(GuildMessageReactionAddEvent event) {
+        handleReaction(event.getMember(), event.getChannel(), event.getMessageIdLong(), event.getReaction());
+    }
 
-	@Override
-	public void onGuildMessageReactionRemove(GuildMessageReactionRemoveEvent event) {
-		//handleReaction(event.getMember(), event.getChannel(), event.getMessageIdLong(), event.getReaction());
-	}
+    @Override
+    public void onGuildMessageReactionRemove(GuildMessageReactionRemoveEvent event) {
+        //handleReaction(event.getMember(), event.getChannel(), event.getMessageIdLong(), event.getReaction());
+    }
 
-	@Override
-	public void onGuildVoiceUpdate(@Nonnull GuildVoiceUpdateEvent event) {
-		VoiceChannel channel = event.getChannelJoined();
+    @Override
+    public void onGuildVoiceUpdate(@Nonnull GuildVoiceUpdateEvent event) {
+        VoiceChannel channel = event.getChannelJoined();
 
-		if (channel == null) {
-			channel = event.getChannelLeft();
-		}
+        if (channel == null) {
+            channel = event.getChannelLeft();
+        }
 
-		if (channel != null) {
-			this.map.get(channel.getGuild().getIdLong()).voiceUpdate();
-		}
-	}
+        if (channel != null) {
+            this.map.get(channel.getGuild().getIdLong()).voiceUpdate();
+        }
+    }
 
-	@Override
-	public void onGuildJoin(GuildJoinEvent event) {
-		System.out.println("joined new server " + event.getGuild().getIdLong());
-		GuildHandler guildHandler = new GuildHandler(this, new GuildConfig(), event.getGuild());
-		this.map.put(event.getGuild().getIdLong(), guildHandler);
-		saveGuildHandler(guildHandler);
-	}
+    @Override
+    public void onGuildJoin(GuildJoinEvent event) {
+        System.out.println("joined new server " + event.getGuild().getIdLong());
+        GuildHandler guildHandler = new GuildHandler(this, new GuildConfig(), event.getGuild());
+        this.map.put(event.getGuild().getIdLong(), guildHandler);
+        saveGuildHandler(guildHandler);
+    }
 
-	@Override
-	public void onGuildLeave(GuildLeaveEvent event) {
-		System.out.println("left server " + event.getGuild().getIdLong());
-		this.map.remove(event.getGuild().getIdLong());
-		File file = new File("./" + getFilename(event.getGuild().getIdLong()));
-		file.delete();
-	}
+    @Override
+    public void onGuildLeave(GuildLeaveEvent event) {
+        System.out.println("left server " + event.getGuild().getIdLong());
+        this.map.remove(event.getGuild().getIdLong());
+        File file = new File("./" + getFilename(event.getGuild().getIdLong()));
+        file.delete();
+    }
 
-	private void handleReaction(Member member, MessageChannel channel, long messageid,
-								MessageReaction react) {
-		if (member.getUser().isBot()) {
-			return;
-		}
+    private void handleReaction(Member member, MessageChannel channel, long messageid,
+                                MessageReaction react) {
+        if (member.getUser().isBot()) {
+            return;
+        }
 
-		channel.retrieveMessageById(messageid).queue(new Consumer<>() {
-			@Override
-			public void accept(Message message) {
-				MusicBot.this.map.get(message.getGuild().getIdLong()).handleReaction(react, message, member);
-			}
-		});
-	}
+        channel.retrieveMessageById(messageid).queue(new Consumer<>() {
+            @Override
+            public void accept(Message message) {
+                MusicBot.this.map.get(message.getGuild().getIdLong()).handleReaction(react, message, member);
+            }
+        });
+    }
 
-	public String getFilename(long l) {
-		return l + ".config";
-	}
+    public String getFilename(long l) {
+        return l + ".config";
+    }
 
-	public AudioPlayerManager getManager() {
-		return this.manager;
-	}
+    public AudioPlayerManager getManager() {
+        return this.manager;
+    }
 
-	public TrackLoader.PlaylistPreloadManager getPreloader() {
-		return this.preloader;
-	}
+    public TrackLoader.PlaylistPreloadManager getPreloader() {
+        return this.preloader;
+    }
 
-	public Guild getGuild(long guildid) {
-		return this.jda.getGuildById(guildid);
-	}
+    public Guild getGuild(long guildid) {
+        return this.jda.getGuildById(guildid);
+    }
 }
