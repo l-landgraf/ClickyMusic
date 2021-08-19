@@ -32,7 +32,7 @@ public abstract class Button {
             return false;
         }
 
-        if (player != null && message.getChannel().getIdLong() != this.handler.getChannel().getIdLong()) {
+        if (player.isConnected() && player != null && message.getChannel().getIdLong() != this.handler.getChannel().getIdLong()) {
             this.handler.sendLostMessage(member, message.getChannel());
         }
 
