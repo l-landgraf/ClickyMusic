@@ -78,7 +78,6 @@ public class GuildHandler {
         }
         saveConfig();
         log("initialized! outputchannel: " + this.output.getName() + " prefix: " + this.prefix);
-        setupCheck();
     }
 
     public void setChannel(TextChannel channel) {

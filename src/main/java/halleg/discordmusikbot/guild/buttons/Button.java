@@ -36,7 +36,6 @@ public abstract class Button {
             this.handler.sendLostMessage(member, message.getChannel());
         }
 
-
         this.handler.log("executing button: " + react.getReactionEmote().getEmoji());
         run(message, player, react, member);
         return true;
