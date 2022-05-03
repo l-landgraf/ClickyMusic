@@ -5,6 +5,7 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import halleg.discordmusikbot.guild.GuildHandler;
 import halleg.discordmusikbot.guild.player.queue.QueueElement;
 import halleg.discordmusikbot.guild.player.queue.QueueStatus;
+import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.VoiceChannel;
 import net.dv8tion.jda.api.exceptions.InsufficientPermissionException;
@@ -191,14 +192,21 @@ public class Player implements Timer.TimerListener {
 
     public void voiceUpdate() {
         if (this.audioManager.isConnected()) {
-            if (this.audioManager.getConnectedChannel().getMembers().size() > 1) {
+            int nonBotUsers = 0;
+            for (Member m : this.audioManager.getConnectedChannel().getMembers()) {
+                if (!m.getUser().isBot()) {
+                    nonBotUsers++;
+                }
+            }
+
+            if (nonBotUsers >= 1) {
                 this.handler.log("Timer stopped.");
                 this.timer.stop();
+                return;
             }
-            if (this.audioManager.getConnectedChannel().getMembers().size() == 1) {
-                this.handler.log("Disconnecting in " + DISCONNECT_TIME / 1000 + "s...");
-                this.timer.start();
-            }
+            this.handler.log("Disconnecting in " + DISCONNECT_TIME / 1000 + "s...");
+            this.timer.start();
+
         }
     }
 
