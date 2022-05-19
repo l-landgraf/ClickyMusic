@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
+import com.sedmelluq.discord.lavaplayer.source.soundcloud.SoundCloudAudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager;
 import halleg.discordmusikbot.guild.GuildConfig;
 import halleg.discordmusikbot.guild.GuildHandler;
@@ -47,6 +48,7 @@ public class MusicBot extends ListenerAdapter {
         this.manager.registerSourceManager(this.preloader);
         this.manager.registerSourceManager(new MyLocalAudioSourceManager(musicFolder));
         this.manager.registerSourceManager(new YoutubeQueryAudioSourceManager(ytManager));
+        this.manager.registerSourceManager(SoundCloudAudioSourceManager.createDefault());
         this.map = new HashMap<>();
         loadConfigs();
     }
