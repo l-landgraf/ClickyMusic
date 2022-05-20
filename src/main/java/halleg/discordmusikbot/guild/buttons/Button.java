@@ -27,13 +27,12 @@ public abstract class Button {
             return false;
         }
 
-        QueuePlayer player = this.handler.getPlayer(member.getVoiceState().getChannel());
-        if (this.connectedOnly && player == null) {
+        if (this.connectedOnly && !this.handler.isCorrectChannel(member.getVoiceState().getChannel())) {
             return false;
         }
 
         this.handler.log("executing button: " + react.getReactionEmote().getEmoji());
-        run(message, player, react, member);
+        run(message, this.handler.getPlayer(), react, member);
         return true;
 
     }

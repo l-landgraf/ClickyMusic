@@ -238,11 +238,6 @@ public class CommandManager {
     }
 
     private void parseSeek(List<String> args, Message message) {
-        QueuePlayer player = this.handler.getPlayer(message.getMember().getVoiceState().getChannel());
-        if (player == null) {
-            return;
-        }
-
         String arg = args.get(1);
         arg = arg.trim();
         String sign = null;
@@ -288,11 +283,11 @@ public class CommandManager {
 
         long time = seconds * 1000 + minutes * 60000 + hours * 3600000;
         if (sign == null) {
-            player.seekTo(time);
+            this.handler.getPlayer().seekTo(time);
         } else if (sign.equals("+")) {
-            player.seekAdd(time);
+            this.handler.getPlayer().seekAdd(time);
         } else if (sign.equals("-")) {
-            player.seekAdd(-time);
+            this.handler.getPlayer().seekAdd(-time);
         }
     }
 }

@@ -28,9 +28,9 @@ public class ButtonManager {
                 String search = this.handler.getBuilder().getURI(message);
                 try {
                     player.join(member.getVoiceState().getChannel());
-                    return;
                 } catch (InsufficientPermissionException e) {
                     this.handler.handleMissingPermission(e);
+                    return;
                 }
                 this.handler.sendRepeatMessage(search, new Consumer<>() {
                     @Override

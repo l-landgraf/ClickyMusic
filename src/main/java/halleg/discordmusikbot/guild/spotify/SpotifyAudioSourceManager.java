@@ -202,25 +202,21 @@ public class SpotifyAudioSourceManager implements AudioSourceManager, TrackLoade
 
     @Override
     public InititalPlaylistLoadHandler load(GuildHandler handler, String source, Member member, Message message) {
-        QueuePlayer player = handler.getPlayer(member.getVoiceState().getChannel());
-        if (player == null) {
-            return null;
-        }
         if (source.startsWith(PLAYLIST_PREFIX)) {
             String playlistId = extractId(source);
 
-            return preLoadPlaylist(playlistId, player, handler, source, member, message);
+            return preLoadPlaylist(playlistId, handler.getPlayer(), handler, source, member, message);
         }
 
         if (source.startsWith(ALBUM_PREFIX)) {
             String playlistId = extractId(source);
-            return preLoadAlbum(playlistId, player, handler, source, member, message);
+            return preLoadAlbum(playlistId, handler.getPlayer(), handler, source, member, message);
         }
         return null;
     }
 
     private InititalPlaylistLoadHandler preLoadPlaylist(String playlistId, QueuePlayer player, GuildHandler handler, String source,
-														Member member, Message message) {
+                                                        Member member, Message message) {
         Playlist playlist = SpotifyApi.loadPlaylist(playlistId);
         if (playlist == null) {
             return null;
@@ -247,7 +243,7 @@ public class SpotifyAudioSourceManager implements AudioSourceManager, TrackLoade
     }
 
     private InititalPlaylistLoadHandler preLoadAlbum(String albumId, QueuePlayer player, GuildHandler handler, String source, Member member,
-													 Message message) {
+                                                     Message message) {
         Album album = SpotifyApi.loadAlbum(albumId);
         if (album == null) {
             return null;

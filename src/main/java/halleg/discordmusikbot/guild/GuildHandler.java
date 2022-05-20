@@ -93,8 +93,7 @@ public class GuildHandler {
             this.commands.handleCommand(event.getMessage());
             return;
         }
-        QueuePlayer player = getPlayer(event.getMember().getVoiceState().getChannel());
-        if (player == null) {
+        if (!isCorrectChannel(event.getMember().getVoiceState().getChannel())) {
             return;
         }
 
@@ -103,18 +102,18 @@ public class GuildHandler {
         }
 
         try {
-            player.join(event.getMember().getVoiceState().getChannel());
+            this.player.join(event.getMember().getVoiceState().getChannel());
         } catch (InsufficientPermissionException e) {
             handleMissingPermission(e);
             return;
         }
 
         this.builder.setLoading(event.getMessage());
-        this.loader.search(event.getMessage().getContentRaw(), player, event.getMember(), event.getMessage());
+        this.loader.search(event.getMessage().getContentRaw(), this.player, event.getMember(), event.getMessage());
     }
 
     public void handleReaction(MessageReaction react, Message message, Member member) {
-        GuildHandler.this.buttons.handleReaction(message, react, member);
+        this.buttons.handleReaction(message, react, member);
     }
 
     public void voiceUpdate() {
@@ -189,11 +188,11 @@ public class GuildHandler {
 
     public Message complete(MessageChannel channel, Message message) {
         try {
-            channel.sendMessage(message).complete();
+            return channel.sendMessage(message).complete();
         } catch (InsufficientPermissionException e) {
             handleMissingPermission(e);
+            return null;
         }
-        return null;
     }
 
     public void removeReaction(Message message, MessageReaction.ReactionEmote emote, Member member) {
@@ -212,10 +211,7 @@ public class GuildHandler {
         return this.guild;
     }
 
-    public QueuePlayer getPlayer(VoiceChannel channel) {
-        if (channel == null || (this.player.getConnectedChannel() != null && channel.getIdLong() != this.player.getConnectedChannel().getIdLong())) {
-            return null;
-        }
+    public QueuePlayer getPlayer() {
         return this.player;
     }
 
@@ -247,8 +243,13 @@ public class GuildHandler {
         return this.loader;
     }
 
+    public boolean isCorrectChannel(VoiceChannel channel) {
+        return channel != null && (this.player.getConnectedChannel() == null || channel.getIdLong() == this.player.getConnectedChannel().getIdLong());
+    }
+
     public void handleMissingPermission(InsufficientPermissionException e) {
-        log("insuficciant permissions. missing " + e.getMessage() + " in " + e.getChannelType().name() + " " + e.getChannel(getGuild().getJDA()).getName());
-        sendErrorMessage("insuficciant permissions. missing " + e.getMessage() + " in " + e.getChannelType().name() + " " + e.getChannel(getGuild().getJDA()).getName());
+        String message = e.getMessage() + " in " + e.getChannelType().name() + "-CHANNEL \"" + e.getChannel(getGuild().getJDA()).getName() + "\"";
+        log(message);
+        sendErrorMessage(message);
     }
 }

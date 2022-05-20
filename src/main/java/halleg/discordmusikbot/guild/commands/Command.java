@@ -46,8 +46,7 @@ public abstract class Command {
         }
 
 
-        QueuePlayer player = this.handler.getPlayer(message.getMember().getVoiceState().getChannel());
-        if (this.voiceChannelOnly && player == null) {
+        if (this.voiceChannelOnly && !this.handler.isCorrectChannel(message.getMember().getVoiceState().getChannel())) {
             this.handler.sendErrorMessage("Im bussy in a diffrent Voicechanel.");
             return false;
         }
@@ -64,7 +63,7 @@ public abstract class Command {
         }
 
         this.handler.log("executing command: " + this.command);
-        run(args, player, message);
+        run(args, this.handler.getPlayer(), message);
         return true;
 
     }
