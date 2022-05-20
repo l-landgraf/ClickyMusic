@@ -3,9 +3,9 @@ package halleg.discordmusikbot.guild.commands;
 import halleg.discordmusikbot.guild.GuildHandler;
 import halleg.discordmusikbot.guild.player.QueuePlayer;
 import halleg.discordmusikbot.guild.player.queue.QueueElement;
-import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.TextChannel;
+import net.dv8tion.jda.api.exceptions.InsufficientPermissionException;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -31,6 +31,14 @@ public class CommandManager {
                     return;
                 }
 
+                try {
+
+                    player.join(message.getMember().getVoiceState().getChannel());
+                } catch (InsufficientPermissionException e) {
+                    this.handler.handleMissingPermission(e);
+                    return;
+                }
+
                 String search = "";
                 for (int i = 1; i < args.size(); i++) {
                     search += " " + args.get(i);
@@ -39,7 +47,6 @@ public class CommandManager {
                 search = search.trim();
 
                 this.handler.getBuilder().setLoading(message);
-                player.join(message.getMember().getVoiceState().getChannel());
                 this.handler.getLoader().search(search, player, message.getMember(), message);
             }
         });
@@ -70,7 +77,11 @@ public class CommandManager {
                 false, true, "the bot will join your voicechannel.") {
             @Override
             protected void run(List<String> args, QueuePlayer player, Message message) {
-                player.join(message.getMember().getVoiceState().getChannel());
+                try {
+                    player.join(message.getMember().getVoiceState().getChannel());
+                } catch (InsufficientPermissionException e) {
+                    this.handler.handleMissingPermission(e);
+                }
             }
         });
 

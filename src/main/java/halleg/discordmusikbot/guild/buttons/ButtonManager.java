@@ -28,16 +28,17 @@ public class ButtonManager {
                 String search = this.handler.getBuilder().getURI(message);
                 try {
                     player.join(member.getVoiceState().getChannel());
-                    this.handler.sendRepeatMessage(search, new Consumer<>() {
-                        @Override
-                        public void accept(Message message) {
-                            //ButtonManager.this.handler.getBuilder().setLoading(message);
-                            handler.getLoader().search(search, player, member, message);
-                        }
-                    });
+                    return;
                 } catch (InsufficientPermissionException e) {
                     this.handler.handleMissingPermission(e);
                 }
+                this.handler.sendRepeatMessage(search, new Consumer<>() {
+                    @Override
+                    public void accept(Message message) {
+                        //ButtonManager.this.handler.getBuilder().setLoading(message);
+                        handler.getLoader().search(search, player, member, message);
+                    }
+                });
             }
         });
 
@@ -117,9 +118,6 @@ public class ButtonManager {
     }
 
     public void handleReaction(Message message, MessageReaction react, Member member) {
-        if (this.handler.getPlayer(member.getVoiceState().getChannel()) == null) {
-
-        }
         react.retrieveUsers()
              .queue(
                      new Consumer<List<User>>() {

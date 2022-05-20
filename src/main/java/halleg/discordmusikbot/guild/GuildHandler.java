@@ -91,20 +91,26 @@ public class GuildHandler {
     public void handleMessage(GuildMessageReceivedEvent event) {
         if (event.getMessage().getContentRaw().startsWith(this.prefix)) {
             this.commands.handleCommand(event.getMessage());
-        } else {
-            QueuePlayer player = getPlayer(event.getMember().getVoiceState().getChannel());
-            if (player == null) {
-                return;
-            }
-
-            if (event.getChannel() != this.output) {
-                return;
-            }
-
-            player.join(event.getMember().getVoiceState().getChannel());
-            this.builder.setLoading(event.getMessage());
-            this.loader.search(event.getMessage().getContentRaw(), player, event.getMember(), event.getMessage());
+            return;
         }
+        QueuePlayer player = getPlayer(event.getMember().getVoiceState().getChannel());
+        if (player == null) {
+            return;
+        }
+
+        if (event.getChannel() != this.output) {
+            return;
+        }
+
+        try {
+            player.join(event.getMember().getVoiceState().getChannel());
+        } catch (InsufficientPermissionException e) {
+            handleMissingPermission(e);
+            return;
+        }
+
+        this.builder.setLoading(event.getMessage());
+        this.loader.search(event.getMessage().getContentRaw(), player, event.getMember(), event.getMessage());
     }
 
     public void handleReaction(MessageReaction react, Message message, Member member) {
