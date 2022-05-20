@@ -1,7 +1,7 @@
 package halleg.discordmusikbot.guild.commands;
 
 import halleg.discordmusikbot.guild.GuildHandler;
-import halleg.discordmusikbot.guild.player.Player;
+import halleg.discordmusikbot.guild.player.QueuePlayer;
 import halleg.discordmusikbot.guild.player.queue.QueueElement;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
@@ -25,7 +25,7 @@ public class CommandManager {
                 true, false, "adds a song to the queue. Alternatively you can write the source directly in the specefied channel.",
                 "*source*") {
             @Override
-            protected void run(List<String> args, Player player, Message message) {
+            protected void run(List<String> args, QueuePlayer player, Message message) {
                 if (args.size() <= 1) {
                     this.handler.sendErrorMessage("Command ussage: " + getTip());
                     return;
@@ -48,7 +48,7 @@ public class CommandManager {
                 false, true, "plays the playlist song specefied by the number",
                 "*songNr*") {
             @Override
-            protected void run(List<String> args, Player player, Message message) {
+            protected void run(List<String> args, QueuePlayer player, Message message) {
                 QueueElement ele = player.getCurrentElement();
 
                 int i;
@@ -69,7 +69,7 @@ public class CommandManager {
         this.commands.add(new Command(handler, "join", true, true, false,
                 false, true, "the bot will join your voicechannel.") {
             @Override
-            protected void run(List<String> args, Player player, Message message) {
+            protected void run(List<String> args, QueuePlayer player, Message message) {
                 player.join(message.getMember().getVoiceState().getChannel());
             }
         });
@@ -77,7 +77,7 @@ public class CommandManager {
         this.commands.add(new Command(handler, "setchannel", false, false, false,
                 true, true, "sets the channel for this bot.", "[channelid]") {
             @Override
-            protected void run(List<String> args, Player player, Message message) {
+            protected void run(List<String> args, QueuePlayer player, Message message) {
                 if (args.size() == 1) {
                     this.handler.setChannel((TextChannel) message.getChannel());
                 }
@@ -96,7 +96,7 @@ public class CommandManager {
         this.commands.add(new Command(handler, "setprefix", false, false, false,
                 false, true, "sets the chracters commands have to start with.", "*prefix*") {
             @Override
-            protected void run(List<String> args, Player player, Message message) {
+            protected void run(List<String> args, QueuePlayer player, Message message) {
                 this.handler.setPrefix(args.get(1));
             }
         });
@@ -104,7 +104,7 @@ public class CommandManager {
         this.commands.add(new Command(handler, "pause", true, true, true,
                 false, true, "pauses the player.") {
             @Override
-            protected void run(List<String> args, Player player, Message message) {
+            protected void run(List<String> args, QueuePlayer player, Message message) {
                 player.setPaused(true);
             }
         });
@@ -112,7 +112,7 @@ public class CommandManager {
         this.commands.add(new Command(handler, "resume", true, true, true,
                 false, true, "resumes the player.") {
             @Override
-            protected void run(List<String> args, Player player, Message message) {
+            protected void run(List<String> args, QueuePlayer player, Message message) {
                 player.setPaused(false);
             }
         });
@@ -120,7 +120,7 @@ public class CommandManager {
         this.commands.add(new Command(handler, "skip", true, true, true,
                 false, true, "skips the current track.") {
             @Override
-            protected void run(List<String> args, Player player, Message message) {
+            protected void run(List<String> args, QueuePlayer player, Message message) {
                 player.nextTrack();
             }
         });
@@ -128,7 +128,7 @@ public class CommandManager {
         this.commands.add(new Command(handler, "jump", true, true, true,
                 false, true, "skips the given amount of queue elements.", "*amount*") {
             @Override
-            protected void run(List<String> args, Player player, Message message) {
+            protected void run(List<String> args, QueuePlayer player, Message message) {
                 int nr;
                 try {
                     nr = Integer.parseInt(args.get(1));
@@ -151,7 +151,7 @@ public class CommandManager {
         this.commands.add(new Command(handler, "seek", true, true, true,
                 false, true, "seeks to the desired possition or skips forward the given amount of time.", "*[sign][[hours:]minutes:]seconds*") {
             @Override
-            protected void run(List<String> args, Player player, Message message) {
+            protected void run(List<String> args, QueuePlayer player, Message message) {
                 CommandManager.this.parseSeek(args, message);
             }
         });
@@ -159,7 +159,7 @@ public class CommandManager {
         this.commands.add(new Command(handler, "time", true, true, true,
                 false, true, "displays the time of the current Song.") {
             @Override
-            protected void run(List<String> args, Player player, Message message) {
+            protected void run(List<String> args, QueuePlayer player, Message message) {
                 if (!player.isPlaying()) {
                     this.handler.sendErrorMessage("No track currently playing.");
                     return;
@@ -179,7 +179,7 @@ public class CommandManager {
         this.commands.add(new Command(handler, "leave", true, true, true,
                 false, true, "the bot will leave any voicechannel and completly clear its Queue.") {
             @Override
-            protected void run(List<String> args, Player player, Message message) {
+            protected void run(List<String> args, QueuePlayer player, Message message) {
                 player.leave();
                 player.clearQueue();
             }
@@ -188,7 +188,7 @@ public class CommandManager {
         this.commands.add(new Command(handler, "clear", true, true, false,
                 false, true, "clears the queue and the currently playling track.") {
             @Override
-            protected void run(List<String> args, Player player, Message message) {
+            protected void run(List<String> args, QueuePlayer player, Message message) {
                 player.clearQueue();
             }
         });
@@ -196,71 +196,15 @@ public class CommandManager {
         this.commands.add(new Command(handler, "ripclicky", true, false, false,
                 false, true, "terminates the bot and hopefully restarts it.") {
             @Override
-            protected void run(List<String> args, Player player, Message message) {
+            protected void run(List<String> args, QueuePlayer player, Message message) {
                 message.addReaction(GuildHandler.RIP).queue();
-            }
-        });
-
-        this.commands.add(new Command(handler, "linkbots", false, false, false,
-                true, true, "links multible clickymusik bots.") {
-            @Override
-            protected void run(List<String> args, Player player, Message message) {
-                boolean skip = true;
-                String overview = "";
-                for (String s : args) {
-                    if (skip) {
-                        skip = false;
-                        continue;
-                    }
-                    Member bot;
-                    TextChannel channel;
-
-                    String[] split = s.split("\\;");
-                    if (split.length != 2) {
-                        error();
-                        return;
-                    }
-
-                    try {
-                        bot = this.handler.getGuild().retrieveMemberById(Long.parseLong(split[0])).complete();
-                        channel = this.handler.getGuild().getTextChannelById(Long.parseLong(split[1]));
-                    } catch (NumberFormatException e) {
-                        error();
-                        return;
-                    }
-
-                    if (bot == null || channel == null) {
-                        error();
-                        return;
-                    }
-
-                    if (!bot.getUser().isBot()) {
-                        error();
-                        return;
-                    }
-
-                    if (bot.getIdLong() == this.handler.getGuild().getSelfMember().getIdLong()) {
-                        this.handler.setChannel(channel);
-                        continue;
-                    }
-
-                    this.handler.addLikedBot(bot, channel);
-                    this.handler.log("added linked bot " + bot.getEffectiveName() + " with channel " + channel.getName());
-                    overview += "added linked bot " + bot.getAsMention() + " with channel " + channel.getAsMention();
-                }
-
-                this.handler.sendInfoMessage(overview);
-            }
-
-            private void error() {
-                this.handler.sendErrorMessage("syntax: linkbots bot1Id;bot1TextChannelTd bot2Id;bot2TextChannelTd ...");
             }
         });
 
         this.commands.add(new Command(handler, "help", false, false, false,
                 false, true, "displays a help message.") {
             @Override
-            protected void run(List<String> args, Player player, Message message) {
+            protected void run(List<String> args, QueuePlayer player, Message message) {
                 this.handler.sendHelpMessage(message.getChannel());
             }
         });
@@ -283,7 +227,7 @@ public class CommandManager {
     }
 
     private void parseSeek(List<String> args, Message message) {
-        Player player = this.handler.getPlayer(message.getMember().getVoiceState().getChannel());
+        QueuePlayer player = this.handler.getPlayer(message.getMember().getVoiceState().getChannel());
         if (player == null) {
             return;
         }

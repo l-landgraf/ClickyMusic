@@ -3,7 +3,7 @@ package halleg.discordmusikbot.guild.loader;
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import halleg.discordmusikbot.guild.GuildHandler;
-import halleg.discordmusikbot.guild.player.Player;
+import halleg.discordmusikbot.guild.player.QueuePlayer;
 import halleg.discordmusikbot.guild.player.queue.playlist.LoadablePlaylistQueueElement;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
@@ -14,7 +14,7 @@ public class PlaylistTrackLoadHandler extends LoadHandler {
     private boolean update;
     private boolean playThis;
 
-    public PlaylistTrackLoadHandler(GuildHandler handler, Player player, String source, Member member, Message message,
+    public PlaylistTrackLoadHandler(GuildHandler handler, QueuePlayer player, String source, Member member, Message message,
                                     LoadablePlaylistQueueElement element, int trackNr, boolean update, boolean playThis) {
         super(handler, player, source, member, message);
         this.trackNr = trackNr;

@@ -3,7 +3,7 @@ package halleg.discordmusikbot.guild.loader;
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import halleg.discordmusikbot.guild.GuildHandler;
-import halleg.discordmusikbot.guild.player.Player;
+import halleg.discordmusikbot.guild.player.QueuePlayer;
 import halleg.discordmusikbot.guild.player.queue.playlist.LoadablePlaylistQueueElement;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
@@ -17,7 +17,7 @@ public class InititalPlaylistLoadHandler extends LoadHandler {
     private String author;
     private String thumbnail;
 
-    public InititalPlaylistLoadHandler(GuildHandler handler, Player player, String source, String initialSource, Member member, Message message, String[] sources, String[] images, String title, String author, String thumbnail) {
+    public InititalPlaylistLoadHandler(GuildHandler handler, QueuePlayer player, String source, String initialSource, Member member, Message message, String[] sources, String[] images, String title, String author, String thumbnail) {
         super(handler, player, source, member, message);
         this.initialSource = initialSource;
         this.sources = sources;

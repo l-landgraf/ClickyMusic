@@ -3,7 +3,7 @@ package halleg.discordmusikbot.guild.player.queue.playlist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import halleg.discordmusikbot.guild.GuildHandler;
 import halleg.discordmusikbot.guild.loader.PlaylistTrackLoadHandler;
-import halleg.discordmusikbot.guild.player.Player;
+import halleg.discordmusikbot.guild.player.QueuePlayer;
 import halleg.discordmusikbot.guild.player.tracks.LoadablePlaylist;
 import halleg.discordmusikbot.guild.player.tracks.LoadableTrack;
 import net.dv8tion.jda.api.entities.Member;
@@ -13,9 +13,9 @@ import java.util.List;
 
 public class LoadablePlaylistQueueElement extends PlaylistQueueElement<LoadablePlaylist> {
     protected GuildHandler handler;
-    protected Player player;
+    protected QueuePlayer player;
 
-    public LoadablePlaylistQueueElement(GuildHandler handler, Player player, AudioTrack firstTrack, String title, String author, String thumbnail, String uri, Member member, String[] sources, String[] images) {
+    public LoadablePlaylistQueueElement(GuildHandler handler, QueuePlayer player, AudioTrack firstTrack, String title, String author, String thumbnail, String uri, Member member, String[] sources, String[] images) {
         super(player, new LoadablePlaylist(title, author, thumbnail, uri, member, sources, images));
         this.handler = handler;
         this.playlist.getTrack(0).setTrack(firstTrack);

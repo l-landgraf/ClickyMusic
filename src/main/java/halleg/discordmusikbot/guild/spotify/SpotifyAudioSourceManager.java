@@ -11,7 +11,7 @@ import com.wrapper.spotify.model_objects.specification.*;
 import halleg.discordmusikbot.guild.GuildHandler;
 import halleg.discordmusikbot.guild.TrackLoader;
 import halleg.discordmusikbot.guild.loader.InititalPlaylistLoadHandler;
-import halleg.discordmusikbot.guild.player.Player;
+import halleg.discordmusikbot.guild.player.QueuePlayer;
 import halleg.discordmusikbot.guild.youtube.RetryYoutubeSearchProvider;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
@@ -202,7 +202,7 @@ public class SpotifyAudioSourceManager implements AudioSourceManager, TrackLoade
 
     @Override
     public InititalPlaylistLoadHandler load(GuildHandler handler, String source, Member member, Message message) {
-        Player player = handler.getPlayer(member.getVoiceState().getChannel());
+        QueuePlayer player = handler.getPlayer(member.getVoiceState().getChannel());
         if (player == null) {
             return null;
         }
@@ -219,8 +219,8 @@ public class SpotifyAudioSourceManager implements AudioSourceManager, TrackLoade
         return null;
     }
 
-    private InititalPlaylistLoadHandler preLoadPlaylist(String playlistId, Player player, GuildHandler handler, String source,
-                                                        Member member, Message message) {
+    private InititalPlaylistLoadHandler preLoadPlaylist(String playlistId, QueuePlayer player, GuildHandler handler, String source,
+														Member member, Message message) {
         Playlist playlist = SpotifyApi.loadPlaylist(playlistId);
         if (playlist == null) {
             return null;
@@ -246,8 +246,8 @@ public class SpotifyAudioSourceManager implements AudioSourceManager, TrackLoade
                 playlist.getName(), getUserLink(playlist.getOwner()), playlist.getImages()[0].getUrl());
     }
 
-    private InititalPlaylistLoadHandler preLoadAlbum(String albumId, Player player, GuildHandler handler, String source, Member member,
-                                                     Message message) {
+    private InititalPlaylistLoadHandler preLoadAlbum(String albumId, QueuePlayer player, GuildHandler handler, String source, Member member,
+													 Message message) {
         Album album = SpotifyApi.loadAlbum(albumId);
         if (album == null) {
             return null;

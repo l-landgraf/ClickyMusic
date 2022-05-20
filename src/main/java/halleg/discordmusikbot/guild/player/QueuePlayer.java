@@ -14,7 +14,7 @@ import net.dv8tion.jda.api.managers.AudioManager;
 import java.util.LinkedList;
 import java.util.List;
 
-public class Player implements Timer.TimerListener {
+public class QueuePlayer implements Timer.TimerListener {
     private static final long DISCONNECT_TIME = 10000l;
 
     private List<QueueElement> queue;
@@ -29,7 +29,7 @@ public class Player implements Timer.TimerListener {
 
     private Timer timer;
 
-    public Player(GuildHandler handler) {
+    public QueuePlayer(GuildHandler handler) {
 
         this.handler = handler;
         this.audioManager = handler.getGuild().getAudioManager();
@@ -53,7 +53,6 @@ public class Player implements Timer.TimerListener {
     }
 
     public void disconnect() {
-        busy(false);
         this.audioManager.closeAudioConnection();
     }
 
@@ -63,23 +62,18 @@ public class Player implements Timer.TimerListener {
     }
 
     public void addQueue(QueueElement element) {
-        try {
-            if (this.currentTrack == null) {
-                Message m = element.buildMessage(QueueStatus.PLAYING);
-                Message message = this.handler.complete(m);
-                element.setMessage(message);
-                this.currentTrack = element;
-                this.currentTrack.onPlaying();
-            } else {
-                Message m = element.buildMessage(QueueStatus.QUEUED);
-                Message message = this.handler.complete(m);
-                element.setMessage(message);
-                Player.this.queue.add(element);
-                element.onQueued();
-            }
-        } catch (Exception e) {
-            System.err.println(e.getCause());
-            e.printStackTrace();
+        if (this.currentTrack == null) {
+            Message m = element.buildMessage(QueueStatus.PLAYING);
+            Message message = this.handler.complete(m);
+            element.setMessage(message);
+            this.currentTrack = element;
+            this.currentTrack.onPlaying();
+        } else {
+            Message m = element.buildMessage(QueueStatus.QUEUED);
+            Message message = this.handler.complete(m);
+            element.setMessage(message);
+            this.queue.add(element);
+            element.onQueued();
         }
     }
 
@@ -124,23 +118,11 @@ public class Player implements Timer.TimerListener {
     }
 
     public void playTrack(AudioTrack track) {
-        busy(true);
         this.player.playTrack(track.makeClone());
     }
 
-    public void join(VoiceChannel c) {
-        connect(c);
-    }
-
-    public void connect(VoiceChannel c) {
-        busy(true);
-        setPaused(false);
-        try {
-            this.audioManager.openAudioConnection(c);
-        } catch (InsufficientPermissionException e) {
-            this.handler.log("insufficient permission to connect to voicechannel " + c.getName());
-            this.handler.sendErrorMessage("insufficient permission to connect to voicechannel " + c.getAsMention());
-        }
+    public void join(VoiceChannel c) throws InsufficientPermissionException {
+        this.audioManager.openAudioConnection(c);
     }
 
     public void removeElement(QueueElement element) {
@@ -241,13 +223,5 @@ public class Player implements Timer.TimerListener {
 
     public int queueSize() {
         return this.queue.size();
-    }
-
-    public boolean isConnected() {
-        return this.audioManager.getConnectedChannel() != null;
-    }
-
-    private void busy(boolean b) {
-        this.handler.setBusy(b);
     }
 }

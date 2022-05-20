@@ -1,7 +1,7 @@
 package halleg.discordmusikbot.guild.player.queue.playlist;
 
 import halleg.discordmusikbot.guild.GuildHandler;
-import halleg.discordmusikbot.guild.player.Player;
+import halleg.discordmusikbot.guild.player.QueuePlayer;
 import halleg.discordmusikbot.guild.player.queue.QueueElement;
 import halleg.discordmusikbot.guild.player.queue.QueueStatus;
 import halleg.discordmusikbot.guild.player.tracks.Track;
@@ -28,7 +28,7 @@ public abstract class PlaylistQueueElement<L extends TrackPlaylist> extends Queu
 
 	protected boolean shuffle;
 
-	public PlaylistQueueElement(Player player, L playlist) {
+	public PlaylistQueueElement(QueuePlayer player, L playlist) {
 		super(player);
 		this.playlist = playlist;
 		this.currentPlanedIndex = 0;

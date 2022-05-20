@@ -4,17 +4,12 @@ import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import halleg.discordmusikbot.MusicBot;
 import halleg.discordmusikbot.guild.buttons.ButtonManager;
 import halleg.discordmusikbot.guild.commands.CommandManager;
-import halleg.discordmusikbot.guild.player.Player;
-import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.Permission;
+import halleg.discordmusikbot.guild.player.QueuePlayer;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
 import net.dv8tion.jda.api.exceptions.InsufficientPermissionException;
-import net.dv8tion.jda.api.requests.restaction.MessageAction;
-import net.dv8tion.jda.internal.utils.PermissionUtil;
 
 import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
@@ -43,10 +38,8 @@ public class GuildHandler {
     private Guild guild;
     private TextChannel output;
     private String prefix;
-    private Role role;
-    private Map<Long, Long> linkedBots;
 
-    private Player player;
+    private QueuePlayer player;
     private MusicBot bot;
     private MessageBuilder builder;
     private CommandManager commands;
@@ -61,12 +54,10 @@ public class GuildHandler {
         this.guild = g;
         this.prefix = config.getPrefix();
         this.output = this.guild.getTextChannelById(config.getChannelId());
-        //this.role = this.guild.getRoleById(config.getRoleId());
-        this.linkedBots = config.getLinkedBots();
 
         this.bot = musicbot;
         this.builder = new MessageBuilder(this);
-        this.player = new Player(this);
+        this.player = new QueuePlayer(this);
         this.commands = new CommandManager(this);
         this.buttons = new ButtonManager(this);
         this.loader = new TrackLoader(this, musicbot.getPreloader());
@@ -74,7 +65,7 @@ public class GuildHandler {
         if (this.output == null) {
             setChannel(this.guild.getTextChannels().get(0));
         } else {
-            clearLastMessages(this.output);
+            //clearLastMessages(this.output);
         }
         saveConfig();
         log("initialized! outputchannel: " + this.output.getName() + " prefix: " + this.prefix);
@@ -97,194 +88,17 @@ public class GuildHandler {
         this.bot.saveGuildHandler(this);
     }
 
-    private void setupCheck() {
-        EmbedBuilder primary = new EmbedBuilder();
-        primary.setTitle("Primary Voice Channel");
-        primaryTextchannelPermissionCheck(primary);
-        for (long l : this.linkedBots.keySet()) {
-            linkedTextchannelPermissionCheck(primary, l, this.guild.getTextChannelById(this.linkedBots.get(l)));
-        }
-        EmbedBuilder voice = new EmbedBuilder();
-        voice.setTitle("Visible Voice Channel");
-        voiceChannelPermissionCheck(voice);
-        EmbedBuilder text = new EmbedBuilder();
-        voice.setTitle("Visible Text Channel");
-        textChannelPermissionCheck(text);
-
-        this.output.sendMessageEmbeds(primary.build(), voice.build(), text.build()).queue();
-    }
-
-    public void primaryTextchannelPermissionCheck(EmbedBuilder eb) {
-        Permission[] text = {
-                Permission.VIEW_CHANNEL,
-                Permission.MESSAGE_READ,
-                Permission.MESSAGE_WRITE,
-                Permission.MESSAGE_ADD_REACTION,
-                Permission.MESSAGE_MANAGE
-        };
-
-        addPermissionsField(eb, text, this.output, "output channel");
-    }
-
-    public void linkedTextchannelPermissionCheck(EmbedBuilder eb, long bot, TextChannel channel) {
-        Permission[] text = {
-                Permission.VIEW_CHANNEL,
-                Permission.MESSAGE_READ,
-                Permission.MESSAGE_WRITE,
-                Permission.MESSAGE_MANAGE
-        };
-
-        addPermissionsField(eb, text, channel, "linked channel for\n`" + bot + "`");
-    }
-
-    public void voiceChannelPermissionCheck(EmbedBuilder eb) {
-        String name = "Visible voicechannel";
-        String connect = "can connect";
-        String speak = "can speak";
-
-        for (VoiceChannel l : this.guild.getVoiceChannels()) {
-
-            Member self = l.getGuild().getSelfMember();
-            if (name == null) {
-                name = l.getName();
-                connect = getStatusEmote(self.hasPermission(Permission.VOICE_CONNECT));
-                speak = getStatusEmote(self.hasPermission(Permission.VOICE_SPEAK));
-            } else {
-                eb.addField(name, l.getName(), true);
-                eb.addField(connect, getStatusEmote(self.hasPermission(Permission.VOICE_CONNECT)), true);
-                eb.addField(speak, getStatusEmote(self.hasPermission(Permission.VOICE_SPEAK)), true);
-                name = null;
-                connect = null;
-                speak = null;
-            }
-        }
-
-        if (name != null) {
-            {
-                eb.addField(name, "", true);
-                eb.addField(connect, "", true);
-                eb.addField(speak, "", true);
-            }
-        }
-    }
-
-    public void textChannelPermissionCheck(EmbedBuilder eb) {
-        String name = "Visible textchannel";
-        String connect = "can message";
-        String speak = "can canmanage";
-
-        for (TextChannel l : this.guild.getTextChannels()) {
-
-            Member self = l.getGuild().getSelfMember();
-            if (name == null) {
-                name = l.getName();
-                connect = getStatusEmote(self.hasPermission(Permission.MESSAGE_WRITE));
-                speak = getStatusEmote(self.hasPermission(Permission.MESSAGE_MANAGE));
-            } else {
-                eb.addField(name, l.getName(), true);
-                eb.addField(connect, getStatusEmote(self.hasPermission(Permission.VOICE_CONNECT)), true);
-                eb.addField(speak, getStatusEmote(self.hasPermission(Permission.VOICE_SPEAK)), true);
-                name = null;
-                connect = null;
-                speak = null;
-            }
-        }
-
-        if (name != null) {
-            {
-                eb.addField(name, "", true);
-                eb.addField(connect, "", true);
-                eb.addField(speak, "", true);
-            }
-        }
-    }
-
-    private String getStatusEmote(boolean b) {
-        if (b) {
-            return CONFIRMED;
-        }
-        return REMOVE_EMOJI;
-    }
-
-    private void addPermissionsField(EmbedBuilder eb, Permission[] text, GuildChannel channel, String title) {
-        Member self = channel.getGuild().getSelfMember();
-        String perms = "";
-        String status = "";
-        for (Permission p : text) {
-            if (!self.hasPermission(channel, p)) {
-                log("permission: " + p.getName() + " in channel " + this.output.getName());
-
-                perms += p.getName() + ": " + "\n";
-                status += REMOVE_EMOJI + "\n";
-            } else {
-                perms += p.getName() + ": " + "\n";
-                status += CONFIRMED + "\n";
-            }
-        }
-
-        eb.addField(title, channel.getAsMention(), true);
-        eb.addField("Permissions", perms, true);
-        eb.addField("Status", status, true);
-    }
-
-    private void clearLastMessages(TextChannel channel) {
-        /*
-        if (!PermissionUtil.checkPermission(channel, this.guild.getSelfMember(), Permission.MESSAGE_HISTORY)) {
-            log("not permissione to view history, cant clean up!");
-            return;
-        }
-        log("cleaning up...");
-        channel.getHistoryBefore(channel.getLatestMessageId(), 20).queue(new Consumer<MessageHistory>() {
-            @Override
-            public void accept(MessageHistory t) {
-                for (Message message : t.getRetrievedHistory()) {
-
-                    if (message.getAuthor().getIdLong() != message.getJDA().getSelfUser().getIdLong()) {
-                        return;
-                    }
-
-                    for (MessageReaction react : message.getReactions()) {
-                        if (react.isSelf()) {
-                            GuildHandler.this.builder.setPlayed(message);
-                        }
-                    }
-                }
-
-            }
-        });
-
-        if (channel.hasLatestMessage()) {
-            channel.retrieveMessageById(channel.getLatestMessageId()).queue(new Consumer<Message>() {
-                @Override
-                public void accept(Message message) {
-                    for (MessageReaction react : message.getReactions()) {
-                        if (react.isSelf()) {
-                            GuildHandler.this.builder.setPlayed(message);
-                        }
-                    }
-                }
-            });
-        }
-        */
-    }
-
     public void handleMessage(GuildMessageReceivedEvent event) {
         if (event.getMessage().getContentRaw().startsWith(this.prefix)) {
             this.commands.handleCommand(event.getMessage());
         } else {
-
-            Player player = getPlayer(event.getMember().getVoiceState().getChannel());
+            QueuePlayer player = getPlayer(event.getMember().getVoiceState().getChannel());
             if (player == null) {
                 return;
             }
 
-
             if (event.getChannel() != this.output) {
-                if (player.isConnected() && this.linkedBots.values().contains(event.getChannel().getIdLong())) {
-                    sendLostMessage(event.getMember(), event.getChannel());
-                } else {
-                    return;
-                }
+                return;
             }
 
             player.join(event.getMember().getVoiceState().getChannel());
@@ -297,121 +111,102 @@ public class GuildHandler {
         GuildHandler.this.buttons.handleReaction(message, react, member);
     }
 
-
     public void voiceUpdate() {
         this.player.voiceUpdate();
     }
 
-    public void delete(Message message) {
-        try {
-            message.delete().queue();
-        } catch (InsufficientPermissionException e) {
-            log("insuficciant permissions to delete message!");
-            return;
-        }
-    }
-
     public void sendErrorMessage(String error) {
-        queue(this.output, this.builder.buildNewErrorMessage(error), new Consumer<>() {
+        queue(this.builder.buildNewErrorMessage(error), new Consumer<>() {
             @Override
             public void accept(Message message) {
-                message.delete().queueAfter(DELETE_DELAY, TimeUnit.SECONDS);
+                deleteLater(message);
             }
         });
     }
 
     public void sendInfoMessage(String message) {
-        queue(this.output, this.builder.buildInfoMessage(message), new Consumer<>() {
+        queue(this.builder.buildInfoMessage(message), new Consumer<>() {
             @Override
             public void accept(Message message) {
-                message.delete().queueAfter(DELETE_DELAY, TimeUnit.SECONDS);
+                deleteLater(message);
             }
         });
     }
 
-    public void assignRole(VoiceChannel c) {
-        for (Member m : c.getMembers()) {
-            if (!m.getRoles().contains(this.role)) {
-                this.guild.addRoleToMember(m, this.role).queue();
-            }
-        }
-    }
-
-    public void revokeRole(VoiceChannel c) {
-        for (Member m : this.guild.getMembersWithRoles(this.role)) {
-            this.guild.removeRoleFromMember(m, this.role);
-        }
-    }
-
-    public void setBusy(boolean busy) {
-
-    }
-
     public void sendHelpMessage(MessageChannel channel) {
-        complete(channel, this.builder.buildHelpMessage());
+        queue(channel, this.builder.buildHelpMessage());
     }
 
     public void sendRepeatMessage(String link, Consumer<Message> c) {
         queue(this.output, this.builder.buildRepeatMessage(link), c);
     }
 
-    public Message complete(Message message) {
-        return complete(this.output, message);
+    public void delete(Message message) {
+        try {
+            message.delete().queue();
+        } catch (InsufficientPermissionException e) {
+            handleMissingPermission(e);
+        }
     }
 
-    private Message complete(MessageChannel channel, Message message) {
-        MessageAction act = send(channel, message);
-        if (act != null) {
-            return act.complete();
+    public void deleteLater(Message message) {
+        try {
+            message.delete().queueAfter(DELETE_DELAY, TimeUnit.SECONDS);
+        } catch (InsufficientPermissionException e) {
+            handleMissingPermission(e);
         }
-        return null;
+    }
+
+    public void queue(Message message) {
+        queue(this.output, message, null);
+    }
+
+    public void queue(MessageChannel channel, Message message) {
+        queue(channel, message, null);
     }
 
     public void queue(Message message, Consumer<Message> consumer) {
         queue(this.output, message, consumer);
     }
 
-    private void queue(MessageChannel channel, Message message, Consumer<Message> consuber) {
-        MessageAction act = send(channel, message);
-        if (act != null) {
-            act.queue(consuber);
-        }
-    }
-
-    public void deleteLater(Message message) {
-        message.delete().queueAfter(DELETE_DELAY, TimeUnit.SECONDS);
-    }
-
-    private MessageAction send(MessageChannel channel, Message message) {
+    public void queue(MessageChannel channel, Message message, Consumer<Message> consumer) {
         try {
-            return channel.sendMessage(message);
+            channel.sendMessage(message).queue(consumer);
         } catch (InsufficientPermissionException e) {
-            log("insufficient permissions to send Message!");
-        } catch (NullPointerException e) {
-            log("output not initialized!");
+            handleMissingPermission(e);
         }
+    }
 
+    public Message complete(Message message) {
+        return complete(this.output, message);
+    }
+
+    public Message complete(MessageChannel channel, Message message) {
+        try {
+            channel.sendMessage(message).complete();
+        } catch (InsufficientPermissionException e) {
+            handleMissingPermission(e);
+        }
         return null;
+    }
+
+    public void removeReaction(Message message, MessageReaction.ReactionEmote emote, Member member) {
+        try {
+            message.removeReaction(emote.getEmoji(), member.getUser()).queue();
+        } catch (InsufficientPermissionException e) {
+            handleMissingPermission(e);
+        }
     }
 
     public void log(String string) {
         System.out.println("[" + this.guild.getName() + "] (" + Thread.currentThread().getId() + ") " + string);
     }
 
-    public boolean reactionPermissionCheck() {
-        boolean ret = PermissionUtil.checkPermission(this.output, this.guild.getSelfMember(),
-                Permission.MESSAGE_ADD_REACTION);
-        if (!ret) {
-            log("missing reaction manage permission, continuing anyways...");
-        }
-        return ret;
-    }
-
     public Guild getGuild() {
         return this.guild;
     }
 
-    public Player getPlayer(VoiceChannel channel) {
+    public QueuePlayer getPlayer(VoiceChannel channel) {
         if (channel == null || (this.player.getConnectedChannel() != null && channel.getIdLong() != this.player.getConnectedChannel().getIdLong())) {
             return null;
         }
@@ -446,29 +241,8 @@ public class GuildHandler {
         return this.loader;
     }
 
-    public Role getRole() {
-        return this.role;
-    }
-
-    public boolean isLinkedBot(User u) {
-        return this.linkedBots.get(u.getIdLong()) != null;
-    }
-
-    public void addLikedBot(Member m, TextChannel t) {
-        this.linkedBots.put(m.getUser().getIdLong(), t.getIdLong());
-        saveConfig();
-    }
-
-    public Map<Long, Long> getLinkedBots() {
-        return this.linkedBots;
-    }
-
-    public void sendLostMessage(Member member, MessageChannel channel) {
-        queue(channel, this.builder.buildInfoMessage(member.getAsMention() + " you seem to be lost. This is where you need to go: " + this.output.getAsMention()), new Consumer<>() {
-            @Override
-            public void accept(Message message) {
-                message.delete().queueAfter(DELETE_DELAY, TimeUnit.SECONDS);
-            }
-        });
+    public void handleMissingPermission(InsufficientPermissionException e) {
+        log("insuficciant permissions. missing " + e.getMessage() + " in " + e.getChannelType().name() + " " + e.getChannel(getGuild().getJDA()).getName());
+        sendErrorMessage("insuficciant permissions. missing " + e.getMessage() + " in " + e.getChannelType().name() + " " + e.getChannel(getGuild().getJDA()).getName());
     }
 }

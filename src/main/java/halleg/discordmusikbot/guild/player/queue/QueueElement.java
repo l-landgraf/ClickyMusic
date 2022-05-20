@@ -1,6 +1,6 @@
 package halleg.discordmusikbot.guild.player.queue;
 
-import halleg.discordmusikbot.guild.player.Player;
+import halleg.discordmusikbot.guild.player.QueuePlayer;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.entities.Message;
@@ -10,11 +10,11 @@ import java.awt.*;
 import java.util.function.Consumer;
 
 public abstract class QueueElement {
-	protected Player player;
+	protected QueuePlayer player;
 	protected Message message;
 	protected QueueStatus status;
 
-	public QueueElement(Player player) {
+	public QueueElement(QueuePlayer player) {
 		this.player = player;
 		this.status = null;
 	}

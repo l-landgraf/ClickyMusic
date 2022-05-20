@@ -9,9 +9,9 @@ import halleg.discordmusikbot.guild.GuildHandler;
 
 public class EventListener extends AudioEventAdapter {
     private GuildHandler handler;
-    private Player player;
+    private QueuePlayer player;
 
-    public EventListener(GuildHandler handler, Player player) {
+    public EventListener(GuildHandler handler, QueuePlayer player) {
         this.handler = handler;
         this.player = player;
     }

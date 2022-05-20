@@ -1,7 +1,7 @@
 package halleg.discordmusikbot.guild.commands;
 
 import halleg.discordmusikbot.guild.GuildHandler;
-import halleg.discordmusikbot.guild.player.Player;
+import halleg.discordmusikbot.guild.player.QueuePlayer;
 import net.dv8tion.jda.api.entities.Message;
 
 import java.util.Arrays;
@@ -32,7 +32,7 @@ public abstract class Command {
         this.tips = tips;
     }
 
-    protected abstract void run(List<String> args, Player player, Message message);
+    protected abstract void run(List<String> args, QueuePlayer player, Message message);
 
     public boolean check(Message message) {
         if (this.textChannelOnly && message.getChannel().getIdLong() != this.handler.getChannel().getIdLong()) {
@@ -46,7 +46,7 @@ public abstract class Command {
         }
 
 
-        Player player = this.handler.getPlayer(message.getMember().getVoiceState().getChannel());
+        QueuePlayer player = this.handler.getPlayer(message.getMember().getVoiceState().getChannel());
         if (this.voiceChannelOnly && player == null) {
             this.handler.sendErrorMessage("Im bussy in a diffrent Voicechanel.");
             return false;

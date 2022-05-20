@@ -1,7 +1,7 @@
 package halleg.discordmusikbot.guild.buttons;
 
 import halleg.discordmusikbot.guild.GuildHandler;
-import halleg.discordmusikbot.guild.player.Player;
+import halleg.discordmusikbot.guild.player.QueuePlayer;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageReaction;
@@ -13,7 +13,7 @@ public abstract class Button {
     protected String description;
     protected boolean connectedOnly;
 
-    protected abstract void run(Message message, Player player, MessageReaction react, Member member);
+    protected abstract void run(Message message, QueuePlayer player, MessageReaction react, Member member);
 
     public Button(GuildHandler handler, String emoji, boolean connectedOnly, String description) {
         this.handler = handler;
@@ -27,13 +27,9 @@ public abstract class Button {
             return false;
         }
 
-        Player player = this.handler.getPlayer(member.getVoiceState().getChannel());
+        QueuePlayer player = this.handler.getPlayer(member.getVoiceState().getChannel());
         if (this.connectedOnly && player == null) {
             return false;
-        }
-
-        if (player.isConnected() && player != null && message.getChannel().getIdLong() != this.handler.getChannel().getIdLong()) {
-            this.handler.sendLostMessage(member, message.getChannel());
         }
 
         this.handler.log("executing button: " + react.getReactionEmote().getEmoji());

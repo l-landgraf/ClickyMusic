@@ -1,7 +1,7 @@
 package halleg.discordmusikbot.guild.player.queue;
 
 import halleg.discordmusikbot.guild.GuildHandler;
-import halleg.discordmusikbot.guild.player.Player;
+import halleg.discordmusikbot.guild.player.QueuePlayer;
 import halleg.discordmusikbot.guild.player.tracks.Track;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
@@ -9,7 +9,7 @@ import net.dv8tion.jda.api.entities.MessageEmbed;
 public class SingleQueueElement extends QueueElement {
 	private Track track;
 
-	public SingleQueueElement(Player player, Track track) {
+	public SingleQueueElement(QueuePlayer player, Track track) {
 		super(player);
 		this.track = track;
 	}
