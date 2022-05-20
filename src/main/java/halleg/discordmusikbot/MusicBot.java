@@ -5,11 +5,10 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers;
-import com.sedmelluq.discord.lavaplayer.source.soundcloud.SoundCloudAudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager;
-import halleg.discordmusikbot.guild.GuildConfig;
 import halleg.discordmusikbot.guild.GuildHandler;
 import halleg.discordmusikbot.guild.TrackLoader;
+import halleg.discordmusikbot.guild.config.GuildConfigBuilder;
 import halleg.discordmusikbot.guild.local.MyLocalAudioSourceManager;
 import halleg.discordmusikbot.guild.spotify.SpotifyAudioSourceManager;
 import halleg.discordmusikbot.guild.youtube.MyYoutubeAudioSourceManager;
@@ -26,6 +25,7 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
 import javax.annotation.Nonnull;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -43,7 +43,7 @@ public class MusicBot extends ListenerAdapter {
         this.mapper = new ObjectMapper();
         this.mapper.enable(SerializationFeature.INDENT_OUTPUT);
         this.manager = new DefaultAudioPlayerManager();
-        AudioSourceManagers.registerRemoteSources(manager);
+        AudioSourceManagers.registerRemoteSources(this.manager);
         YoutubeAudioSourceManager ytManager = new MyYoutubeAudioSourceManager();
         this.manager.registerSourceManager(ytManager);
         this.preloader = new SpotifyAudioSourceManager(ytManager);
@@ -61,11 +61,11 @@ public class MusicBot extends ListenerAdapter {
 
             System.out.println("initializing guild " + g.getName() + " (" + g.getIdLong() + ")");
             try {
-                handler = new GuildHandler(this, loadConfig(file), g);
+                handler = new GuildHandler(this, loadConfig(file).build(g));
             } catch (Exception e) {
-                e.printStackTrace();
                 System.out.println("failed to load, using default");
-                handler = new GuildHandler(this, g);
+                handler = new GuildHandler(this, new GuildConfigBuilder().build(g));
+                saveGuildHandler(handler);
             }
             this.map.put(g.getIdLong(), handler);
         }
@@ -75,16 +75,16 @@ public class MusicBot extends ListenerAdapter {
     public void saveGuildHandler(GuildHandler handler) {
         try {
             File file = new File(getFilename(handler.getGuild().getIdLong()));
-            this.mapper.writeValue(file, new GuildConfig(handler));
+            this.mapper.writeValue(file, handler.getConfig());
             System.out.println("saved config file " + file.getAbsolutePath());
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    public GuildConfig loadConfig(File file) throws IOException {
+    public GuildConfigBuilder loadConfig(File file) throws IOException, FileNotFoundException {
         System.out.println("loading file " + file.getAbsolutePath());
-        return this.mapper.readValue(file, GuildConfig.class);
+        return this.mapper.readValue(file, GuildConfigBuilder.class);
 
     }
 
@@ -125,7 +125,7 @@ public class MusicBot extends ListenerAdapter {
     @Override
     public void onGuildJoin(GuildJoinEvent event) {
         System.out.println("joined new server " + event.getGuild().getIdLong());
-        GuildHandler guildHandler = new GuildHandler(this, new GuildConfig(), event.getGuild());
+        GuildHandler guildHandler = new GuildHandler(this, new GuildConfigBuilder().build(event.getGuild()));
         this.map.put(event.getGuild().getIdLong(), guildHandler);
         saveGuildHandler(guildHandler);
     }

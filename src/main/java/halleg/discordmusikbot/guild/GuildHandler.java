@@ -4,12 +4,12 @@ import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import halleg.discordmusikbot.MusicBot;
 import halleg.discordmusikbot.guild.buttons.ButtonManager;
 import halleg.discordmusikbot.guild.commands.CommandManager;
+import halleg.discordmusikbot.guild.config.GuildConfig;
 import halleg.discordmusikbot.guild.player.QueuePlayer;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
 import net.dv8tion.jda.api.exceptions.InsufficientPermissionException;
 
-import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
@@ -35,9 +35,7 @@ public class GuildHandler {
     public static final int RETRY_AMOUNT = 5;
     private static final long DELETE_DELAY = 60;
 
-    private Guild guild;
-    private TextChannel output;
-    private String prefix;
+    private GuildConfig config;
 
     private QueuePlayer player;
     private MusicBot bot;
@@ -46,14 +44,8 @@ public class GuildHandler {
     private ButtonManager buttons;
     private TrackLoader loader;
 
-    public GuildHandler(MusicBot musicbot, Guild g) {
-        this(musicbot, new GuildConfig(g.getTextChannels().get(0).getIdLong(), ".", new HashMap<>()), g);
-    }
-
-    public GuildHandler(MusicBot musicbot, GuildConfig config, Guild g) {
-        this.guild = g;
-        this.prefix = config.getPrefix();
-        this.output = this.guild.getTextChannelById(config.getChannelId());
+    public GuildHandler(MusicBot musicbot, GuildConfig config) {
+        this.config = config;
 
         this.bot = musicbot;
         this.builder = new MessageBuilder(this);
@@ -61,26 +53,19 @@ public class GuildHandler {
         this.commands = new CommandManager(this);
         this.buttons = new ButtonManager(this);
         this.loader = new TrackLoader(this, musicbot.getPreloader());
-
-        if (this.output == null) {
-            setChannel(this.guild.getTextChannels().get(0));
-        } else {
-            //clearLastMessages(this.output);
-        }
-        saveConfig();
-        log("initialized! outputchannel: " + this.output.getName() + " prefix: " + this.prefix);
+        log("initialized! outputchannel: " + config.getOutputChannel().getName() + " prefix: " + config.getPrefix());
     }
 
     public void setChannel(TextChannel channel) {
-        this.output = channel;
+        this.config.setOutputChannel(channel);
         log("set channel to: " + channel.getName());
         sendInfoMessage("This is now the prefered channel.");
         saveConfig();
     }
 
     public void setPrefix(String prefix) {
-        this.prefix = prefix;
-        sendInfoMessage("Commands for this bot now have to start with `" + this.prefix + "`.");
+        this.config.setPrefix(prefix);
+        sendInfoMessage("Commands for this bot now have to start with `" + this.config.getPrefix() + "`.");
         saveConfig();
     }
 
@@ -89,7 +74,7 @@ public class GuildHandler {
     }
 
     public void handleMessage(GuildMessageReceivedEvent event) {
-        if (event.getMessage().getContentRaw().startsWith(this.prefix)) {
+        if (event.getMessage().getContentRaw().startsWith(this.config.getPrefix())) {
             this.commands.handleCommand(event.getMessage());
             return;
         }
@@ -97,7 +82,7 @@ public class GuildHandler {
             return;
         }
 
-        if (event.getChannel() != this.output) {
+        if (event.getChannel() != this.config.getOutputChannel()) {
             return;
         }
 
@@ -143,7 +128,7 @@ public class GuildHandler {
     }
 
     public void sendRepeatMessage(String link, Consumer<Message> c) {
-        queue(this.output, this.builder.buildRepeatMessage(link), c);
+        queue(this.builder.buildRepeatMessage(link), c);
     }
 
     public void delete(Message message) {
@@ -163,7 +148,7 @@ public class GuildHandler {
     }
 
     public void queue(Message message) {
-        queue(this.output, message, null);
+        queue(this.config.getOutputChannel(), message, null);
     }
 
     public void queue(MessageChannel channel, Message message) {
@@ -171,7 +156,7 @@ public class GuildHandler {
     }
 
     public void queue(Message message, Consumer<Message> consumer) {
-        queue(this.output, message, consumer);
+        queue(this.config.getOutputChannel(), message, consumer);
     }
 
     public void queue(MessageChannel channel, Message message, Consumer<Message> consumer) {
@@ -183,7 +168,7 @@ public class GuildHandler {
     }
 
     public Message complete(Message message) {
-        return complete(this.output, message);
+        return complete(this.config.getOutputChannel(), message);
     }
 
     public Message complete(MessageChannel channel, Message message) {
@@ -204,23 +189,23 @@ public class GuildHandler {
     }
 
     public void log(String string) {
-        System.out.println("[" + this.guild.getName() + "] (" + Thread.currentThread().getId() + ") " + string);
+        System.out.println("[" + this.config.getGuild().getName() + "] (" + Thread.currentThread().getId() + ") " + string);
     }
 
     public Guild getGuild() {
-        return this.guild;
+        return this.config.getGuild();
     }
 
     public QueuePlayer getPlayer() {
         return this.player;
     }
 
-    public TextChannel getChannel() {
-        return this.output;
+    public MessageChannel getChannel() {
+        return this.config.getOutputChannel();
     }
 
     public String getPrefix() {
-        return this.prefix;
+        return this.config.getPrefix();
     }
 
     public MessageBuilder getBuilder() {
@@ -241,6 +226,10 @@ public class GuildHandler {
 
     public TrackLoader getLoader() {
         return this.loader;
+    }
+
+    public GuildConfig getConfig() {
+        return this.config;
     }
 
     public boolean isCorrectChannel(VoiceChannel channel) {
