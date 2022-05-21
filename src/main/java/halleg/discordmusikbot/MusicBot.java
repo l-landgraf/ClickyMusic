@@ -28,6 +28,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
 public class MusicBot extends ListenerAdapter {
@@ -36,9 +37,11 @@ public class MusicBot extends ListenerAdapter {
     private AudioPlayerManager manager;
     private SpotifyAudioSourceManager preloader;
     private ObjectMapper mapper;
+    private File musicFolder;
 
     public MusicBot(JDA jda, File musicFolder) {
         this.jda = jda;
+        this.musicFolder = musicFolder;
         this.mapper = new ObjectMapper();
         this.mapper.enable(SerializationFeature.INDENT_OUTPUT);
         this.manager = new DefaultAudioPlayerManager();
@@ -154,5 +157,18 @@ public class MusicBot extends ListenerAdapter {
 
     public TrackLoader.PlaylistPreloadManager getPreloader() {
         return this.preloader;
+    }
+
+    public void downloadAttachment(Message.Attachment attachment) {
+        try {
+            System.out.println("Downloading file");
+            CompletableFuture<File> future = attachment.downloadToFile(this.musicFolder.getCanonicalPath() + attachment.getFileName());
+            future.exceptionally(error -> {
+                error.printStackTrace();
+                return null;
+            });
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

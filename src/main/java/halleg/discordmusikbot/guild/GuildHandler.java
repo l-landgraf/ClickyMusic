@@ -74,6 +74,16 @@ public class GuildHandler {
     }
 
     public void handleMessage(GuildMessageReceivedEvent event) {
+        if (event.getMessage().getAttachments().size() > 0) {
+            for (Message.Attachment attachment : event.getMessage().getAttachments()) {
+                if (!attachment.getFileExtension().equals("mp3")) {
+                    continue;
+                }
+
+                this.bot.downloadAttachment(attachment);
+            }
+            return;
+        }
         if (event.getMessage().getContentRaw().startsWith(this.config.getPrefix())) {
             this.commands.handleCommand(event.getMessage());
             return;
