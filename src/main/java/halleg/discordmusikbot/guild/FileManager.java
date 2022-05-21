@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 public class FileManager {
+    private static final long MAX_SIZE = (long) 1E9;
     private File musicFolder;
     private GuildHandler handler;
 
@@ -109,6 +110,11 @@ public class FileManager {
         }
 
         if (folder.isDirectory()) {
+            if (!checkFolderSize(folderSize(folder))) {
+                this.handler.sendErrorMessage("Not enough space available to create copy");
+                return;
+            }
+
             try {
                 FileUtils.copyDirectory(folder, newFolder);
             } catch (IOException e) {
@@ -117,6 +123,11 @@ public class FileManager {
                 return;
             }
         } else {
+            if (!checkFolderSize(folder.length())) {
+                this.handler.sendErrorMessage("Not enough space available to create copy");
+                return;
+            }
+
             try {
                 Files.copy(folder.toPath(), newFolder.toPath());
             } catch (IOException e) {
@@ -226,6 +237,11 @@ public class FileManager {
             return false;
         }
 
+        if (!checkFolderSize(attachment.getSize())) {
+            this.handler.sendErrorMessage("Not enough space available to download Attachment");
+            return false;
+        }
+
         this.handler.log("Downloading file \"" + file.getPath() + "\"");
         CompletableFuture<File> future = attachment.downloadToFile(file.getAbsolutePath());
         future.exceptionally(error -> {
@@ -249,5 +265,23 @@ public class FileManager {
 
     public String getRelativePath(File child) {
         return new File(this.musicFolder.getAbsolutePath()).toPath().relativize(new File(child.getAbsolutePath()).toPath()).toString();
+    }
+
+    private boolean checkFolderSize(long newFile) {
+        long size = folderSize(this.musicFolder) + newFile;
+        this.handler.log("current size: " + size);
+        return size < MAX_SIZE;
+    }
+
+    public static long folderSize(File directory) {
+        long length = 0;
+        for (File file : directory.listFiles()) {
+            if (file.isFile()) {
+                length += file.length();
+            } else {
+                length += folderSize(file);
+            }
+        }
+        return length;
     }
 }
