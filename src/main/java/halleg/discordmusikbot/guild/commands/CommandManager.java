@@ -204,6 +204,54 @@ public class CommandManager {
             }
         });
 
+        this.commands.add(new Command(handler, "tree", true, false, false,
+                false, true, "displays all local files.") {
+            @Override
+            protected void run(List<String> args, QueuePlayer player, Message message) {
+                this.handler.getFileManager().showTree();
+            }
+        });
+
+        this.commands.add(new Command(handler, "copy", true, false, false,
+                false, true, "copies a file or folder.", "*from*", "*to*") {
+            @Override
+            protected void run(List<String> args, QueuePlayer player, Message message) {
+                this.handler.getFileManager().copyFile(args.get(1), args.get(2));
+            }
+        });
+
+        this.commands.add(new Command(handler, "move", true, false, false,
+                false, true, "moves a file or folder. can also be used for renaming.", "*from*", "*to*") {
+            @Override
+            protected void run(List<String> args, QueuePlayer player, Message message) {
+                this.handler.getFileManager().moveFile(args.get(1), args.get(2));
+            }
+        });
+
+        this.commands.add(new Command(handler, "delete", true, false, false,
+                false, true, "deletes a file or folder.", "*directory*") {
+            @Override
+            protected void run(List<String> args, QueuePlayer player, Message message) {
+                this.handler.getFileManager().deleteFile(args.get(1));
+            }
+        });
+
+        this.commands.add(new Command(handler, "deleteAll", true, false, false,
+                false, true, "deletes a directory and all of its contents.", "*directory*") {
+            @Override
+            protected void run(List<String> args, QueuePlayer player, Message message) {
+                this.handler.getFileManager().deleteDirectoryRecursively(args.get(1));
+            }
+        });
+
+        this.commands.add(new Command(handler, "list", true, false, false,
+                false, true, "lists the files of the folder.", "*directory*") {
+            @Override
+            protected void run(List<String> args, QueuePlayer player, Message message) {
+                this.handler.getFileManager().listFiles(args.get(1));
+            }
+        });
+
         this.commands.add(new Command(handler, "ripclicky", true, false, false,
                 false, true, "terminates the bot and hopefully restarts it.") {
             @Override

@@ -40,7 +40,7 @@ public class MessageBuilder {
         try {
             String uri = message.getEmbeds().get(0).getUrl();
             if (uri == null) {
-                uri = message.getEmbeds().get(0).getTitle();
+                uri = message.getEmbeds().get(0).getFooter().getText();
             }
             return uri;
         } catch (Exception e) {
@@ -76,6 +76,37 @@ public class MessageBuilder {
         EmbedBuilder eb = new EmbedBuilder();
         eb.setTitle("🔔 Info");
         eb.setDescription(message);
+
+        return new net.dv8tion.jda.api.MessageBuilder(eb.build()).build();
+    }
+
+    public Message buildListMessage(String title, String[] elements) {
+        EmbedBuilder eb = new EmbedBuilder();
+        eb.setTitle(title);
+        if (elements == null || elements.length == 0) {
+            eb.setDescription("none");
+            return new net.dv8tion.jda.api.MessageBuilder(eb.build()).build();
+        }
+
+        String[] batch = new String[6];
+        for (int e = 0; e < batch.length; e++) {
+            batch[e] = "";
+        }
+        for (int i = 0; i < elements.length; i++) {
+            batch[i % 6] = elements[i];
+            if (i % 6 == 5) {
+                eb.addField(batch[0], batch[3], true);
+                eb.addField(batch[1], batch[4], true);
+                eb.addField(batch[2], batch[5], true);
+                for (int e = 0; e < batch.length; e++) {
+                    batch[e] = "";
+                }
+            }
+        }
+
+        eb.addField(batch[0], batch[3], true);
+        eb.addField(batch[1], batch[4], true);
+        eb.addField(batch[2], batch[5], true);
 
         return new net.dv8tion.jda.api.MessageBuilder(eb.build()).build();
     }

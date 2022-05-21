@@ -32,8 +32,7 @@ public class MyLocalAudioSourceManager extends LocalAudioSourceManager {
             return null;
         }
         String stringPath = file.toURI().getPath();
-        System.out.println("path: " + stringPath);
-        AudioReference newRef = new AudioReference(stringPath, reference.identifier, reference.containerDescriptor);
+        AudioReference newRef = new AudioReference(stringPath, folderPath.relativize(filePath).toString(), reference.containerDescriptor);
         AudioItem item = super.loadItem(manager, newRef);
         return item;
     }

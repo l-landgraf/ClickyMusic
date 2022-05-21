@@ -111,7 +111,9 @@ public class GuildHandler {
             if (!attachment.getFileExtension().equals("mp3")) {
                 continue;
             }
-            this.fileManager.downloadAttachment(attachment, event.getMessage().getContentRaw());
+            if (this.fileManager.downloadAttachment(attachment, event.getMessage().getContentRaw())) {
+                addReaction(event.getMessage(), SAVED);
+            }
         }
         return;
     }
@@ -153,6 +155,19 @@ public class GuildHandler {
     public void delete(Message message) {
         try {
             message.delete().queue();
+        } catch (InsufficientPermissionException e) {
+            handleMissingPermission(e);
+        }
+    }
+
+    public void queueAndDeleteLater(Message message) {
+        try {
+            queue(message, new Consumer<Message>() {
+                @Override
+                public void accept(Message message) {
+                    deleteLater(message);
+                }
+            });
         } catch (InsufficientPermissionException e) {
             handleMissingPermission(e);
         }
@@ -257,6 +272,10 @@ public class GuildHandler {
 
     public GuildConfig getConfig() {
         return this.config;
+    }
+
+    public FileManager getFileManager() {
+        return this.fileManager;
     }
 
     public boolean isCorrectChannel(VoiceChannel channel) {
