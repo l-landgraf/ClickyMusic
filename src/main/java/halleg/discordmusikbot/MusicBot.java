@@ -161,8 +161,9 @@ public class MusicBot extends ListenerAdapter {
 
     public void downloadAttachment(Message.Attachment attachment) {
         try {
-            System.out.println("Downloading file");
-            CompletableFuture<File> future = attachment.downloadToFile(this.musicFolder.getCanonicalPath() + attachment.getFileName());
+            String path = this.musicFolder.getCanonicalPath() + "/" + attachment.getFileName();
+            System.out.println("Downloading file \"" + path + "\"");
+            CompletableFuture<File> future = attachment.downloadToFile();
             future.exceptionally(error -> {
                 error.printStackTrace();
                 return null;

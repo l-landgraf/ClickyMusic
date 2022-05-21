@@ -26,6 +26,8 @@ public class GuildHandler {
     public static final String LOADING_FAILED_EMOJI = "⚡";
     public static final String UNKNOWN_COMMAND = "❓";
     public static final String CONFIRMED = "✅";
+    public static final String SAVED = "\uD83D\uDCC2";
+
     public static final String BUSY = "\uD83D\uDD34";
     public static final String NOT_BUSY = "\uD83D\uDFE2";
     public static final String RIP = "\uD83D\uDC80";
@@ -79,8 +81,8 @@ public class GuildHandler {
                 if (!attachment.getFileExtension().equals("mp3")) {
                     continue;
                 }
-
                 this.bot.downloadAttachment(attachment);
+                addReaction(message, SAVED);
             }
             return;
         }
@@ -187,6 +189,14 @@ public class GuildHandler {
         } catch (InsufficientPermissionException e) {
             handleMissingPermission(e);
             return null;
+        }
+    }
+
+    public void addReaction(Message message, String emote) {
+        try {
+            message.addReaction(emote).queue();
+        } catch (InsufficientPermissionException e) {
+            handleMissingPermission(e);
         }
     }
 
