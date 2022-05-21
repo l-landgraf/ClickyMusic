@@ -45,16 +45,19 @@ public class GuildHandler {
     private CommandManager commands;
     private ButtonManager buttons;
     private TrackLoader loader;
+    private FileManager fileManager;
+    private AudioPlayerManager audioPlayerManager;
 
-    public GuildHandler(MusicBot musicbot, GuildConfig config) {
+    public GuildHandler(MusicBot musicbot, GuildConfig config, AudioPlayerManager audioPlayerManager) {
         this.config = config;
-
+        this.audioPlayerManager = audioPlayerManager;
         this.bot = musicbot;
         this.builder = new MessageBuilder(this);
-        this.player = new QueuePlayer(this);
+        this.player = new QueuePlayer(this, audioPlayerManager.createPlayer());
         this.commands = new CommandManager(this);
         this.buttons = new ButtonManager(this);
         this.loader = new TrackLoader(this, musicbot.getPreloader());
+        this.fileManager = new FileManager(this.bot.getMusikFolder(), this);
         log("initialized! outputchannel: " + config.getOutputChannel().getName() + " prefix: " + config.getPrefix());
     }
 
@@ -76,14 +79,8 @@ public class GuildHandler {
     }
 
     public void handleMessage(GuildMessageReceivedEvent event) {
-        if (event.getMessage().getAttachments().size() > 0) {
-            for (Message.Attachment attachment : event.getMessage().getAttachments()) {
-                if (!attachment.getFileExtension().equals("mp3")) {
-                    continue;
-                }
-                this.bot.downloadAttachment(attachment);
-                addReaction(event.getMessage(), SAVED);
-            }
+        if (!event.getMessage().getAttachments().isEmpty() && event.getChannel().getIdLong() == this.config.getOutputChannelId()) {
+            handleAttachments(event);
             return;
         }
         if (event.getMessage().getContentRaw().startsWith(this.config.getPrefix())) {
@@ -107,6 +104,16 @@ public class GuildHandler {
 
         this.builder.setLoading(event.getMessage());
         this.loader.search(event.getMessage().getContentRaw(), this.player, event.getMember(), event.getMessage());
+    }
+
+    private void handleAttachments(GuildMessageReceivedEvent event) {
+        for (Message.Attachment attachment : event.getMessage().getAttachments()) {
+            if (!attachment.getFileExtension().equals("mp3")) {
+                continue;
+            }
+            this.fileManager.downloadAttachment(attachment, event.getMessage().getContentRaw());
+        }
+        return;
     }
 
     public void handleReaction(MessageReaction react, Message message, Member member) {
@@ -241,7 +248,7 @@ public class GuildHandler {
     }
 
     public AudioPlayerManager getManager() {
-        return this.bot.getManager();
+        return this.audioPlayerManager;
     }
 
     public TrackLoader getLoader() {

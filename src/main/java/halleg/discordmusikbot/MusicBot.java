@@ -28,14 +28,13 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
 public class MusicBot extends ListenerAdapter {
     private JDA jda;
     private Map<Long, GuildHandler> map;
-    private AudioPlayerManager manager;
     private SpotifyAudioSourceManager preloader;
+    private YoutubeAudioSourceManager ytManager;
     private ObjectMapper mapper;
     private File musicFolder;
 
@@ -44,16 +43,20 @@ public class MusicBot extends ListenerAdapter {
         this.musicFolder = musicFolder;
         this.mapper = new ObjectMapper();
         this.mapper.enable(SerializationFeature.INDENT_OUTPUT);
-        this.manager = new DefaultAudioPlayerManager();
-        AudioSourceManagers.registerRemoteSources(this.manager);
-        YoutubeAudioSourceManager ytManager = new MyYoutubeAudioSourceManager();
-        this.manager.registerSourceManager(ytManager);
-        this.preloader = new SpotifyAudioSourceManager(ytManager);
-        this.manager.registerSourceManager(this.preloader);
-        this.manager.registerSourceManager(new MyLocalAudioSourceManager(musicFolder));
-        this.manager.registerSourceManager(new YoutubeQueryAudioSourceManager(ytManager));
+        this.preloader = new SpotifyAudioSourceManager(this.ytManager);
+        this.ytManager = new MyYoutubeAudioSourceManager();
         this.map = new HashMap<>();
         initGuilds();
+    }
+
+    private AudioPlayerManager buildAudioPlayerManager(Guild guild) {
+        AudioPlayerManager manager = new DefaultAudioPlayerManager();
+        AudioSourceManagers.registerRemoteSources(manager);
+        manager.registerSourceManager(this.ytManager);
+        manager.registerSourceManager(this.preloader);
+        manager.registerSourceManager(new MyLocalAudioSourceManager(new File(this.musicFolder, guild.getId())));
+        manager.registerSourceManager(new YoutubeQueryAudioSourceManager(this.ytManager));
+        return manager;
     }
 
     private void initGuilds() {
@@ -63,10 +66,10 @@ public class MusicBot extends ListenerAdapter {
 
             System.out.println("initializing guild " + g.getName() + " (" + g.getIdLong() + ")");
             try {
-                handler = new GuildHandler(this, loadConfig(file).build(g));
+                handler = new GuildHandler(this, loadConfig(file).build(g), buildAudioPlayerManager(g));
             } catch (Exception e) {
                 System.out.println("failed to load, using default");
-                handler = new GuildHandler(this, new GuildConfigBuilder().build(g));
+                handler = new GuildHandler(this, new GuildConfigBuilder().build(g), buildAudioPlayerManager(g));
                 saveGuildHandler(handler);
             }
             this.map.put(g.getIdLong(), handler);
@@ -120,7 +123,7 @@ public class MusicBot extends ListenerAdapter {
     @Override
     public void onGuildJoin(GuildJoinEvent event) {
         System.out.println("joined new server " + event.getGuild().getIdLong());
-        GuildHandler guildHandler = new GuildHandler(this, new GuildConfigBuilder().build(event.getGuild()));
+        GuildHandler guildHandler = new GuildHandler(this, new GuildConfigBuilder().build(event.getGuild()), buildAudioPlayerManager(event.getGuild()));
         this.map.put(event.getGuild().getIdLong(), guildHandler);
         saveGuildHandler(guildHandler);
     }
@@ -151,25 +154,12 @@ public class MusicBot extends ListenerAdapter {
         return l + ".config";
     }
 
-    public AudioPlayerManager getManager() {
-        return this.manager;
-    }
-
     public TrackLoader.PlaylistPreloadManager getPreloader() {
         return this.preloader;
     }
 
-    public void downloadAttachment(Message.Attachment attachment) {
-        try {
-            String path = this.musicFolder.getCanonicalPath() + "/" + attachment.getFileName();
-            System.out.println("Downloading file \"" + path + "\"");
-            CompletableFuture<File> future = attachment.downloadToFile();
-            future.exceptionally(error -> {
-                error.printStackTrace();
-                return null;
-            });
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+
+    public File getMusikFolder() {
+        return this.musicFolder;
     }
 }

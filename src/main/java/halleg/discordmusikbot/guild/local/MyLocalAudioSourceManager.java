@@ -19,7 +19,7 @@ public class MyLocalAudioSourceManager extends LocalAudioSourceManager {
 
     @Override
     public AudioItem loadItem(AudioPlayerManager manager, AudioReference reference) {
-        File file = new File(this.musicFodler.getPath(), reference.identifier);
+        File file = new File(this.musicFodler, reference.identifier);
         Path filePath = null;
         Path folderPath = null;
         try {
@@ -32,6 +32,7 @@ public class MyLocalAudioSourceManager extends LocalAudioSourceManager {
             return null;
         }
         String stringPath = file.toURI().getPath();
+        System.out.println("path: " + stringPath);
         AudioReference newRef = new AudioReference(stringPath, reference.identifier, reference.containerDescriptor);
         AudioItem item = super.loadItem(manager, newRef);
         return item;

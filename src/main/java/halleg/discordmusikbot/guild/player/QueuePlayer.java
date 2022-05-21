@@ -29,11 +29,11 @@ public class QueuePlayer implements Timer.TimerListener {
 
     private Timer timer;
 
-    public QueuePlayer(GuildHandler handler) {
+    public QueuePlayer(GuildHandler handler, AudioPlayer player) {
 
         this.handler = handler;
         this.audioManager = handler.getGuild().getAudioManager();
-        this.player = handler.getManager().createPlayer();
+        this.player = player;
         this.listener = new EventListener(handler, this);
         this.player.addListener(this.listener);
         this.sender = new SendHandler(this.player);
