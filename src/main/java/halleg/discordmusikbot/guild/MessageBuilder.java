@@ -81,12 +81,12 @@ public class MessageBuilder {
     }
 
     public void setLoading(Message message) {
-        message.addReaction(GuildHandler.LOADING_EMOJI).queue();
+        this.handler.addReaction(message, GuildHandler.LOADING_EMOJI);
     }
 
     public void setLoadingFailed(Message message) {
-        message.clearReactions(GuildHandler.LOADING_EMOJI).queue();
-        message.addReaction(GuildHandler.LOADING_FAILED_EMOJI).queue();
+        this.handler.addReaction(message, GuildHandler.LOADING_EMOJI);
+        this.handler.addReaction(message, GuildHandler.LOADING_FAILED_EMOJI);
     }
 
     public Message buildRepeatMessage(String link) {
@@ -99,10 +99,10 @@ public class MessageBuilder {
     }
 
     public void setUnknownCommand(Message message) {
-        message.addReaction(GuildHandler.UNKNOWN_COMMAND).queue();
+        this.handler.addReaction(message, GuildHandler.UNKNOWN_COMMAND);
     }
 
     public void setConfirmed(Message message) {
-        message.addReaction(GuildHandler.CONFIRMED).queue();
+        this.handler.addReaction(message, GuildHandler.CONFIRMED);
     }
 }
