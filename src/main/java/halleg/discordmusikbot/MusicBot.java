@@ -20,7 +20,6 @@ import net.dv8tion.jda.api.events.guild.GuildLeaveEvent;
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceUpdateEvent;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.guild.react.GuildMessageReactionAddEvent;
-import net.dv8tion.jda.api.events.message.guild.react.GuildMessageReactionRemoveEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
 import javax.annotation.Nonnull;
@@ -51,10 +50,10 @@ public class MusicBot extends ListenerAdapter {
         this.manager.registerSourceManager(new MyLocalAudioSourceManager(musicFolder));
         this.manager.registerSourceManager(new YoutubeQueryAudioSourceManager(ytManager));
         this.map = new HashMap<>();
-        loadConfigs();
+        initGuilds();
     }
 
-    private void loadConfigs() {
+    private void initGuilds() {
         for (Guild g : this.jda.getGuilds()) {
             File file = new File(getFilename(g.getIdLong()));
             GuildHandler handler = null;
@@ -90,23 +89,16 @@ public class MusicBot extends ListenerAdapter {
 
     @Override
     public void onGuildMessageReceived(GuildMessageReceivedEvent event) {
-
         if (event.getAuthor().isBot()) {
             return;
         }
 
         this.map.get(event.getGuild().getIdLong()).handleMessage(event);
-
     }
 
     @Override
     public void onGuildMessageReactionAdd(GuildMessageReactionAddEvent event) {
         handleReaction(event.getMember(), event.getChannel(), event.getMessageIdLong(), event.getReaction());
-    }
-
-    @Override
-    public void onGuildMessageReactionRemove(GuildMessageReactionRemoveEvent event) {
-        //handleReaction(event.getMember(), event.getChannel(), event.getMessageIdLong(), event.getReaction());
     }
 
     @Override
@@ -162,9 +154,5 @@ public class MusicBot extends ListenerAdapter {
 
     public TrackLoader.PlaylistPreloadManager getPreloader() {
         return this.preloader;
-    }
-
-    public Guild getGuild(long guildid) {
-        return this.jda.getGuildById(guildid);
     }
 }

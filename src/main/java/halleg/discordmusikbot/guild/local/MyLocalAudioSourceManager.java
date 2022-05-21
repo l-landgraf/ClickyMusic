@@ -11,29 +11,29 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class MyLocalAudioSourceManager extends LocalAudioSourceManager {
-	private File musicFodler;
+    private File musicFodler;
 
-	public MyLocalAudioSourceManager(File musicFolder) {
-		this.musicFodler = musicFolder;
-	}
+    public MyLocalAudioSourceManager(File musicFolder) {
+        this.musicFodler = musicFolder;
+    }
 
-	@Override
-	public AudioItem loadItem(AudioPlayerManager manager, AudioReference reference) {
-		File file = new File(this.musicFodler.getPath(), reference.identifier);
-		Path filePath = null;
-		Path folderPath = null;
-		try {
-			filePath = Paths.get(file.getCanonicalPath()).toAbsolutePath();
-			folderPath = Paths.get(this.musicFodler.getCanonicalPath()).toAbsolutePath();
-		} catch (IOException e) {
-			return null;
-		}
-		if (!filePath.startsWith(folderPath)) {
-			return null;
-		}
-		String stringPath = file.toURI().getPath();
-		AudioReference newRef = new AudioReference(stringPath, reference.title, reference.containerDescriptor);
-		AudioItem item = super.loadItem(manager, newRef);
-		return item;
-	}
+    @Override
+    public AudioItem loadItem(AudioPlayerManager manager, AudioReference reference) {
+        File file = new File(this.musicFodler.getPath(), reference.identifier);
+        Path filePath = null;
+        Path folderPath = null;
+        try {
+            filePath = Paths.get(file.getCanonicalPath()).toAbsolutePath();
+            folderPath = Paths.get(this.musicFodler.getCanonicalPath()).toAbsolutePath();
+        } catch (IOException e) {
+            return null;
+        }
+        if (!filePath.startsWith(folderPath)) {
+            return null;
+        }
+        String stringPath = file.toURI().getPath();
+        AudioReference newRef = new AudioReference(stringPath, reference.identifier, reference.containerDescriptor);
+        AudioItem item = super.loadItem(manager, newRef);
+        return item;
+    }
 }

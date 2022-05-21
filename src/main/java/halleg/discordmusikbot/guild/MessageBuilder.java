@@ -38,7 +38,11 @@ public class MessageBuilder {
 
     public String getURI(Message message) {
         try {
-            return message.getEmbeds().get(0).getUrl();
+            String uri = message.getEmbeds().get(0).getUrl();
+            if (uri == null) {
+                uri = message.getEmbeds().get(0).getTitle();
+            }
+            return uri;
         } catch (Exception e) {
             return "";
         }
