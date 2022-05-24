@@ -18,9 +18,11 @@ import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.guild.GuildJoinEvent;
 import net.dv8tion.jda.api.events.guild.GuildLeaveEvent;
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceUpdateEvent;
-import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
-import net.dv8tion.jda.api.events.message.guild.react.GuildMessageReactionAddEvent;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 import java.io.File;
@@ -46,6 +48,7 @@ public class MusicBot extends ListenerAdapter {
         this.preloader = new SpotifyAudioSourceManager(this.ytManager);
         this.ytManager = new MyYoutubeAudioSourceManager();
         this.map = new HashMap<>();
+
         initGuilds();
     }
 
@@ -94,7 +97,7 @@ public class MusicBot extends ListenerAdapter {
     }
 
     @Override
-    public void onGuildMessageReceived(GuildMessageReceivedEvent event) {
+    public void onMessageReceived(MessageReceivedEvent event) {
         if (event.getAuthor().isBot()) {
             return;
         }
@@ -103,13 +106,18 @@ public class MusicBot extends ListenerAdapter {
     }
 
     @Override
-    public void onGuildMessageReactionAdd(GuildMessageReactionAddEvent event) {
+    public void onSlashCommandInteraction(@NotNull SlashCommandInteractionEvent event) {
+        this.map.get(event.getGuild().getIdLong()).handleCommand(event);
+    }
+
+    @Override
+    public void onMessageReactionAdd(@NotNull MessageReactionAddEvent event) {
         handleReaction(event.getMember(), event.getChannel(), event.getMessageIdLong(), event.getReaction());
     }
 
     @Override
     public void onGuildVoiceUpdate(@Nonnull GuildVoiceUpdateEvent event) {
-        VoiceChannel channel = event.getChannelJoined();
+        AudioChannel channel = event.getChannelJoined();
 
         if (channel == null) {
             channel = event.getChannelLeft();

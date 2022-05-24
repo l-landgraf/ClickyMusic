@@ -7,8 +7,10 @@ import halleg.discordmusikbot.guild.commands.CommandManager;
 import halleg.discordmusikbot.guild.config.GuildConfig;
 import halleg.discordmusikbot.guild.player.QueuePlayer;
 import net.dv8tion.jda.api.entities.*;
-import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.exceptions.InsufficientPermissionException;
+import net.dv8tion.jda.api.requests.restaction.interactions.ReplyCallbackAction;
 
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
@@ -35,13 +37,13 @@ public class GuildHandler {
     public static final int PLAYLIST_PREVIEW_MAX = 3;
     public static final int PRELOAD_MAX = 5;
     public static final int RETRY_AMOUNT = 5;
-    private static final long DELETE_DELAY = 60;
+    public static final long DELETE_DELAY = 60;
 
     private GuildConfig config;
 
     private QueuePlayer player;
     private MusicBot bot;
-    private MessageBuilder builder;
+    private MessageFactory builder;
     private CommandManager commands;
     private ButtonManager buttons;
     private TrackLoader loader;
@@ -52,10 +54,11 @@ public class GuildHandler {
         this.config = config;
         this.audioPlayerManager = audioPlayerManager;
         this.bot = musicbot;
-        this.builder = new MessageBuilder(this);
+        this.builder = new MessageFactory(this);
         this.player = new QueuePlayer(this, audioPlayerManager.createPlayer());
         this.commands = new CommandManager(this);
         this.buttons = new ButtonManager(this);
+
         this.loader = new TrackLoader(this, musicbot.getPreloader());
         this.fileManager = new FileManager(this.bot.getMusikFolder(), this);
         log("initialized! outputchannel: " + config.getOutputChannel().getName() + " prefix: " + config.getPrefix());
@@ -78,13 +81,9 @@ public class GuildHandler {
         this.bot.saveGuildHandler(this);
     }
 
-    public void handleMessage(GuildMessageReceivedEvent event) {
+    public void handleMessage(MessageReceivedEvent event) {
         if (!event.getMessage().getAttachments().isEmpty() && event.getChannel().getIdLong() == this.config.getOutputChannelId()) {
             handleAttachments(event);
-            return;
-        }
-        if (event.getMessage().getContentRaw().startsWith(this.config.getPrefix())) {
-            this.commands.handleCommand(event.getMessage());
             return;
         }
         if (!isCorrectChannel(event.getMember().getVoiceState().getChannel())) {
@@ -106,7 +105,11 @@ public class GuildHandler {
         this.loader.search(event.getMessage().getContentRaw(), this.player, event.getMember(), event.getMessage());
     }
 
-    private void handleAttachments(GuildMessageReceivedEvent event) {
+    public void handleCommand(SlashCommandInteractionEvent event) {
+        this.commands.handleCommand(event);
+    }
+
+    private void handleAttachments(MessageReceivedEvent event) {
         for (Message.Attachment attachment : event.getMessage().getAttachments()) {
             if (!attachment.getFileExtension().equals("mp3")) {
                 continue;
@@ -127,21 +130,11 @@ public class GuildHandler {
     }
 
     public void sendErrorMessage(String error) {
-        queue(this.builder.buildNewErrorMessage(error), new Consumer<>() {
-            @Override
-            public void accept(Message message) {
-                deleteLater(message);
-            }
-        });
+        queue(this.builder.buildNewErrorMessage(error), m -> deleteLater(m));
     }
 
     public void sendInfoMessage(String message) {
-        queue(this.builder.buildInfoMessage(message), new Consumer<>() {
-            @Override
-            public void accept(Message message) {
-                deleteLater(message);
-            }
-        });
+        queue(this.builder.buildInfoMessage(message), m -> deleteLater(m));
     }
 
     public void sendHelpMessage(MessageChannel channel) {
@@ -160,17 +153,22 @@ public class GuildHandler {
         }
     }
 
-    public void queueAndDeleteLater(Message message) {
+
+    public void queueAndDeleteLater(ReplyCallbackAction reply) {
         try {
-            queue(message, new Consumer<Message>() {
-                @Override
-                public void accept(Message message) {
-                    deleteLater(message);
-                }
-            });
+            reply.queue(ih -> ih.deleteOriginal().queueAfter(DELETE_DELAY, TimeUnit.SECONDS));
         } catch (InsufficientPermissionException e) {
             handleMissingPermission(e);
         }
+    }
+
+    public void queueAndDeleteLater(Message message) {
+        try {
+            queue(message, m -> deleteLater(m));
+        } catch (InsufficientPermissionException e) {
+            handleMissingPermission(e);
+        }
+
     }
 
     public void deleteLater(Message message) {
@@ -250,7 +248,7 @@ public class GuildHandler {
         return this.config.getPrefix();
     }
 
-    public MessageBuilder getBuilder() {
+    public MessageFactory getBuilder() {
         return this.builder;
     }
 
@@ -278,12 +276,13 @@ public class GuildHandler {
         return this.fileManager;
     }
 
-    public boolean isCorrectChannel(VoiceChannel channel) {
+    public boolean isCorrectChannel(AudioChannel channel) {
         return channel != null && (this.player.getConnectedChannel() == null || channel.getIdLong() == this.player.getConnectedChannel().getIdLong());
     }
 
     public void handleMissingPermission(InsufficientPermissionException e) {
-        String message = e.getMessage() + " in " + e.getChannelType().name() + "-CHANNEL \"" + e.getChannel(getGuild().getJDA()).getName() + "\"";
+        String message =
+                e.getMessage() + " in " + e.getChannelType().name() + "-CHANNEL \"" + e.getChannel(getGuild().getJDA()).getName() + "\"";
         log(message);
         sendErrorMessage(message);
     }
