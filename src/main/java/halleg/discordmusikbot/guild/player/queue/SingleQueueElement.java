@@ -1,6 +1,6 @@
 package halleg.discordmusikbot.guild.player.queue;
 
-import halleg.discordmusikbot.guild.GuildHandler;
+import halleg.discordmusikbot.guild.buttons.ButtonGoup;
 import halleg.discordmusikbot.guild.player.QueuePlayer;
 import halleg.discordmusikbot.guild.player.tracks.Track;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -42,30 +42,20 @@ public class SingleQueueElement extends QueueElement {
     @Override
     public void onQueued() {
         super.onQueued();
-        this.message.addReaction(GuildHandler.REPEAT_EMOJI).queue();
-        this.message.addReaction(GuildHandler.REMOVE_EMOJI).queue();
+        this.player.getHandler().setButtons(this.message, ButtonGoup.QUEUED);
     }
 
     @Override
     public void onPlaying() {
         super.onPlaying();
         this.player.playTrack(this.track.getTrack());
-        this.message.clearReactions(GuildHandler.REMOVE_EMOJI).queue();
-        this.message.addReaction(GuildHandler.REPEAT_EMOJI).queue();
-        this.message.addReaction(GuildHandler.BACK_EMOJI).queue();
-        this.message.addReaction(GuildHandler.RESUME_PAUSE_EMOJI).queue();
-        this.message.addReaction(GuildHandler.SKIP_EMOJI).queue();
+        this.player.getHandler().setButtons(this.message, ButtonGoup.PLAYING_SINGLE);
     }
 
     @Override
     public void onPlayed() {
         super.onPlayed();
-        this.message.clearReactions(GuildHandler.SKIP_EMOJI).queue();
-        this.message.clearReactions(GuildHandler.RESUME_PAUSE_EMOJI).queue();
-        this.message.clearReactions(GuildHandler.BACK_EMOJI).queue();
-        this.message.clearReactions(GuildHandler.REMOVE_EMOJI).queue();
-        this.message.clearReactions(GuildHandler.REMOVE_ALL_EMOJI).queue();
-        this.message.addReaction(GuildHandler.REPEAT_EMOJI).queue();
+        this.player.getHandler().setButtons(this.message, ButtonGoup.PLAYED);
     }
 
     @Override
@@ -82,7 +72,7 @@ public class SingleQueueElement extends QueueElement {
     @Override
     public void onDelete() {
         super.onDelete();
-        this.message.clearReactions(GuildHandler.REMOVE_EMOJI).queue();
+        this.player.getHandler().setButtons(this.message, ButtonGoup.PLAYED);
         this.player.removeElement(this);
     }
 

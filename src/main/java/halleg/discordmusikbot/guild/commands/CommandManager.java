@@ -4,6 +4,7 @@ import halleg.discordmusikbot.guild.GuildHandler;
 import halleg.discordmusikbot.guild.MessageFactory;
 import halleg.discordmusikbot.guild.player.QueuePlayer;
 import halleg.discordmusikbot.guild.player.queue.QueueElement;
+import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.entities.ChannelType;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.TextChannel;
@@ -12,6 +13,8 @@ import net.dv8tion.jda.api.exceptions.InsufficientPermissionException;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
+import net.dv8tion.jda.api.interactions.components.ActionRow;
+import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.requests.restaction.CommandListUpdateAction;
 import net.dv8tion.jda.internal.interactions.CommandDataImpl;
 
@@ -270,7 +273,9 @@ public class CommandManager {
         this.commands.add(new Command(handler, "help", "displays a help message.") {
             @Override
             protected Message run(SlashCommandInteractionEvent event, QueuePlayer player) {
-                //this.getHandler().sendHelpMessage(message.getChannel());
+                Message m = new MessageBuilder("test").build();
+                event.getChannel().sendMessage(m).setActionRows(ActionRow.of(Button.primary(
+                        "test", "test"))).queue(me -> me.editMessage(m).setActionRow(Button.secondary("t2", "t2")).queue());
                 return this.getHandler().getBuilder().errorReply("");
             }
         });

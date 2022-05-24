@@ -14,13 +14,14 @@ import halleg.discordmusikbot.guild.spotify.SpotifyAudioSourceManager;
 import halleg.discordmusikbot.guild.youtube.MyYoutubeAudioSourceManager;
 import halleg.discordmusikbot.guild.youtube.YoutubeQueryAudioSourceManager;
 import net.dv8tion.jda.api.JDA;
-import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.entities.AudioChannel;
+import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.events.guild.GuildJoinEvent;
 import net.dv8tion.jda.api.events.guild.GuildLeaveEvent;
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceUpdateEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
-import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.jetbrains.annotations.NotNull;
 
@@ -30,7 +31,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Consumer;
 
 public class MusicBot extends ListenerAdapter {
     private JDA jda;
@@ -111,8 +111,8 @@ public class MusicBot extends ListenerAdapter {
     }
 
     @Override
-    public void onMessageReactionAdd(@NotNull MessageReactionAddEvent event) {
-        handleReaction(event.getMember(), event.getChannel(), event.getMessageIdLong(), event.getReaction());
+    public void onButtonInteraction(@NotNull ButtonInteractionEvent event) {
+        this.map.get(event.getGuild().getIdLong()).handleButton(event);
     }
 
     @Override
@@ -131,7 +131,8 @@ public class MusicBot extends ListenerAdapter {
     @Override
     public void onGuildJoin(GuildJoinEvent event) {
         System.out.println("joined new server " + event.getGuild().getIdLong());
-        GuildHandler guildHandler = new GuildHandler(this, new GuildConfigBuilder().build(event.getGuild()), buildAudioPlayerManager(event.getGuild()));
+        GuildHandler guildHandler = new GuildHandler(this, new GuildConfigBuilder().build(event.getGuild()),
+                buildAudioPlayerManager(event.getGuild()));
         this.map.put(event.getGuild().getIdLong(), guildHandler);
         saveGuildHandler(guildHandler);
     }
@@ -142,20 +143,6 @@ public class MusicBot extends ListenerAdapter {
         this.map.remove(event.getGuild().getIdLong());
         File file = new File("./" + getFilename(event.getGuild().getIdLong()));
         file.delete();
-    }
-
-    private void handleReaction(Member member, MessageChannel channel, long messageid,
-                                MessageReaction react) {
-        if (member.getUser().isBot()) {
-            return;
-        }
-
-        channel.retrieveMessageById(messageid).queue(new Consumer<>() {
-            @Override
-            public void accept(Message message) {
-                MusicBot.this.map.get(message.getGuild().getIdLong()).handleReaction(react, message, member);
-            }
-        });
     }
 
     public String getFilename(long l) {

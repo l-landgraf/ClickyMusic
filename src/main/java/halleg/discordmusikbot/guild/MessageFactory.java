@@ -1,11 +1,14 @@
 package halleg.discordmusikbot.guild;
 
+import halleg.discordmusikbot.guild.buttons.MyButton;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 
 public class MessageFactory {
+
+
     private GuildHandler handler;
 
     public MessageFactory(GuildHandler handler) {
@@ -135,14 +138,13 @@ public class MessageFactory {
     }
 
     public void setLoadingFailed(Message message) {
-        this.handler.addReaction(message, GuildHandler.LOADING_EMOJI);
         this.handler.addReaction(message, GuildHandler.LOADING_FAILED_EMOJI);
     }
 
     public Message buildRepeatMessage(String link) {
         net.dv8tion.jda.api.MessageBuilder mb = new net.dv8tion.jda.api.MessageBuilder();
 
-        mb.append(GuildHandler.REPEAT_EMOJI);
+        mb.append(MyButton.REPEAT_BUTTON.getEmoji());
         mb.appendCodeLine(link);
 
         return mb.build();

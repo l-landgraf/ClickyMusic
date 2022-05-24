@@ -15,7 +15,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class QueuePlayer implements Timer.TimerListener {
-    private static final long DISCONNECT_TIME = 10000l;
+    private static final long DISCONNECT_TIME = 10000L;
 
     private List<QueueElement> queue;
     private QueueElement currentTrack;

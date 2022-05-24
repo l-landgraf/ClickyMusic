@@ -2,12 +2,14 @@ package halleg.discordmusikbot.guild;
 
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import halleg.discordmusikbot.MusicBot;
+import halleg.discordmusikbot.guild.buttons.ButtonGoup;
 import halleg.discordmusikbot.guild.buttons.ButtonManager;
 import halleg.discordmusikbot.guild.commands.CommandManager;
 import halleg.discordmusikbot.guild.config.GuildConfig;
 import halleg.discordmusikbot.guild.player.QueuePlayer;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.exceptions.InsufficientPermissionException;
 import net.dv8tion.jda.api.requests.restaction.interactions.ReplyCallbackAction;
@@ -16,14 +18,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 public class GuildHandler {
-
-    public static final String REMOVE_EMOJI = "❌";
-    public static final String RESUME_PAUSE_EMOJI = "⏯";
-    public static final String REPEAT_EMOJI = "🔁";
-    public static final String SKIP_EMOJI = "⏩";
-    public static final String BACK_EMOJI = "⏪";
-    public static final String REMOVE_ALL_EMOJI = "❎";
-    public static final String SHUFFLE_EMOJI = "\uD83D\uDD00";
     public static final String LOADING_EMOJI = "\uD83D\uDD0D";
     public static final String LOADING_FAILED_EMOJI = "⚡";
     public static final String UNKNOWN_COMMAND = "❓";
@@ -121,8 +115,13 @@ public class GuildHandler {
         return;
     }
 
-    public void handleReaction(MessageReaction react, Message message, Member member) {
-        this.buttons.handleReaction(message, react, member);
+
+    public void handleButton(ButtonInteractionEvent event) {
+        this.buttons.handleEvent(event, this.player);
+    }
+
+    public void setButtons(Message m, ButtonGoup buttons) {
+        m.editMessage(m).setActionRow(buttons.getButtons()).queue();
     }
 
     public void voiceUpdate() {

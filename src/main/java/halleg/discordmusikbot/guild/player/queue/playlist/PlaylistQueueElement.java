@@ -1,6 +1,7 @@
 package halleg.discordmusikbot.guild.player.queue.playlist;
 
 import halleg.discordmusikbot.guild.GuildHandler;
+import halleg.discordmusikbot.guild.buttons.ButtonGoup;
 import halleg.discordmusikbot.guild.player.QueuePlayer;
 import halleg.discordmusikbot.guild.player.queue.QueueElement;
 import halleg.discordmusikbot.guild.player.queue.QueueStatus;
@@ -192,34 +193,21 @@ public abstract class PlaylistQueueElement<L extends TrackPlaylist> extends Queu
     @Override
     public void onQueued() {
         super.onQueued();
-        this.message.addReaction(GuildHandler.REPEAT_EMOJI).queue();
-        this.message.addReaction(GuildHandler.REMOVE_EMOJI).queue();
+        this.player.getHandler().setButtons(this.message, ButtonGoup.QUEUED);
     }
 
     @Override
     public synchronized void onPlaying() {
         playCurrent();
         super.onPlaying();
-        this.message.clearReactions(GuildHandler.REMOVE_EMOJI).queue();
-        this.message.addReaction(GuildHandler.REPEAT_EMOJI).queue();
-        this.message.addReaction(GuildHandler.BACK_EMOJI).queue();
-        this.message.addReaction(GuildHandler.RESUME_PAUSE_EMOJI).queue();
-        this.message.addReaction(GuildHandler.SKIP_EMOJI).queue();
-        this.message.addReaction(GuildHandler.SHUFFLE_EMOJI).queue();
-        this.message.addReaction(GuildHandler.REMOVE_ALL_EMOJI).queue();
+        this.player.getHandler().setButtons(this.message, ButtonGoup.PLAYING_PLAYLIST);
     }
 
     @Override
     public void onPlayed() {
         super.onPlayed();
         updateMessage();
-        this.message.clearReactions(GuildHandler.REMOVE_ALL_EMOJI).queue();
-        this.message.clearReactions(GuildHandler.SHUFFLE_EMOJI).queue();
-        this.message.clearReactions(GuildHandler.SKIP_EMOJI).queue();
-        this.message.clearReactions(GuildHandler.RESUME_PAUSE_EMOJI).queue();
-        this.message.clearReactions(GuildHandler.BACK_EMOJI).queue();
-        this.message.clearReactions(GuildHandler.REMOVE_EMOJI).queue();
-        this.message.addReaction(GuildHandler.REPEAT_EMOJI).queue();
+        this.player.getHandler().setButtons(this.message, ButtonGoup.PLAYED);
     }
 
     @Override
@@ -247,7 +235,7 @@ public abstract class PlaylistQueueElement<L extends TrackPlaylist> extends Queu
     public void onDelete() {
         super.onDelete();
         updateMessage();
-        this.message.clearReactions(GuildHandler.REMOVE_EMOJI).queue();
+        this.player.getHandler().setButtons(this.message, ButtonGoup.PLAYED);
         this.player.removeElement(this);
     }
 
