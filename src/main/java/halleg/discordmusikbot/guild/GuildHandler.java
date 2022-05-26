@@ -82,7 +82,7 @@ public class GuildHandler {
                     continue;
                 }
                 this.bot.downloadAttachment(attachment);
-                addReaction(message, SAVED);
+                addReaction(event.getMessage(), SAVED);
             }
             return;
         }
