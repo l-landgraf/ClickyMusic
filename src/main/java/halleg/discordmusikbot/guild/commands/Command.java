@@ -3,67 +3,36 @@ package halleg.discordmusikbot.guild.commands;
 import halleg.discordmusikbot.guild.GuildHandler;
 import halleg.discordmusikbot.guild.player.QueuePlayer;
 import net.dv8tion.jda.api.entities.Message;
-
-import java.util.Arrays;
-import java.util.List;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 
 public abstract class Command {
-    protected GuildHandler handler;
-    protected String command;
-    protected int atibNum;
-    protected String description;
-    protected String[] tips;
-    protected boolean textChannelOnly;
-    protected boolean voiceChannelOnly;
-    protected boolean connectedOnly;
-    protected boolean unlimitedArguments;
-    private final boolean deleteLater;
+    private GuildHandler handler;
+    private String command;
+    private String description;
+    private OptionData[] options;
+    private boolean voiceChannelOnly;
+    private boolean connectedOnly;
 
-    public Command(GuildHandler handler, String command, boolean textChannelOnly, boolean voiceChannelOnly, boolean connectedOnly, boolean unlimitedArguments, boolean deleteLater, String description, String... tips) {
+    public Command(GuildHandler handler, String command, String description, OptionData... options) {
         this.handler = handler;
         this.command = command;
-        this.atibNum = tips.length;
-        this.textChannelOnly = textChannelOnly;
-        this.voiceChannelOnly = voiceChannelOnly;
-        this.connectedOnly = connectedOnly;
-        this.unlimitedArguments = unlimitedArguments;
-        this.deleteLater = deleteLater;
         this.description = description;
-        this.tips = tips;
+        this.options = options;
     }
 
-    protected abstract void run(List<String> args, QueuePlayer player, Message message);
+    protected abstract Message run(SlashCommandInteractionEvent event, QueuePlayer player);
 
-    public boolean check(Message message) {
-        if (this.textChannelOnly && message.getChannel().getIdLong() != this.handler.getChannel().getIdLong()) {
+    public boolean check(SlashCommandInteractionEvent event) {
+        if (!event.getInteraction().getName().equals(this.command)) {
             return false;
-        }
-
-
-        List<String> args = Arrays.asList(message.getContentRaw().split(" "));
-        if (!args.get(0).equalsIgnoreCase(this.handler.getPrefix() + this.command)) {
-            return false;
-        }
-
-
-        if (this.voiceChannelOnly && !this.handler.isCorrectChannel(message.getMember().getVoiceState().getChannel())) {
-            this.handler.sendErrorMessage("Im bussy in a diffrent Voicechanel.");
-            return false;
-        }
-
-        if (!this.unlimitedArguments) {
-            if ((args.size() - 1) != this.atibNum) {
-                this.handler.sendErrorMessage("Command ussage: " + getTip());
-                return false;
-            }
-        }
-
-        if (this.deleteLater) {
-            this.handler.deleteLater(message);
         }
 
         this.handler.log("executing command: " + this.command);
-        run(args, this.handler.getPlayer(), message);
+        Message m = run(event, getHandler().getPlayer());
+        this.handler.queueAndDeleteLater(event.reply(m));
+
+
         return true;
 
     }
@@ -72,20 +41,12 @@ public abstract class Command {
         return this.handler;
     }
 
+    public OptionData[] getOptions() {
+        return this.options;
+    }
+
     public String getCommand() {
         return this.command;
-    }
-
-    public String getTip() {
-        String ret = this.handler.getPrefix() + this.command;
-        for (String string : this.tips) {
-            ret += " " + string;
-        }
-        return ret;
-    }
-
-    public int getAtibNum() {
-        return this.atibNum;
     }
 
     public String getDescription() {

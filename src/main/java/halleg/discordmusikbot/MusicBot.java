@@ -14,13 +14,16 @@ import halleg.discordmusikbot.guild.spotify.SpotifyAudioSourceManager;
 import halleg.discordmusikbot.guild.youtube.MyYoutubeAudioSourceManager;
 import halleg.discordmusikbot.guild.youtube.YoutubeQueryAudioSourceManager;
 import net.dv8tion.jda.api.JDA;
-import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.entities.AudioChannel;
+import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.events.guild.GuildJoinEvent;
 import net.dv8tion.jda.api.events.guild.GuildLeaveEvent;
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceUpdateEvent;
-import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
-import net.dv8tion.jda.api.events.message.guild.react.GuildMessageReactionAddEvent;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 import java.io.File;
@@ -28,14 +31,12 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import java.util.function.Consumer;
 
 public class MusicBot extends ListenerAdapter {
     private JDA jda;
     private Map<Long, GuildHandler> map;
-    private AudioPlayerManager manager;
     private SpotifyAudioSourceManager preloader;
+    private YoutubeAudioSourceManager ytManager;
     private ObjectMapper mapper;
     private File musicFolder;
 
@@ -44,16 +45,21 @@ public class MusicBot extends ListenerAdapter {
         this.musicFolder = musicFolder;
         this.mapper = new ObjectMapper();
         this.mapper.enable(SerializationFeature.INDENT_OUTPUT);
-        this.manager = new DefaultAudioPlayerManager();
-        AudioSourceManagers.registerRemoteSources(this.manager);
-        YoutubeAudioSourceManager ytManager = new MyYoutubeAudioSourceManager();
-        this.manager.registerSourceManager(ytManager);
-        this.preloader = new SpotifyAudioSourceManager(ytManager);
-        this.manager.registerSourceManager(this.preloader);
-        this.manager.registerSourceManager(new MyLocalAudioSourceManager(musicFolder));
-        this.manager.registerSourceManager(new YoutubeQueryAudioSourceManager(ytManager));
+        this.preloader = new SpotifyAudioSourceManager(this.ytManager);
+        this.ytManager = new MyYoutubeAudioSourceManager();
         this.map = new HashMap<>();
+
         initGuilds();
+    }
+
+    private AudioPlayerManager buildAudioPlayerManager(Guild guild) {
+        AudioPlayerManager manager = new DefaultAudioPlayerManager();
+        AudioSourceManagers.registerRemoteSources(manager);
+        manager.registerSourceManager(this.ytManager);
+        manager.registerSourceManager(this.preloader);
+        manager.registerSourceManager(new MyLocalAudioSourceManager(new File(this.musicFolder, guild.getId())));
+        manager.registerSourceManager(new YoutubeQueryAudioSourceManager(this.ytManager));
+        return manager;
     }
 
     private void initGuilds() {
@@ -63,10 +69,10 @@ public class MusicBot extends ListenerAdapter {
 
             System.out.println("initializing guild " + g.getName() + " (" + g.getIdLong() + ")");
             try {
-                handler = new GuildHandler(this, loadConfig(file).build(g));
+                handler = new GuildHandler(this, loadConfig(file).build(g), buildAudioPlayerManager(g));
             } catch (Exception e) {
                 System.out.println("failed to load, using default");
-                handler = new GuildHandler(this, new GuildConfigBuilder().build(g));
+                handler = new GuildHandler(this, new GuildConfigBuilder().build(g), buildAudioPlayerManager(g));
                 saveGuildHandler(handler);
             }
             this.map.put(g.getIdLong(), handler);
@@ -91,7 +97,7 @@ public class MusicBot extends ListenerAdapter {
     }
 
     @Override
-    public void onGuildMessageReceived(GuildMessageReceivedEvent event) {
+    public void onMessageReceived(MessageReceivedEvent event) {
         if (event.getAuthor().isBot()) {
             return;
         }
@@ -100,13 +106,18 @@ public class MusicBot extends ListenerAdapter {
     }
 
     @Override
-    public void onGuildMessageReactionAdd(GuildMessageReactionAddEvent event) {
-        handleReaction(event.getMember(), event.getChannel(), event.getMessageIdLong(), event.getReaction());
+    public void onSlashCommandInteraction(@NotNull SlashCommandInteractionEvent event) {
+        this.map.get(event.getGuild().getIdLong()).handleCommand(event);
+    }
+
+    @Override
+    public void onButtonInteraction(@NotNull ButtonInteractionEvent event) {
+        this.map.get(event.getGuild().getIdLong()).handleButton(event);
     }
 
     @Override
     public void onGuildVoiceUpdate(@Nonnull GuildVoiceUpdateEvent event) {
-        VoiceChannel channel = event.getChannelJoined();
+        AudioChannel channel = event.getChannelJoined();
 
         if (channel == null) {
             channel = event.getChannelLeft();
@@ -120,7 +131,8 @@ public class MusicBot extends ListenerAdapter {
     @Override
     public void onGuildJoin(GuildJoinEvent event) {
         System.out.println("joined new server " + event.getGuild().getIdLong());
-        GuildHandler guildHandler = new GuildHandler(this, new GuildConfigBuilder().build(event.getGuild()));
+        GuildHandler guildHandler = new GuildHandler(this, new GuildConfigBuilder().build(event.getGuild()),
+                buildAudioPlayerManager(event.getGuild()));
         this.map.put(event.getGuild().getIdLong(), guildHandler);
         saveGuildHandler(guildHandler);
     }
@@ -133,43 +145,16 @@ public class MusicBot extends ListenerAdapter {
         file.delete();
     }
 
-    private void handleReaction(Member member, MessageChannel channel, long messageid,
-                                MessageReaction react) {
-        if (member.getUser().isBot()) {
-            return;
-        }
-
-        channel.retrieveMessageById(messageid).queue(new Consumer<>() {
-            @Override
-            public void accept(Message message) {
-                MusicBot.this.map.get(message.getGuild().getIdLong()).handleReaction(react, message, member);
-            }
-        });
-    }
-
     public String getFilename(long l) {
         return l + ".config";
-    }
-
-    public AudioPlayerManager getManager() {
-        return this.manager;
     }
 
     public TrackLoader.PlaylistPreloadManager getPreloader() {
         return this.preloader;
     }
 
-    public void downloadAttachment(Message.Attachment attachment) {
-        try {
-            String path = this.musicFolder.getCanonicalPath() + "/" + attachment.getFileName();
-            System.out.println("Downloading file \"" + path + "\"");
-            CompletableFuture<File> future = attachment.downloadToFile();
-            future.exceptionally(error -> {
-                error.printStackTrace();
-                return null;
-            });
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+
+    public File getMusikFolder() {
+        return this.musicFolder;
     }
 }

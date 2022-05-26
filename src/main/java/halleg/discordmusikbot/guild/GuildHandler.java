@@ -2,26 +2,22 @@ package halleg.discordmusikbot.guild;
 
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import halleg.discordmusikbot.MusicBot;
+import halleg.discordmusikbot.guild.buttons.ButtonGoup;
 import halleg.discordmusikbot.guild.buttons.ButtonManager;
 import halleg.discordmusikbot.guild.commands.CommandManager;
 import halleg.discordmusikbot.guild.config.GuildConfig;
 import halleg.discordmusikbot.guild.player.QueuePlayer;
 import net.dv8tion.jda.api.entities.*;
-import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.exceptions.InsufficientPermissionException;
+import net.dv8tion.jda.api.requests.restaction.interactions.ReplyCallbackAction;
 
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 public class GuildHandler {
-
-    public static final String REMOVE_EMOJI = "❌";
-    public static final String RESUME_PAUSE_EMOJI = "⏯";
-    public static final String REPEAT_EMOJI = "🔁";
-    public static final String SKIP_EMOJI = "⏩";
-    public static final String BACK_EMOJI = "⏪";
-    public static final String REMOVE_ALL_EMOJI = "❎";
-    public static final String SHUFFLE_EMOJI = "\uD83D\uDD00";
     public static final String LOADING_EMOJI = "\uD83D\uDD0D";
     public static final String LOADING_FAILED_EMOJI = "⚡";
     public static final String UNKNOWN_COMMAND = "❓";
@@ -35,26 +31,30 @@ public class GuildHandler {
     public static final int PLAYLIST_PREVIEW_MAX = 3;
     public static final int PRELOAD_MAX = 5;
     public static final int RETRY_AMOUNT = 5;
-    private static final long DELETE_DELAY = 60;
+    public static final long DELETE_DELAY = 60;
 
     private GuildConfig config;
 
     private QueuePlayer player;
     private MusicBot bot;
-    private MessageBuilder builder;
+    private MessageFactory builder;
     private CommandManager commands;
     private ButtonManager buttons;
     private TrackLoader loader;
+    private FileManager fileManager;
+    private AudioPlayerManager audioPlayerManager;
 
-    public GuildHandler(MusicBot musicbot, GuildConfig config) {
+    public GuildHandler(MusicBot musicbot, GuildConfig config, AudioPlayerManager audioPlayerManager) {
         this.config = config;
-
+        this.audioPlayerManager = audioPlayerManager;
         this.bot = musicbot;
-        this.builder = new MessageBuilder(this);
-        this.player = new QueuePlayer(this);
+        this.builder = new MessageFactory(this);
+        this.player = new QueuePlayer(this, audioPlayerManager.createPlayer());
         this.commands = new CommandManager(this);
         this.buttons = new ButtonManager(this);
+
         this.loader = new TrackLoader(this, musicbot.getPreloader());
+        this.fileManager = new FileManager(this.bot.getMusikFolder(), this);
         log("initialized! outputchannel: " + config.getOutputChannel().getName() + " prefix: " + config.getPrefix());
     }
 
@@ -75,19 +75,9 @@ public class GuildHandler {
         this.bot.saveGuildHandler(this);
     }
 
-    public void handleMessage(GuildMessageReceivedEvent event) {
-        if (event.getMessage().getAttachments().size() > 0) {
-            for (Message.Attachment attachment : event.getMessage().getAttachments()) {
-                if (!attachment.getFileExtension().equals("mp3")) {
-                    continue;
-                }
-                this.bot.downloadAttachment(attachment);
-                addReaction(message, SAVED);
-            }
-            return;
-        }
-        if (event.getMessage().getContentRaw().startsWith(this.config.getPrefix())) {
-            this.commands.handleCommand(event.getMessage());
+    public void handleMessage(MessageReceivedEvent event) {
+        if (!event.getMessage().getAttachments().isEmpty() && event.getChannel().getIdLong() == this.config.getOutputChannelId()) {
+            handleAttachments(event);
             return;
         }
         if (!isCorrectChannel(event.getMember().getVoiceState().getChannel())) {
@@ -109,8 +99,29 @@ public class GuildHandler {
         this.loader.search(event.getMessage().getContentRaw(), this.player, event.getMember(), event.getMessage());
     }
 
-    public void handleReaction(MessageReaction react, Message message, Member member) {
-        this.buttons.handleReaction(message, react, member);
+    public void handleCommand(SlashCommandInteractionEvent event) {
+        this.commands.handleCommand(event);
+    }
+
+    private void handleAttachments(MessageReceivedEvent event) {
+        for (Message.Attachment attachment : event.getMessage().getAttachments()) {
+            if (!attachment.getFileExtension().equals("mp3")) {
+                continue;
+            }
+            if (this.fileManager.downloadAttachment(attachment, event.getMessage().getContentRaw())) {
+                addReaction(event.getMessage(), SAVED);
+            }
+        }
+        return;
+    }
+
+
+    public void handleButton(ButtonInteractionEvent event) {
+        this.buttons.handleEvent(event, this.player);
+    }
+
+    public void setButtons(Message m, ButtonGoup buttons) {
+        m.editMessage(m).setActionRow(buttons.getButtons()).queue();
     }
 
     public void voiceUpdate() {
@@ -118,21 +129,11 @@ public class GuildHandler {
     }
 
     public void sendErrorMessage(String error) {
-        queue(this.builder.buildNewErrorMessage(error), new Consumer<>() {
-            @Override
-            public void accept(Message message) {
-                deleteLater(message);
-            }
-        });
+        queue(this.builder.buildNewErrorMessage(error), m -> deleteLater(m));
     }
 
     public void sendInfoMessage(String message) {
-        queue(this.builder.buildInfoMessage(message), new Consumer<>() {
-            @Override
-            public void accept(Message message) {
-                deleteLater(message);
-            }
-        });
+        queue(this.builder.buildInfoMessage(message), m -> deleteLater(m));
     }
 
     public void sendHelpMessage(MessageChannel channel) {
@@ -149,6 +150,24 @@ public class GuildHandler {
         } catch (InsufficientPermissionException e) {
             handleMissingPermission(e);
         }
+    }
+
+
+    public void queueAndDeleteLater(ReplyCallbackAction reply) {
+        try {
+            reply.queue(ih -> ih.deleteOriginal().queueAfter(DELETE_DELAY, TimeUnit.SECONDS));
+        } catch (InsufficientPermissionException e) {
+            handleMissingPermission(e);
+        }
+    }
+
+    public void queueAndDeleteLater(Message message) {
+        try {
+            queue(message, m -> deleteLater(m));
+        } catch (InsufficientPermissionException e) {
+            handleMissingPermission(e);
+        }
+
     }
 
     public void deleteLater(Message message) {
@@ -228,7 +247,7 @@ public class GuildHandler {
         return this.config.getPrefix();
     }
 
-    public MessageBuilder getBuilder() {
+    public MessageFactory getBuilder() {
         return this.builder;
     }
 
@@ -241,7 +260,7 @@ public class GuildHandler {
     }
 
     public AudioPlayerManager getManager() {
-        return this.bot.getManager();
+        return this.audioPlayerManager;
     }
 
     public TrackLoader getLoader() {
@@ -252,12 +271,17 @@ public class GuildHandler {
         return this.config;
     }
 
-    public boolean isCorrectChannel(VoiceChannel channel) {
+    public FileManager getFileManager() {
+        return this.fileManager;
+    }
+
+    public boolean isCorrectChannel(AudioChannel channel) {
         return channel != null && (this.player.getConnectedChannel() == null || channel.getIdLong() == this.player.getConnectedChannel().getIdLong());
     }
 
     public void handleMissingPermission(InsufficientPermissionException e) {
-        String message = e.getMessage() + " in " + e.getChannelType().name() + "-CHANNEL \"" + e.getChannel(getGuild().getJDA()).getName() + "\"";
+        String message =
+                e.getMessage() + " in " + e.getChannelType().name() + "-CHANNEL \"" + e.getChannel(getGuild().getJDA()).getName() + "\"";
         log(message);
         sendErrorMessage(message);
     }
