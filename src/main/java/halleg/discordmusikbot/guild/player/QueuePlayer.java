@@ -5,9 +5,9 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import halleg.discordmusikbot.guild.GuildHandler;
 import halleg.discordmusikbot.guild.player.queue.QueueElement;
 import halleg.discordmusikbot.guild.player.queue.QueueStatus;
+import net.dv8tion.jda.api.entities.AudioChannel;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.VoiceChannel;
 import net.dv8tion.jda.api.exceptions.InsufficientPermissionException;
 import net.dv8tion.jda.api.managers.AudioManager;
 
@@ -15,7 +15,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class QueuePlayer implements Timer.TimerListener {
-    private static final long DISCONNECT_TIME = 10000l;
+    private static final long DISCONNECT_TIME = 10000L;
 
     private List<QueueElement> queue;
     private QueueElement currentTrack;
@@ -29,11 +29,11 @@ public class QueuePlayer implements Timer.TimerListener {
 
     private Timer timer;
 
-    public QueuePlayer(GuildHandler handler) {
+    public QueuePlayer(GuildHandler handler, AudioPlayer player) {
 
         this.handler = handler;
         this.audioManager = handler.getGuild().getAudioManager();
-        this.player = handler.getManager().createPlayer();
+        this.player = player;
         this.listener = new EventListener(handler, this);
         this.player.addListener(this.listener);
         this.sender = new SendHandler(this.player);
@@ -121,7 +121,7 @@ public class QueuePlayer implements Timer.TimerListener {
         this.player.playTrack(track.makeClone());
     }
 
-    public void join(VoiceChannel c) throws InsufficientPermissionException {
+    public void join(AudioChannel c) throws InsufficientPermissionException {
         this.audioManager.openAudioConnection(c);
     }
 
@@ -146,7 +146,7 @@ public class QueuePlayer implements Timer.TimerListener {
         return this.currentTrack;
     }
 
-    public void seekAdd(long l) {
+    public void seekAdd(long l) throws Exception {
         seekTo(this.player.getPlayingTrack().getPosition() + l);
     }
 
@@ -154,20 +154,17 @@ public class QueuePlayer implements Timer.TimerListener {
         return this.player.getPlayingTrack().getPosition();
     }
 
-    public void seekTo(long l) {
+    public void seekTo(long l) throws Exception {
         if (this.player.getPlayingTrack() == null) {
-            this.handler.sendErrorMessage("No Track is currently playing.");
-            return;
+            throw new Exception("No Track is currently playing.");
         }
 
         if (!this.player.getPlayingTrack().isSeekable()) {
-            this.handler.sendErrorMessage("Seeking not supported for this type of Track.");
-            return;
+            throw new Exception("Seeking not supported for this type of Track.");
         }
 
         if (this.player.getPlayingTrack().getDuration() < l) {
-            this.handler.sendErrorMessage("Cant seek, track end reached.");
-            return;
+            throw new Exception("Cant seek, track end reached.");
         }
         this.player.getPlayingTrack().setPosition(l);
     }
@@ -200,7 +197,7 @@ public class QueuePlayer implements Timer.TimerListener {
         return this.player.isPaused();
     }
 
-    public VoiceChannel getConnectedChannel() {
+    public AudioChannel getConnectedChannel() {
         return this.audioManager.getConnectedChannel();
     }
 
