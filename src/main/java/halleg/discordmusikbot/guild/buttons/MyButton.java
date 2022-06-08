@@ -21,9 +21,9 @@ public enum MyButton {
         });
     }),
 
-    SKIP_BUTTON("next", "<:next:979022469308497940>", "Skip this song", (ele) -> ele.onNext()),
+    NEXT_BUTTON("next", "<:next:979022469308497940>", "Skip this song", (ele) -> ele.onNext()),
 
-    SKIP_ALL_BUTTON("skip", "<:forward:979022469174280242>", "Skip the entire Playlist",
+    SKIP_BUTTON("skip", "<:forward:979022469174280242>", "Skip the entire Playlist",
             (ele) -> ele.onSkip()),
 
     DELETE_BUTTON("delete", "<:cancel:979022468649988137>", "Remove this song from the Queue",
@@ -33,10 +33,10 @@ public enum MyButton {
 
     RESUME_BUTTON("resume", "<:playbutton:979022469195268106>", "Resume the Player", (ele) -> ele.onResumePause()),
 
-    BACK_BUTTON("previous", "<:previous:979022469123952711>", "Play Song from the beginning",
+    PREV_BUTTON("previous", "<:previous:979022469123952711>", "Play Song from the beginning",
             (ele) -> ele.onPrevious()),
 
-    BACK_ALL_BUTTON("back", "<:backwards:979420915664322620>", "Play Song from the beginning",
+    BACK_BUTTON("back", "<:backwards:979420915664322620>", "Play Song from the beginning",
             (ele) -> ele.onBack()),
 
 
@@ -69,8 +69,29 @@ public enum MyButton {
         return Button.primary(this.id, this.emoji);
     }
 
-    public Button getDisabled() {
+    public Button getDanger() {
+        return Button.danger(this.id, this.emoji);
+    }
+
+    public Button getSuccess() {
+        return Button.success(this.id, this.emoji);
+    }
+
+
+    public Button getDisabledSecondary() {
         return Button.secondary(this.id, this.emoji).asDisabled();
+    }
+
+    public Button getDisabledPrimary() {
+        return Button.primary(this.id, this.emoji).asDisabled();
+    }
+
+    public Button getDisabledDanger() {
+        return Button.danger(this.id, this.emoji).asDisabled();
+    }
+
+    public Button getDisabledSuccess() {
+        return Button.success(this.id, this.emoji).asDisabled();
     }
 
     public String getId() {
