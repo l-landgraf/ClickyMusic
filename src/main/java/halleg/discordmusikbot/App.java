@@ -17,8 +17,8 @@ public class App extends ListenerAdapter {
         // https://discordapp.com/api/oauth2/authorize?client_id=565293748309983252&permissions=36777024&scope=bot
 
         if (args.length < 4) {
-            System.out.println("Required arguments: Discord-Bot-Secret, Spotify-Client-Id, Spotify-Client-Secret, " +
-                    "Music-Folder");
+            System.out.println(
+                    "Required arguments: Discord-Bot-Secret, Spotify-Client-Id, Spotify-Client-Secret, Music-Folder");
             System.exit(1);
         }
 
