@@ -1,22 +1,24 @@
 package halleg.discordmusikbot.guild.player.queue;
 
+import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import halleg.discordmusikbot.guild.player.QueuePlayer;
-import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 
-import java.awt.*;
-import java.util.function.Consumer;
-
 public abstract class QueueElement {
+    protected final boolean isPlaylist;
+    protected boolean isShuffle;
+
     protected QueuePlayer player;
     protected Message message;
     protected QueueStatus status;
 
-    public QueueElement(QueuePlayer player) {
+    public QueueElement(QueuePlayer player, boolean isPlaylist) {
+
         this.player = player;
         this.status = null;
+        this.isPlaylist = isPlaylist;
     }
 
     public MessageEmbed buildMessageEmbed(QueueStatus status) {
@@ -28,6 +30,7 @@ public abstract class QueueElement {
         return new MessageBuilder(buildMessageEmbed(status)).build();
     }
 
+
     public Message getMessage() {
         return this.message;
     }
@@ -36,56 +39,95 @@ public abstract class QueueElement {
         this.message = m;
     }
 
+    public void updateMessage() {
+        if (this.message == null) {
+            return;
+        }
+
+        this.player.getHandler().editMessage(this.message, new MessageBuilder(buildMessageEmbed(this.status)).build(),
+                this.status.getButtons(this.player.isPaused(), this.isPlaylist, this.isShuffle),
+                (message) -> {
+                    QueueElement.this.message = message;
+                });
+    }
+
+    public abstract AudioTrack getCurrentTrack();
 
     public void onQueued() {
         this.status = QueueStatus.QUEUED;
+        this.player.getHandler().setButtons(this.message, this.status.getButtons(
+                this.player.isPaused(), this.isPlaylist, this.isShuffle));
     }
 
     public void onPlaying() {
         this.status = QueueStatus.PLAYING;
+        this.player.playTrack(this.getCurrentTrack());
+        this.player.getHandler().setButtons(this.message,
+                this.status.getButtons(this.player.isPaused(), this.isPlaylist, this.isShuffle));
+        updateMessage();
     }
 
     public void onPlayed() {
         this.status = QueueStatus.PLAYED;
+        this.player.getHandler().setButtons(this.message,
+                this.status.getButtons(this.player.isPaused(), this.isPlaylist, this.isShuffle));
+        updateMessage();
     }
 
-    public abstract void onResumePause();
+    public void onResumePause() {
+        this.player.togglePaused();
+        this.player.getHandler().setButtons(this.message,
+                this.status.getButtons(this.player.isPaused(), this.isPlaylist, this.isShuffle));
+    }
 
     public void onEnded() {
         this.status = QueueStatus.PLAYED;
+        this.player.nextTrack();
+        this.player.getHandler().setButtons(this.message,
+                this.status.getButtons(this.player.isPaused(), this.isPlaylist, this.isShuffle));
+        updateMessage();
     }
 
     public void onSkip() {
         this.status = QueueStatus.SKIPPED;
+        this.player.getHandler().setButtons(this.message,
+                this.status.getButtons(this.player.isPaused(), this.isPlaylist, this.isShuffle));
         this.player.nextTrack();
+        updateMessage();
     }
 
     public void onBack() {
         this.status = QueueStatus.PLAYING;
+        this.player.playTrack(this.getCurrentTrack());
+        updateMessage();
     }
 
-    public void onDelete() {
+    public void onRemoved() {
         this.status = QueueStatus.REMOVED;
+        this.player.removeElement(this);
+        this.player.getHandler().setButtons(this.message,
+                this.status.getButtons(this.player.isPaused(), this.isPlaylist, this.isShuffle));
+        updateMessage();
     }
 
-    public void onDeletePlaylist() {
-        this.status = QueueStatus.SKIPPED;
+    public void onShuffle() {
+        this.isShuffle = !this.isShuffle;
+        updateMessage();
     }
 
-    public abstract void onShuffle();
+    public abstract void onNext();
+
+    public abstract void onPrevious();
 
     public void runPlay(int i) throws Exception {
         throw new Exception("Command not supported for this Track.");
     }
 
-    protected void setColor(Color color) {
-        EmbedBuilder eb = new EmbedBuilder(this.message.getEmbeds().get(0));
-        eb.setColor(color);
-        this.message.editMessage(new MessageBuilder(eb.build()).build()).queue(new Consumer<>() {
-            @Override
-            public void accept(Message message) {
-                QueueElement.this.message = message;
-            }
-        });
+    public boolean isPlaylist() {
+        return this.isPlaylist;
+    }
+
+    public boolean isShuffle() {
+        return this.isShuffle;
     }
 }

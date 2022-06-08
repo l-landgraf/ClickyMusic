@@ -1,20 +1,17 @@
 package halleg.discordmusikbot.guild.player.queue.playlist;
 
+import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import halleg.discordmusikbot.guild.GuildHandler;
-import halleg.discordmusikbot.guild.buttons.ButtonGoup;
 import halleg.discordmusikbot.guild.player.QueuePlayer;
 import halleg.discordmusikbot.guild.player.queue.QueueElement;
 import halleg.discordmusikbot.guild.player.queue.QueueStatus;
 import halleg.discordmusikbot.guild.player.tracks.Track;
 import halleg.discordmusikbot.guild.player.tracks.TrackPlaylist;
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.MessageBuilder;
-import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -28,10 +25,9 @@ public abstract class PlaylistQueueElement<L extends TrackPlaylist> extends Queu
     //the index of the current track in the playlist
     protected int currentTrackIndex;
 
-    protected boolean shuffle;
 
     public PlaylistQueueElement(QueuePlayer player, L playlist) {
-        super(player);
+        super(player, true);
         this.playlist = playlist;
         this.currentPlanedIndex = 0;
 
@@ -55,17 +51,6 @@ public abstract class PlaylistQueueElement<L extends TrackPlaylist> extends Queu
         return eb.build();
     }
 
-    protected void updateMessage() {
-        if (this.message == null) {
-            return;
-        }
-        this.message.editMessage(new MessageBuilder(buildMessageEmbed(this.status)).build()).queue(new Consumer<>() {
-            @Override
-            public void accept(Message message) {
-                PlaylistQueueElement.this.message = message;
-            }
-        });
-    }
 
     protected void addPlaylistRow(EmbedBuilder eb) {
         eb.setTitle(this.playlist.getTitle(), this.playlist.getURI());
@@ -122,7 +107,7 @@ public abstract class PlaylistQueueElement<L extends TrackPlaylist> extends Queu
 
         int songsLeft = (this.playlist.getTotal() - (this.currentPlanedIndex + GuildHandler.PLAYLIST_PREVIEW_MAX + 1));
         if (songsLeft > 0) {
-            if (this.shuffle) {
+            if (this.isShuffle) {
                 s += "**-- Shuffling " + songsLeft + " More --**";
             } else {
                 s += "**-- " + songsLeft + " More --**";
@@ -144,7 +129,7 @@ public abstract class PlaylistQueueElement<L extends TrackPlaylist> extends Queu
     }
 
     protected List<Integer> getPlanedTracks() {
-        if (this.shuffle) {
+        if (this.isShuffle) {
             return getPlanedShuffle();
         } else {
             return getPlanedNormal();
@@ -180,39 +165,12 @@ public abstract class PlaylistQueueElement<L extends TrackPlaylist> extends Queu
 
     protected void playCurrent() {
         this.player.playTrack(this.playlist.getTrack(this.currentTrackIndex).getTrack());
-        this.player.playTrack(this.playlist.getTrack(this.currentTrackIndex).getTrack());
         updateMessage();
     }
 
     @Override
-    public void onShuffle() {
-        this.shuffle = !this.shuffle;
-        updateMessage();
-    }
-
-    @Override
-    public void onQueued() {
-        super.onQueued();
-        this.player.getHandler().setButtons(this.message, ButtonGoup.QUEUED);
-    }
-
-    @Override
-    public synchronized void onPlaying() {
-        playCurrent();
-        super.onPlaying();
-        this.player.getHandler().setButtons(this.message, ButtonGoup.PLAYING_PLAYLIST);
-    }
-
-    @Override
-    public void onPlayed() {
-        super.onPlayed();
-        updateMessage();
-        this.player.getHandler().setButtons(this.message, ButtonGoup.PLAYED);
-    }
-
-    @Override
-    public void onResumePause() {
-        this.player.togglePaused();
+    public AudioTrack getCurrentTrack() {
+        return this.playlist.getTrack(this.currentTrackIndex).getTrack();
     }
 
     @Override
@@ -220,29 +178,15 @@ public abstract class PlaylistQueueElement<L extends TrackPlaylist> extends Queu
         nextInternal();
     }
 
+
     @Override
-    public void onSkip() {
+    public void onNext() {
         nextInternal();
     }
 
     @Override
-    public void onBack() {
-        super.onBack();
+    public void onPrevious() {
         prevInternal();
-    }
-
-    @Override
-    public void onDelete() {
-        super.onDelete();
-        updateMessage();
-        this.player.getHandler().setButtons(this.message, ButtonGoup.PLAYED);
-        this.player.removeElement(this);
-    }
-
-    @Override
-    public void onDeletePlaylist() {
-        super.onDelete();
-        this.player.nextTrack();
     }
 
     @Override
@@ -264,10 +208,6 @@ public abstract class PlaylistQueueElement<L extends TrackPlaylist> extends Queu
             return false;
         }
         return true;
-    }
-
-    public int getTotal() {
-        return this.playlist.getTotal();
     }
 
 }

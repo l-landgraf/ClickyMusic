@@ -15,7 +15,8 @@ public class LoadablePlaylistQueueElement extends PlaylistQueueElement<LoadableP
     protected GuildHandler handler;
     protected QueuePlayer player;
 
-    public LoadablePlaylistQueueElement(GuildHandler handler, QueuePlayer player, AudioTrack firstTrack, String title, String author, String thumbnail, String uri, Member member, String[] sources, String[] images) {
+    public LoadablePlaylistQueueElement(GuildHandler handler, QueuePlayer player, AudioTrack firstTrack, String title
+            , String author, String thumbnail, String uri, Member member, String[] sources, String[] images) {
         super(player, new LoadablePlaylist(title, author, thumbnail, uri, member, sources, images));
         this.handler = handler;
         this.playlist.getTrack(0).setTrack(firstTrack);
@@ -46,7 +47,8 @@ public class LoadablePlaylistQueueElement extends PlaylistQueueElement<LoadableP
         }
 
         for (int i = this.currentPlanedIndex + 1; i < planned.size() && i < GuildHandler.PRELOAD_MAX + this.currentPlanedIndex + 1; i++) {
-            loadTrack(planned.get(i), (this.shuffle == shuffle && i < GuildHandler.PRELOAD_MAX + this.currentPlanedIndex + 1), false);
+            loadTrack(planned.get(i),
+                    (this.isShuffle == shuffle && i < GuildHandler.PRELOAD_MAX + this.currentPlanedIndex + 1), false);
         }
 
         for (int i = this.currentPlanedIndex - 1; i >= 0 && i > this.currentPlanedIndex - GuildHandler.PRELOAD_MAX - 1; i--) {
@@ -58,7 +60,8 @@ public class LoadablePlaylistQueueElement extends PlaylistQueueElement<LoadableP
         if (!this.playlist.getTrack(trackNr).isLoaded()) {
             this.handler.log("preloading Song Nr. " + trackNr);
             LoadableTrack track = this.playlist.getTrack(trackNr);
-            PlaylistTrackLoadHandler loader = new PlaylistTrackLoadHandler(this.handler, this.player, track.getSource(), track.getMember(),
+            PlaylistTrackLoadHandler loader = new PlaylistTrackLoadHandler(this.handler, this.player,
+                    track.getSource(), track.getMember(),
                     null, this, trackNr, update, playThis);
             this.handler.getLoader().load(this.playlist.getTrack(trackNr).getSource(), loader);
         } else {
@@ -75,17 +78,6 @@ public class LoadablePlaylistQueueElement extends PlaylistQueueElement<LoadableP
     @Override
     protected void prevInternal() {
         super.prevInternal();
-        loadPlannedTracks();
-    }
-
-    @Override
-    protected void playCurrent() {
-        super.playCurrent();
-    }
-
-    @Override
-    public void onShuffle() {
-        super.onShuffle();
         loadPlannedTracks();
     }
 

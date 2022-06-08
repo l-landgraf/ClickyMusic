@@ -2,7 +2,6 @@ package halleg.discordmusikbot.guild;
 
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import halleg.discordmusikbot.MusicBot;
-import halleg.discordmusikbot.guild.buttons.ButtonGoup;
 import halleg.discordmusikbot.guild.buttons.ButtonManager;
 import halleg.discordmusikbot.guild.commands.CommandManager;
 import halleg.discordmusikbot.guild.config.GuildConfig;
@@ -12,6 +11,8 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.exceptions.InsufficientPermissionException;
+import net.dv8tion.jda.api.interactions.components.ActionRow;
+import net.dv8tion.jda.api.requests.restaction.MessageAction;
 import net.dv8tion.jda.api.requests.restaction.interactions.ReplyCallbackAction;
 
 import java.util.concurrent.TimeUnit;
@@ -120,8 +121,9 @@ public class GuildHandler {
         this.buttons.handleEvent(event, this.player);
     }
 
-    public void setButtons(Message m, ButtonGoup buttons) {
-        m.editMessage(m).setActionRow(buttons.getButtons()).queue();
+    public void setButtons(Message m, ActionRow[] buttons) {
+        m.editMessage(m).setActionRows(buttons).queue();
+
     }
 
     public void voiceUpdate() {
@@ -142,6 +144,10 @@ public class GuildHandler {
 
     public void sendRepeatMessage(String link, Consumer<Message> c) {
         queue(this.builder.buildRepeatMessage(link), c);
+    }
+
+    public void editMessage(Message old, Message neew, ActionRow[] actionRows, Consumer<Message> c) {
+        queue(old.editMessage(neew).setActionRows(actionRows), c);
     }
 
     public void delete(Message message) {
@@ -167,7 +173,6 @@ public class GuildHandler {
         } catch (InsufficientPermissionException e) {
             handleMissingPermission(e);
         }
-
     }
 
     public void deleteLater(Message message) {
@@ -191,8 +196,12 @@ public class GuildHandler {
     }
 
     public void queue(MessageChannel channel, Message message, Consumer<Message> consumer) {
+        queue(channel.sendMessage(message), consumer);
+    }
+
+    public void queue(MessageAction action, Consumer<Message> consumer) {
         try {
-            channel.sendMessage(message).queue(consumer);
+            action.queue(consumer);
         } catch (InsufficientPermissionException e) {
             handleMissingPermission(e);
         }

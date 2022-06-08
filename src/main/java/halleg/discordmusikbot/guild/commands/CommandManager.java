@@ -4,7 +4,6 @@ import halleg.discordmusikbot.guild.GuildHandler;
 import halleg.discordmusikbot.guild.MessageFactory;
 import halleg.discordmusikbot.guild.player.QueuePlayer;
 import halleg.discordmusikbot.guild.player.queue.QueueElement;
-import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.entities.ChannelType;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.TextChannel;
@@ -13,8 +12,6 @@ import net.dv8tion.jda.api.exceptions.InsufficientPermissionException;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
-import net.dv8tion.jda.api.interactions.components.ActionRow;
-import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.requests.restaction.CommandListUpdateAction;
 import net.dv8tion.jda.internal.interactions.CommandDataImpl;
 
@@ -163,8 +160,78 @@ public class CommandManager {
             }
         });
 
-        this.commands.add(new Command(handler, "seek", "seeks to the desired possition or skips forward the given " +
-                "amount of time.", new OptionData(OptionType.STRING, "time", "[sign][[hours:]minutes:]seconds", true)) {
+        this.commands.add(new Command(handler, "next", "plays the next track in the playlist.") {
+            @Override
+            protected Message run(SlashCommandInteractionEvent event, QueuePlayer player) {
+                QueueElement ele = player.getCurrentElement();
+                if (ele == null) {
+                    return this.getHandler().getBuilder().errorReply("Im not playing anything currently.");
+                }
+                if (!ele.isPlaylist()) {
+                    return this.getHandler().getBuilder().errorReply("Current element is not a playlist.");
+                }
+
+                ele.onNext();
+                return this.getHandler().getBuilder().successReply("Playing next track");
+            }
+        });
+
+        this.commands.add(new Command(handler, "prev", "plays the previous track in the playlist.") {
+            @Override
+            protected Message run(SlashCommandInteractionEvent event, QueuePlayer player) {
+                QueueElement ele = player.getCurrentElement();
+                if (ele == null) {
+                    return this.getHandler().getBuilder().errorReply("Im not playing anything currently.");
+                }
+                if (!ele.isPlaylist()) {
+                    return this.getHandler().getBuilder().errorReply("Current element is not a playlist.");
+                }
+
+                ele.onPrevious();
+                return this.getHandler().getBuilder().successReply("Playing previous track");
+            }
+        });
+
+        this.commands.add(new Command(handler, "back", "Restarts the track.") {
+            @Override
+            protected Message run(SlashCommandInteractionEvent event, QueuePlayer player) {
+                QueueElement ele = player.getCurrentElement();
+                if (ele == null) {
+                    return this.getHandler().getBuilder().errorReply("Im not playing anything currently.");
+                }
+                if (!ele.isPlaylist()) {
+                    return this.getHandler().getBuilder().errorReply("Current element is not a playlist.");
+                }
+
+                ele.onBack();
+                return this.getHandler().getBuilder().successReply("Restarted track.");
+            }
+        });
+
+        this.commands.add(new Command(handler, "shuffle", "Shuffles / unshuffles the queue.") {
+            @Override
+            protected Message run(SlashCommandInteractionEvent event, QueuePlayer player) {
+                QueueElement ele = player.getCurrentElement();
+                if (ele == null) {
+                    return this.getHandler().getBuilder().errorReply("Im not playing anything currently.");
+                }
+                if (!ele.isPlaylist()) {
+                    return this.getHandler().getBuilder().errorReply("Current element is not a playlist.");
+                }
+
+                ele.onShuffle();
+                if (ele.isShuffle()) {
+                    return this.getHandler().getBuilder().successReply("Shuffled the playlist.");
+                } else {
+                    return this.getHandler().getBuilder().successReply("Unshuffled the playlist.");
+                }
+            }
+        });
+
+        this.commands.add(new Command(handler, "seek", "seeks to the desired possition or skips forward the given" +
+                " " +
+                "amount of time.", new OptionData(OptionType.STRING, "time", "[sign][[hours" +
+                ":]minutes:]seconds", true)) {
 
             @Override
             protected Message run(SlashCommandInteractionEvent event, QueuePlayer player) {
@@ -185,12 +252,14 @@ public class CommandManager {
                 int minutes = (int) ((milliseconds / (1000 * 60)) % 60);
                 int hours = (int) ((milliseconds / (1000 * 60 * 60)) % 24);
 
-                return this.getHandler().getBuilder().successReply("Current Track Position: " + String.format("%02d",
+                return this.getHandler().getBuilder().successReply("Current Track Position:" +
+                        " " + String.format("%02d",
                         hours) + ":" + String.format("%02d", minutes) + ":" + String.format("%02d", seconds));
             }
         });
 
-        this.commands.add(new Command(handler, "leave", "the bot will leave any voicechannel and completly clear its " +
+        this.commands.add(new Command(handler, "leave", "the bot will leave any voicechannel and completly clear " +
+                "its " +
                 "Queue.") {
             @Override
             protected Message run(SlashCommandInteractionEvent event, QueuePlayer player) {
@@ -211,12 +280,15 @@ public class CommandManager {
         this.commands.add(new Command(handler, "tree", "displays all local files.") {
             @Override
             protected Message run(SlashCommandInteractionEvent event, QueuePlayer player) {
-                return this.getHandler().getBuilder().successReply("```" + getHandler().getFileManager().showTree() + "```");
+                return this.getHandler().getBuilder().successReply("```" + getHandler().getFileManager().showTree() +
+                        "```");
             }
         });
 
         this.commands.add(new Command(handler, "copy", "copies a file or folder.", new OptionData(OptionType.STRING,
-                "from", "from", true), new OptionData(OptionType.STRING, "to", "to", true)) {
+                "from", "from", true), new
+
+                OptionData(OptionType.STRING, "to", "to", true)) {
             @Override
             protected Message run(SlashCommandInteractionEvent event, QueuePlayer player) {
 
@@ -227,7 +299,9 @@ public class CommandManager {
         });
 
         this.commands.add(new Command(handler, "move", "moves a file or folder. can also be used for renaming.",
-                new OptionData(OptionType.STRING, "from", "from", true), new OptionData(OptionType.STRING, "to", "to"
+                new OptionData(OptionType.STRING, "from", "from", true), new
+
+                OptionData(OptionType.STRING, "to", "to"
                 , true)) {
             @Override
             protected Message run(SlashCommandInteractionEvent event, QueuePlayer player) {
@@ -242,7 +316,8 @@ public class CommandManager {
                 new OptionData(OptionType.STRING, "directory", "directory", true)) {
             @Override
             protected Message run(SlashCommandInteractionEvent event, QueuePlayer player) {
-                return this.getHandler().getFileManager().deleteFile(event.getOption("directory").getAsString());
+                return this.getHandler().getFileManager().deleteFile(event.getOption(
+                        "directory").getAsString());
             }
         });
 
@@ -258,7 +333,8 @@ public class CommandManager {
                 new OptionData(OptionType.STRING, "directory", "directory", true)) {
             @Override
             protected Message run(SlashCommandInteractionEvent event, QueuePlayer player) {
-                return this.getHandler().getFileManager().listFiles(event.getOption("directory").getAsString());
+                return this.getHandler().getFileManager().listFiles(event.getOption(
+                        "directory").getAsString());
             }
         });
 
@@ -270,17 +346,14 @@ public class CommandManager {
             }
         });
 
-        this.commands.add(new Command(handler, "help", "displays a help message.") {
-            @Override
-            protected Message run(SlashCommandInteractionEvent event, QueuePlayer player) {
-                Message m = new MessageBuilder("test").build();
-                event.getChannel().sendMessage(m).setActionRows(ActionRow.of(Button.primary(
-                        "test", "test"))).queue(me -> me.editMessage(m).setActionRow(Button.secondary("t2", "t2")).queue());
-                return this.getHandler().getBuilder().errorReply("");
-            }
-        });
+//        this.commands.add(new Command(handler, "help", "displays a help message.") {
+//            @Override
+//            protected Message run(SlashCommandInteractionEvent event, QueuePlayer player) {
+//                return this.getHandler().getBuilder().errorReply("");
+//            }
+//        });
 
-        CommandListUpdateAction list = handler.getGuild().updateCommands();
+        CommandListUpdateAction list = this.handler.getGuild().updateCommands();
         for (Command c : this.commands) {
             CommandDataImpl data = new CommandDataImpl(c.getCommand(), c.getDescription());
             data.addOptions(c.getOptions());

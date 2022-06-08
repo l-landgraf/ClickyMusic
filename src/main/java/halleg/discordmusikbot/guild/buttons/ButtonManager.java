@@ -15,7 +15,7 @@ public class ButtonManager {
         for (MyButton b : MyButton.values()) {
             String eventId = event.getComponent().getId();
             if (b.getId().equals(eventId)) {
-                event.reply("").queue();
+                event.deferEdit().queue();
                 b.execute(event, player);
                 return;
             }

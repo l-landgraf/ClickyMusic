@@ -1,6 +1,6 @@
 package halleg.discordmusikbot.guild.player.queue;
 
-import halleg.discordmusikbot.guild.buttons.ButtonGoup;
+import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import halleg.discordmusikbot.guild.player.QueuePlayer;
 import halleg.discordmusikbot.guild.player.tracks.Track;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -12,7 +12,7 @@ public class SingleQueueElement extends QueueElement {
     private Track track;
 
     public SingleQueueElement(QueuePlayer player, Track track) {
-        super(player);
+        super(player, false);
         this.track = track;
     }
 
@@ -40,46 +40,12 @@ public class SingleQueueElement extends QueueElement {
     }
 
     @Override
-    public void onQueued() {
-        super.onQueued();
-        this.player.getHandler().setButtons(this.message, ButtonGoup.QUEUED);
+    public void updateMessage() {
     }
 
     @Override
-    public void onPlaying() {
-        super.onPlaying();
-        this.player.playTrack(this.track.getTrack());
-        this.player.getHandler().setButtons(this.message, ButtonGoup.PLAYING_SINGLE);
-    }
-
-    @Override
-    public void onPlayed() {
-        super.onPlayed();
-        this.player.getHandler().setButtons(this.message, ButtonGoup.PLAYED);
-    }
-
-    @Override
-    public void onResumePause() {
-        this.player.togglePaused();
-    }
-
-    @Override
-    public void onEnded() {
-        super.onEnded();
-        this.player.nextTrack();
-    }
-
-    @Override
-    public void onDelete() {
-        super.onDelete();
-        this.player.getHandler().setButtons(this.message, ButtonGoup.PLAYED);
-        this.player.removeElement(this);
-    }
-
-    @Override
-    public void onBack() {
-        super.onBack();
-        this.player.playTrack(this.track.getTrack());
+    public AudioTrack getCurrentTrack() {
+        return this.track.getTrack();
     }
 
     @Override
@@ -88,7 +54,12 @@ public class SingleQueueElement extends QueueElement {
     }
 
     @Override
-    public void onDeletePlaylist() {
+    public void onNext() {
+        throw new IllegalStateException();
+    }
+
+    @Override
+    public void onPrevious() {
         throw new IllegalStateException();
     }
 }
