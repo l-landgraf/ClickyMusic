@@ -65,9 +65,9 @@ public class MessageFactory {
             String args = "";
             for(OptionData data : command.getOptions()){
                 if(data.isRequired()){
-                    args += data.getName();
+                    args += " <"+ data.getName()+">";
                 }else{
-                    args += "["+data.getName()+"]";
+                    args += " [<"+data.getName()+">]";
                 }
             }
             eb.addField(command.getCommand()+args, command.getDescription(), false);
