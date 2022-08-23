@@ -29,6 +29,7 @@ import javax.annotation.Nonnull;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.http.HttpClient;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -38,6 +39,7 @@ public class MusicBot extends ListenerAdapter {
     private SpotifyAudioSourceManager preloader;
     private YoutubeAudioSourceManager ytManager;
     private ObjectMapper mapper;
+    private HttpClient httpClient;
     private File musicFolder;
 
     public MusicBot(JDA jda, File musicFolder) {
@@ -45,6 +47,7 @@ public class MusicBot extends ListenerAdapter {
         this.musicFolder = musicFolder;
         this.mapper = new ObjectMapper();
         this.mapper.enable(SerializationFeature.INDENT_OUTPUT);
+        this.httpClient = HttpClient.newBuilder().build();
         this.preloader = new SpotifyAudioSourceManager(this.ytManager);
         this.ytManager = new MyYoutubeAudioSourceManager();
         this.map = new HashMap<>();
@@ -69,10 +72,10 @@ public class MusicBot extends ListenerAdapter {
 
             System.out.println("initializing guild " + g.getName() + " (" + g.getIdLong() + ")");
             try {
-                handler = new GuildHandler(this, loadConfig(file).build(g), buildAudioPlayerManager(g));
+                handler = new GuildHandler(this, loadConfig(file).build(g), buildAudioPlayerManager(g),mapper,httpClient);
             } catch (Exception e) {
                 System.out.println("failed to load, using default");
-                handler = new GuildHandler(this, new GuildConfigBuilder().build(g), buildAudioPlayerManager(g));
+                handler = new GuildHandler(this, new GuildConfigBuilder().build(g), buildAudioPlayerManager(g),mapper,httpClient);
                 saveGuildHandler(handler);
             }
             this.map.put(g.getIdLong(), handler);
@@ -132,7 +135,7 @@ public class MusicBot extends ListenerAdapter {
     public void onGuildJoin(GuildJoinEvent event) {
         System.out.println("joined new server " + event.getGuild().getIdLong());
         GuildHandler guildHandler = new GuildHandler(this, new GuildConfigBuilder().build(event.getGuild()),
-                buildAudioPlayerManager(event.getGuild()));
+                buildAudioPlayerManager(event.getGuild()),mapper,httpClient);
         this.map.put(event.getGuild().getIdLong(), guildHandler);
         saveGuildHandler(guildHandler);
     }

@@ -1,7 +1,9 @@
 package halleg.discordmusikbot.guild;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import halleg.discordmusikbot.MusicBot;
+import halleg.discordmusikbot.guild.blocker.Skipper;
 import halleg.discordmusikbot.guild.buttons.ButtonManager;
 import halleg.discordmusikbot.guild.commands.CommandManager;
 import halleg.discordmusikbot.guild.config.GuildConfig;
@@ -15,6 +17,7 @@ import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.requests.restaction.MessageAction;
 import net.dv8tion.jda.api.requests.restaction.interactions.ReplyCallbackAction;
 
+import java.net.http.HttpClient;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
@@ -44,8 +47,9 @@ public class GuildHandler {
     private TrackLoader loader;
     private FileManager fileManager;
     private AudioPlayerManager audioPlayerManager;
+    private Skipper skipper;
 
-    public GuildHandler(MusicBot musicbot, GuildConfig config, AudioPlayerManager audioPlayerManager) {
+    public GuildHandler(MusicBot musicbot, GuildConfig config, AudioPlayerManager audioPlayerManager, ObjectMapper objectMapper, HttpClient httpClient) {
         this.config = config;
         this.audioPlayerManager = audioPlayerManager;
         this.bot = musicbot;
@@ -53,6 +57,7 @@ public class GuildHandler {
         this.player = new QueuePlayer(this, audioPlayerManager.createPlayer());
         this.commands = new CommandManager(this);
         this.buttons = new ButtonManager(this);
+        this.skipper = new Skipper(httpClient, objectMapper);
 
         this.loader = new TrackLoader(this, musicbot.getPreloader());
         this.fileManager = new FileManager(this.bot.getMusikFolder(), this);
