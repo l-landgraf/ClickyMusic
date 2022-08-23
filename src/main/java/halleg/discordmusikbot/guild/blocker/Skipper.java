@@ -32,5 +32,6 @@ public class Skipper {
 
         JsonNode json = objectMapper.readTree(response.body());
         System.out.println(json.get("segment"));
+        return null;
     }
 }
