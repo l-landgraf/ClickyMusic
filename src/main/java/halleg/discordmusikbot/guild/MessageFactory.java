@@ -1,10 +1,12 @@
 package halleg.discordmusikbot.guild;
 
 import halleg.discordmusikbot.guild.buttons.MyButton;
+import halleg.discordmusikbot.guild.commands.MyCommand;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 
 public class MessageFactory {
 
@@ -51,27 +53,44 @@ public class MessageFactory {
 
     }
 
-    public Message buildHelpMessage() {
+    public Message buildCommandHelpMessage() {
         EmbedBuilder eb = new EmbedBuilder();
-//        eb.setTitle("How to Use:");
-//        eb.setDescription("All commands have to start with `" + this.handler.getPrefix()
-//                + "` and most must be in this channel.\n" + "To start a new track simply write in the " + (
-//                (TextChannel) this.handler.getChannel()).getAsMention() + " channel.\n"
-//                + "You can also click the reactions to perform actions.");
-//
-//        eb.addField("", "**Commands:**", false);
-//        for (Command command : this.handler.getCommands().getCommands()) {
-//            eb.addField(command.getTip(), command.getDescription(), false);
-//        }
-//
-//        eb.addField("", "**Buttons:**", false);
-//
-//        for (Button buttton : this.handler.getButtons().getButtons()) {
-//            eb.addField(buttton.getEmoji(), buttton.getDescription(), false);
-//        }
-//
-//        eb.addField("", "Github: [https://github.com/mrhalleg/ClickyMusic](https://github.com/mrhalleg/ClickyMusic)",
-//        false);
+        eb.setTitle("How to Use:");
+        eb.setDescription( "To start a new track simply write in the " + (
+                 this.handler.getChannel()).getAsMention() + " channel.\n"
+                + "there are also commands available:");
+
+        eb.addField("", "**Commands:**", false);
+        for (MyCommand command : MyCommand.values()) {
+            String args = "";
+            for(OptionData data : command.getOptions()){
+                if(data.isRequired()){
+                    args += data.getName();
+                }else{
+                    args += "["+data.getName()+"]";
+                }
+            }
+            eb.addField(command.getCommand()+args, command.getDescription(), false);
+        }
+
+
+
+        eb.addField("", "Github: [https://github.com/mrhalleg/ClickyMusic](https://github.com/mrhalleg/ClickyMusic)",
+        false);
+
+        return new net.dv8tion.jda.api.MessageBuilder(eb.build()).build();
+    }
+
+    public Message buildButtonHelpMessage() {EmbedBuilder eb = new EmbedBuilder();
+        eb.setTitle("How to Use:");
+        eb.setDescription( "You can click the Buttons to perform actions.");
+        eb.addField("", "**Buttons:**", false);
+
+        for (MyButton buttton : MyButton.values()) {
+            eb.addField(buttton.getEmoji().getAsMention(), buttton.getDescription(), false);
+        }
+        eb.addField("", "Github: [https://github.com/mrhalleg/ClickyMusic](https://github.com/mrhalleg/ClickyMusic)",
+                false);
 
         return new net.dv8tion.jda.api.MessageBuilder(eb.build()).build();
     }

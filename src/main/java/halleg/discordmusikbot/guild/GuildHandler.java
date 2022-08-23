@@ -143,9 +143,6 @@ public class GuildHandler {
         queue(this.builder.buildInfoMessage(message), m -> deleteLater(m));
     }
 
-    public void sendHelpMessage(MessageChannel channel) {
-        queue(channel, this.builder.buildHelpMessage());
-    }
 
     public void sendRepeatMessage(String link, Consumer<Message> c) {
         queue(this.builder.buildRepeatMessage(link), c);
@@ -188,6 +185,7 @@ public class GuildHandler {
         }
     }
 
+
     public void queue(Message message) {
         queue(this.config.getOutputChannel(), message, null);
     }
@@ -202,6 +200,10 @@ public class GuildHandler {
 
     public void queue(MessageChannel channel, Message message, Consumer<Message> consumer) {
         queue(channel.sendMessage(message), consumer);
+    }
+
+    public void queue(MessageAction action) {
+       queue(action,null);
     }
 
     public void queue(MessageAction action, Consumer<Message> consumer) {

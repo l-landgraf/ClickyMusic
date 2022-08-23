@@ -33,7 +33,7 @@ public enum MyButton {
 
     RESUME_BUTTON("resume", "<:playbutton:979022469195268106>", "Resume the Player", (ele) -> ele.onResumePause()),
 
-    PREV_BUTTON("previous", "<:previous:979022469123952711>", "Play Song from the beginning",
+    PREV_BUTTON("previous", "<:previous:979022469123952711>", "Play previous Song",
             (ele) -> ele.onPrevious()),
 
     BACK_BUTTON("back", "<:backwards:979420915664322620>", "Play Song from the beginning",
@@ -44,21 +44,23 @@ public enum MyButton {
             " order",
             (ele) -> ele.onShuffle());
 
-    private Button button;
     private String id;
     private Emoji emoji;
     private ButtonExecutor exe;
+    private String description;
 
     MyButton(String id, String emoji, String description, SimpleExecutor executor) {
         this.id = id;
         this.emoji = Emoji.fromMarkdown(emoji);
         this.exe = executor;
+        this.description = description;
     }
 
     MyButton(String id, String emoji, String description, ButtonExecutor executor) {
         this.id = id;
         this.emoji = Emoji.fromMarkdown(emoji);
         this.exe = executor;
+        this.description = description;
     }
 
     public Button getSecondary() {
@@ -100,6 +102,10 @@ public enum MyButton {
 
     public Emoji getEmoji() {
         return this.emoji;
+    }
+
+    public String getDescription() {
+        return description;
     }
 
     public void execute(ButtonInteractionEvent event, QueuePlayer player) {
