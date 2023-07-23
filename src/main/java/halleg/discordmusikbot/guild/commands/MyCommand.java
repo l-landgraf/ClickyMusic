@@ -406,17 +406,6 @@ public enum MyCommand {
             handler.queue(event.getChannel().sendMessage(handler.getBuilder().buildButtonHelpMessage()));
             return handler.getBuilder().successReply("");
         }
-    },
-    Test("This command should not exist"
-    ) {
-        @Override
-        protected MessageCreateData run(SlashCommandInteractionEvent event, GuildHandler handler) {
-            MessageCreateBuilder mcb = new MessageCreateBuilder();
-            mcb.setContent("test");
-            mcb.setComponents(QueueStatus.PLAYING.getButtons(false, false, false));
-            handler.queue(event.getChannel().sendMessage(mcb.build()));
-            return handler.getBuilder().successReply("");
-        }
     };
 
 
