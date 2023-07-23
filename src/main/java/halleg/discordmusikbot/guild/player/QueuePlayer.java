@@ -130,6 +130,9 @@ public class QueuePlayer {
     }
 
     public void join(AudioChannel c) throws InsufficientPermissionException {
+        if (c == null) {
+            return;
+        }
         this.audioManager.openAudioConnection(c);
     }
 

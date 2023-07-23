@@ -22,6 +22,9 @@ public class Track {
     }
 
     public String getTitleEmbedLink() {
+        if (getURI() == null) {
+            return getTitle();
+        }
         return "[" + getTitle() + "](" + getURI() + ")";
     }
 
