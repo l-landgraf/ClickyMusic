@@ -30,6 +30,9 @@ public class Track {
     }
 
     public String getAuthorEmbedLink() {
+        if (getAuthorLink() == null) {
+            return getAuthor();
+        }
         return "[" + getAuthor() + "](" + getAuthorLink() + ")";
     }
 
