@@ -32,6 +32,7 @@ public class App extends ListenerAdapter {
         intents.add(GatewayIntent.GUILD_MESSAGES);
         intents.add(GatewayIntent.GUILD_MESSAGE_REACTIONS);
         intents.add(GatewayIntent.GUILD_VOICE_STATES);
+        intents.add(GatewayIntent.MESSAGE_CONTENT);
         JDA jda = JDABuilder.create(intents).setToken(args[0]).build().awaitReady();
 
 

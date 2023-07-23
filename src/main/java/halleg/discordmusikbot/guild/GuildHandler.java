@@ -9,13 +9,18 @@ import halleg.discordmusikbot.guild.commands.CommandManager;
 import halleg.discordmusikbot.guild.config.GuildConfig;
 import halleg.discordmusikbot.guild.player.QueuePlayer;
 import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
+import net.dv8tion.jda.api.entities.channel.unions.AudioChannelUnion;
+import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.exceptions.InsufficientPermissionException;
-import net.dv8tion.jda.api.interactions.components.ActionRow;
-import net.dv8tion.jda.api.requests.restaction.MessageAction;
-import net.dv8tion.jda.api.requests.restaction.interactions.ReplyCallbackAction;
+import net.dv8tion.jda.api.exceptions.PermissionException;
+import net.dv8tion.jda.api.requests.RestAction;
+import net.dv8tion.jda.api.requests.restaction.AuditableRestAction;
+import net.dv8tion.jda.api.requests.restaction.MessageCreateAction;
 
 import java.net.http.HttpClient;
 import java.util.concurrent.TimeUnit;
@@ -49,7 +54,8 @@ public class GuildHandler {
     private AudioPlayerManager audioPlayerManager;
     private Skipper skipper;
 
-    public GuildHandler(MusicBot musicbot, GuildConfig config, AudioPlayerManager audioPlayerManager, ObjectMapper objectMapper, HttpClient httpClient) {
+    public GuildHandler(MusicBot musicbot, GuildConfig config, AudioPlayerManager audioPlayerManager,
+                        ObjectMapper objectMapper, HttpClient httpClient) {
         this.config = config;
         this.audioPlayerManager = audioPlayerManager;
         this.bot = musicbot;
@@ -126,121 +132,48 @@ public class GuildHandler {
         this.buttons.handleEvent(event, this.player);
     }
 
-    public void setButtons(Message m, ActionRow[] buttons) {
-        m.editMessage(m).setActionRows(buttons).queue();
-
-    }
-
     public void voiceUpdate() {
         this.player.voiceUpdate();
     }
 
-    public void sendErrorMessage(String error) {
-        queue(this.builder.buildNewErrorMessage(error), m -> deleteLater(m));
+    public <T> void queueLater(RestAction<Void> delete) {
+        try {
+            delete.queueAfter(DELETE_DELAY, TimeUnit.SECONDS);
+        } catch (InsufficientPermissionException e) {
+            handleMissingPermission(e);
+        }
+    }
+
+    public <T> void queue(RestAction<T> action) {
+        queue(action, null);
+    }
+
+    public <T> void queue(RestAction action, Consumer<T> consumer) {
+        try {
+            action.queue(consumer, throwable -> {
+                log(throwable.toString());
+            });
+        } catch (InsufficientPermissionException e) {
+            handleMissingPermission(e);
+        }
+    }
+
+    public <T> T complete(RestAction<T> action) {
+        return action.complete();
     }
 
     public void sendInfoMessage(String message) {
-        queue(this.builder.buildInfoMessage(message), m -> deleteLater(m));
+        queue(this.config.getOutputChannel().sendMessage(this.builder.buildInfoMessage(message)));
+    }
+
+    public void sendErrorMessage(String message) {
+        queue(this.config.getOutputChannel().sendMessage(this.builder.buildErrorMessage(message)));
     }
 
 
-    public void sendRepeatMessage(String link, Consumer<Message> c) {
-        queue(this.builder.buildRepeatMessage(link), c);
-    }
-
-    public void editMessage(Message old, Message neew, ActionRow[] actionRows, Consumer<Message> c) {
-        queue(old.editMessage(neew).setActionRows(actionRows), c);
-    }
-
-    public void delete(Message message) {
-        try {
-            message.delete().queue();
-        } catch (InsufficientPermissionException e) {
-            handleMissingPermission(e);
-        }
-    }
-
-
-    public void queueAndDeleteLater(ReplyCallbackAction reply) {
-        try {
-            reply.queue(ih -> ih.deleteOriginal().queueAfter(DELETE_DELAY, TimeUnit.SECONDS));
-        } catch (InsufficientPermissionException e) {
-            handleMissingPermission(e);
-        }
-    }
-
-    public void queueAndDeleteLater(Message message) {
-        try {
-            queue(message, m -> deleteLater(m));
-        } catch (InsufficientPermissionException e) {
-            handleMissingPermission(e);
-        }
-    }
-
-    public void deleteLater(Message message) {
-        try {
-            message.delete().queueAfter(DELETE_DELAY, TimeUnit.SECONDS);
-        } catch (InsufficientPermissionException e) {
-            handleMissingPermission(e);
-        }
-    }
-
-
-    public void queue(Message message) {
-        queue(this.config.getOutputChannel(), message, null);
-    }
-
-    public void queue(MessageChannel channel, Message message) {
-        queue(channel, message, null);
-    }
-
-    public void queue(Message message, Consumer<Message> consumer) {
-        queue(this.config.getOutputChannel(), message, consumer);
-    }
-
-    public void queue(MessageChannel channel, Message message, Consumer<Message> consumer) {
-        queue(channel.sendMessage(message), consumer);
-    }
-
-    public void queue(MessageAction action) {
-       queue(action,null);
-    }
-
-    public void queue(MessageAction action, Consumer<Message> consumer) {
-        try {
-            action.queue(consumer);
-        } catch (InsufficientPermissionException e) {
-            handleMissingPermission(e);
-        }
-    }
-
-    public Message complete(Message message) {
-        return complete(this.config.getOutputChannel(), message);
-    }
-
-    public Message complete(MessageChannel channel, Message message) {
-        try {
-            return channel.sendMessage(message).complete();
-        } catch (InsufficientPermissionException e) {
-            handleMissingPermission(e);
-            return null;
-        }
-    }
-
-    public void addReaction(Message message, String emote) {
-        try {
-            message.addReaction(emote).queue();
-        } catch (InsufficientPermissionException e) {
-            handleMissingPermission(e);
-        }
-    }
-
-    public void removeReaction(Message message, MessageReaction.ReactionEmote emote, Member member) {
-        try {
-            message.removeReaction(emote.getEmoji(), member.getUser()).queue();
-        } catch (InsufficientPermissionException e) {
-            handleMissingPermission(e);
-        }
+    public void addReaction(Message message, String reaction) {
+        Emoji e = Emoji.fromUnicode(reaction);
+        message.addReaction(e).queue();
     }
 
     public void log(String string) {
@@ -291,7 +224,7 @@ public class GuildHandler {
         return this.fileManager;
     }
 
-    public boolean isCorrectChannel(AudioChannel channel) {
+    public boolean isCorrectChannel(AudioChannelUnion channel) {
         return channel != null && (this.player.getConnectedChannel() == null || channel.getIdLong() == this.player.getConnectedChannel().getIdLong());
     }
 

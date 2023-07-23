@@ -1,7 +1,7 @@
 package halleg.discordmusikbot.guild;
 
-import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.utils.messages.MessageCreateData;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
@@ -51,16 +51,16 @@ public class FileManager {
         }
     }
 
-    public Message listFiles(String path) {
+    public MessageCreateData listFiles(String path) {
         File folder = null;
         try {
             folder = getSecureSubFile(this.musicFolder, path);
         } catch (IOException e) {
-            return this.handler.getBuilder().buildNewErrorMessage("Invalid directory \"" + path + "\"");
+            return this.handler.getBuilder().buildErrorMessage("Invalid directory \"" + path + "\"");
         }
 
         if (!folder.exists() || !folder.isDirectory()) {
-            return this.handler.getBuilder().buildNewErrorMessage("\"" + getRelativePath(folder) + "\" does not exist" +
+            return this.handler.getBuilder().buildErrorMessage("\"" + getRelativePath(folder) + "\" does not exist" +
                     " or is not a directory");
         }
 
@@ -80,118 +80,118 @@ public class FileManager {
         return this.handler.getBuilder().buildListMessage(directories, files);
     }
 
-    public Message copyFile(String path, String newPath) {
+    public String copyFile(String path, String newPath) {
         File folder = null;
         try {
             folder = getSecureSubFile(this.musicFolder, path);
         } catch (IOException e) {
-            return new MessageBuilder("Invalid directory " + MessageFactory.inlineCodeBlock(path)).build();
+            return "Invalid directory " + MessageFactory.inlineCodeBlock(path);
         }
 
         if (!folder.exists()) {
-            return new MessageBuilder(MessageFactory.inlineCodeBlock(getRelativePath(folder)) + " does not exist.").build();
+            return MessageFactory.inlineCodeBlock(getRelativePath(folder)) + " does not exist.";
         }
 
         File newFolder = null;
         try {
             newFolder = getSecureSubFile(this.musicFolder, newPath);
         } catch (IOException e) {
-            return new MessageBuilder("Invalid directory " + MessageFactory.inlineCodeBlock(newPath)).build();
+            return "Invalid directory " + MessageFactory.inlineCodeBlock(newPath);
         }
 
         if (newFolder.exists()) {
-            return new MessageBuilder("\"" + MessageFactory.inlineCodeBlock(getRelativePath(newFolder)) + "\" does " +
-                    "already exist.").build();
+            return "\"" + MessageFactory.inlineCodeBlock(getRelativePath(newFolder)) + "\" does " +
+                    "already exist.";
         }
 
         if (folder.isDirectory()) {
             if (!checkFolderSize(folderSize(folder))) {
-                return new MessageBuilder("Not enough space available to create copy").build();
+                return "Not enough space available to create copy";
             }
 
             try {
                 FileUtils.copyDirectory(folder, newFolder);
             } catch (IOException e) {
 
-                return new MessageBuilder("failed to copy " + MessageFactory.inlineCodeBlock(getRelativePath(folder)) + " to " + getRelativePath(newFolder)).build();
+                return "failed to copy " + MessageFactory.inlineCodeBlock(getRelativePath(folder)) + " to " + getRelativePath(newFolder);
             }
         } else {
             if (!checkFolderSize(folder.length())) {
-                return new MessageBuilder("Not enough space available to create copy").build();
+                return "Not enough space available to create copy";
             }
 
             try {
                 Files.copy(folder.toPath(), newFolder.toPath());
             } catch (IOException e) {
-                return new MessageBuilder("failed to copy " + MessageFactory.inlineCodeBlock(getRelativePath(folder)) + " to " + getRelativePath(newFolder)).build();
+                return "failed to copy " + MessageFactory.inlineCodeBlock(getRelativePath(folder)) + " to " + getRelativePath(newFolder);
             }
         }
 
-        return new MessageBuilder("copied " + MessageFactory.inlineCodeBlock(getRelativePath(folder)) + " to " + getRelativePath(newFolder)).build();
+        return "copied " + MessageFactory.inlineCodeBlock(getRelativePath(folder)) + " to " + getRelativePath(newFolder);
     }
 
-    public Message moveFile(String path, String newPath) {
+    public String moveFile(String path, String newPath) {
         File folder = null;
         try {
             folder = getSecureSubFile(this.musicFolder, path);
         } catch (IOException e) {
-            return new MessageBuilder("Invalid directory " + MessageFactory.inlineCodeBlock(path)).build();
+            return "Invalid directory " + MessageFactory.inlineCodeBlock(path);
         }
 
         if (!folder.exists()) {
-            return new MessageBuilder(MessageFactory.inlineCodeBlock(getRelativePath(folder)) + " does not exist.").build();
+            return MessageFactory.inlineCodeBlock(getRelativePath(folder)) + " does not exist.";
         }
 
         File newFolder = null;
         try {
             newFolder = getSecureSubFile(this.musicFolder, newPath);
         } catch (IOException e) {
-            return new MessageBuilder("Invalid directory " + MessageFactory.inlineCodeBlock(newPath)).build();
+            return "Invalid directory " + MessageFactory.inlineCodeBlock(newPath);
         }
 
         if (newFolder.exists()) {
-            return new MessageBuilder(MessageFactory.inlineCodeBlock(getRelativePath(newFolder)) + " does already " +
-                    "exist.").build();
+            return MessageFactory.inlineCodeBlock(getRelativePath(newFolder)) + " does already " +
+                    "exist.";
         }
 
         folder.renameTo(newFolder);
-        return new MessageBuilder("moved " + MessageFactory.inlineCodeBlock(getRelativePath(folder)) + " to " + MessageFactory.inlineCodeBlock(getRelativePath(newFolder))).build();
+        return "moved " + MessageFactory.inlineCodeBlock(getRelativePath(folder)) + " to " + MessageFactory.inlineCodeBlock(getRelativePath(newFolder));
     }
 
-    public Message deleteFile(String path) {
+    public String deleteFile(String path) {
         File folder = null;
         try {
             folder = getSecureSubFile(this.musicFolder, path);
         } catch (IOException e) {
-            return new MessageBuilder("Invalid directory " + MessageFactory.inlineCodeBlock(path)).build();
+            return "Invalid directory " + MessageFactory.inlineCodeBlock(path);
         }
 
         if (!folder.exists()) {
-            return new MessageBuilder(MessageFactory.inlineCodeBlock(getRelativePath(folder) + " does not exist.")).build();
+            return MessageFactory.inlineCodeBlock(getRelativePath(folder)) + " does not exist.";
         }
 
         if (!folder.delete()) {
-            return new MessageBuilder(MessageFactory.inlineCodeBlock(getRelativePath(folder)) + " is not empty.").build();
+            return MessageFactory.inlineCodeBlock(getRelativePath(folder)) + " is not empty.";
         } else {
-            return new MessageBuilder(MessageFactory.inlineCodeBlock(getRelativePath(folder)) + " has been deleted.").build();
+            return MessageFactory.inlineCodeBlock(getRelativePath(folder)) + " has been deleted.";
         }
     }
 
-    public Message deleteDirectoryRecursively(String path) {
+    public String deleteDirectoryRecursively(String path) {
         File folder = null;
         try {
             folder = getSecureSubFile(this.musicFolder, path);
         } catch (IOException e) {
-            return new MessageBuilder("Invalid directory " + MessageFactory.inlineCodeBlock(path)).build();
+            return "Invalid directory " + MessageFactory.inlineCodeBlock(path);
         }
 
         if (!folder.exists() || !folder.isDirectory()) {
-            return new MessageBuilder(MessageFactory.inlineCodeBlock(getRelativePath(folder)) + " does not exist or " +
-                    "is not a directory").build();
+            return MessageFactory.inlineCodeBlock(getRelativePath(folder)) + " does not exist or " +
+                    "is not a directory";
         }
 
         deleteRecursively(folder);
-        return new MessageBuilder(MessageFactory.inlineCodeBlock(getRelativePath(folder)) + " has been deleted.").build();
+        return MessageFactory.inlineCodeBlock(getRelativePath(folder)) + " has been deleted.";
     }
 
     private void deleteRecursively(File file) {

@@ -3,10 +3,11 @@ package halleg.discordmusikbot.guild;
 import halleg.discordmusikbot.guild.buttons.MyButton;
 import halleg.discordmusikbot.guild.commands.MyCommand;
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
+import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
+import net.dv8tion.jda.api.utils.messages.MessageCreateData;
 
 public class MessageFactory {
 
@@ -32,13 +33,6 @@ public class MessageFactory {
         return min + ":" + sec;
     }
 
-    public Message buildNewErrorMessage(String error) {
-        EmbedBuilder eb = new EmbedBuilder();
-        eb.setTitle("💀 Error");
-        eb.setDescription(error);
-
-        return new net.dv8tion.jda.api.MessageBuilder(eb.build()).build();
-    }
 
     public String getURI(Message message) {
         try {
@@ -53,61 +47,80 @@ public class MessageFactory {
 
     }
 
-    public Message buildCommandHelpMessage() {
+    public MessageCreateData buildCommandHelpMessage() {
         EmbedBuilder eb = new EmbedBuilder();
         eb.setTitle("How to Use:");
-        eb.setDescription( "To start a new track simply write in the " + (
-                 this.handler.getChannel()).getAsMention() + " channel.\n"
+        eb.setDescription("To start a new track simply write in the " + (
+                this.handler.getChannel()).getAsMention() + " channel.\n"
                 + "there are also commands available:");
 
         eb.addField("", "**Commands:**", false);
         for (MyCommand command : MyCommand.values()) {
             String args = "";
-            for(OptionData data : command.getOptions()){
-                if(data.isRequired()){
-                    args += " <"+ data.getName()+">";
-                }else{
-                    args += " [<"+data.getName()+">]";
+            for (OptionData data : command.getOptions()) {
+                if (data.isRequired()) {
+                    args += " <" + data.getName() + ">";
+                } else {
+                    args += " [<" + data.getName() + ">]";
                 }
             }
-            eb.addField(command.getCommand()+args, command.getDescription(), false);
+            eb.addField(command.getCommand() + args, command.getDescription(), false);
         }
 
 
-
         eb.addField("", "Github: [https://github.com/mrhalleg/ClickyMusic](https://github.com/mrhalleg/ClickyMusic)",
-        false);
+                false);
 
-        return new net.dv8tion.jda.api.MessageBuilder(eb.build()).build();
+        MessageCreateBuilder mcb = new MessageCreateBuilder();
+        mcb.addEmbeds(eb.build());
+        return mcb.build();
     }
 
-    public Message buildButtonHelpMessage() {EmbedBuilder eb = new EmbedBuilder();
+    public MessageCreateData buildButtonHelpMessage() {
+        EmbedBuilder eb = new EmbedBuilder();
         eb.setTitle("How to Use:");
-        eb.setDescription( "You can click the Buttons to perform actions.");
+        eb.setDescription("You can click the Buttons to perform actions.");
         eb.addField("", "**Buttons:**", false);
 
         for (MyButton buttton : MyButton.values()) {
-            eb.addField(buttton.getEmoji().getAsMention(), buttton.getDescription(), false);
+            eb.addField(buttton.getEmoji().getFormatted(), buttton.getDescription(), false);
         }
         eb.addField("", "Github: [https://github.com/mrhalleg/ClickyMusic](https://github.com/mrhalleg/ClickyMusic)",
                 false);
 
-        return new net.dv8tion.jda.api.MessageBuilder(eb.build()).build();
+        MessageCreateBuilder mcb = new MessageCreateBuilder();
+        mcb.addEmbeds(eb.build());
+        return mcb.build();
     }
 
-    public Message buildInfoMessage(String message) {
+    public MessageCreateData buildInfoMessage(String message) {
         EmbedBuilder eb = new EmbedBuilder();
         eb.setTitle("🔔 Info");
         eb.setDescription(message);
 
-        return new net.dv8tion.jda.api.MessageBuilder(eb.build()).build();
+        MessageCreateBuilder mcb = new MessageCreateBuilder();
+        mcb.addEmbeds(eb.build());
+        return mcb.build();
     }
 
-    public Message buildListMessage(String[] directories, String[] files) {
+    public MessageCreateData buildErrorMessage(String error) {
+        EmbedBuilder eb = new EmbedBuilder();
+        eb.setTitle("💀 Error");
+        eb.setDescription(error);
+
+        MessageCreateBuilder mcb = new MessageCreateBuilder();
+        mcb.addEmbeds(eb.build());
+        return mcb.build();
+    }
+
+    public MessageCreateData buildListMessage(String[] directories, String[] files) {
         EmbedBuilder eb = new EmbedBuilder();
         buildListEmbed("Directories", directories, eb);
         buildListEmbed("Files", files, eb);
-        return new MessageBuilder(eb.build()).build();
+
+        MessageCreateBuilder mcb = new MessageCreateBuilder();
+        mcb.addEmbeds(eb.build());
+        return mcb.build();
     }
 
     public MessageEmbed buildListEmbed(String title, String[] elements, EmbedBuilder eb) {
@@ -140,12 +153,16 @@ public class MessageFactory {
         return eb.build();
     }
 
-    public Message errorReply(String s) {
-        return new MessageBuilder(GuildHandler.LOADING_FAILED_EMOJI + " " + s).build();
+    public MessageCreateData errorReply(String s) {
+        MessageCreateBuilder mcb = new MessageCreateBuilder();
+        mcb.setContent(GuildHandler.LOADING_FAILED_EMOJI + " " + s);
+        return mcb.build();
     }
 
-    public Message successReply(String s) {
-        return new MessageBuilder(GuildHandler.CONFIRMED + " " + s).build();
+    public MessageCreateData successReply(String s) {
+        MessageCreateBuilder mcb = new MessageCreateBuilder();
+        mcb.setContent(GuildHandler.CONFIRMED + " " + s);
+        return mcb.build();
     }
 
     public static String inlineCodeBlock(String message) {
@@ -160,13 +177,10 @@ public class MessageFactory {
         this.handler.addReaction(message, GuildHandler.LOADING_FAILED_EMOJI);
     }
 
-    public Message buildRepeatMessage(String link) {
-        net.dv8tion.jda.api.MessageBuilder mb = new net.dv8tion.jda.api.MessageBuilder();
-
-        mb.append(MyButton.REPEAT_BUTTON.getEmoji());
-        mb.appendCodeLine(link);
-
-        return mb.build();
+    public MessageCreateData buildRepeatMessage(String link) {
+        MessageCreateBuilder mcb = new MessageCreateBuilder();
+        mcb.setContent(MyButton.REPEAT_BUTTON.getEmoji() + MessageFactory.inlineCodeBlock(link));
+        return mcb.build();
     }
 
     public void setUnknownCommand(Message message) {
@@ -175,5 +189,11 @@ public class MessageFactory {
 
     public void setConfirmed(Message message) {
         this.handler.addReaction(message, GuildHandler.CONFIRMED);
+    }
+
+    public MessageCreateData buildReplyMessage(String message) {
+        MessageCreateBuilder mcb = new MessageCreateBuilder();
+        mcb.setContent(message);
+        return mcb.build();
     }
 }

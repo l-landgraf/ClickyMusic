@@ -60,15 +60,15 @@ public enum QueueStatus {
         Button[][] buttons = new Button[2][5];
 
         buttons[0][0] = MyButton.BACK_BUTTON.getPrimary();
-        buttons[0][1] = disableButton(MyButton.PREV_BUTTON.getPrimary(),isPlaylist);
+        buttons[0][1] = disableButton(MyButton.PREV_BUTTON.getPrimary(), isPlaylist);
         buttons[0][2] = playButton(isPaused);
-        buttons[0][3] = disableButton(MyButton.NEXT_BUTTON.getPrimary(),isPlaylist);
+        buttons[0][3] = disableButton(MyButton.NEXT_BUTTON.getPrimary(), isPlaylist);
         buttons[0][4] = MyButton.SKIP_BUTTON.getPrimary();
 
         buttons[1][0] = MyButton.REPEAT_BUTTON.getSecondary();
-        buttons[1][1] = Button.secondary("empty1", " ").asDisabled();
-        buttons[1][2] = Button.secondary("empty2", " ").asDisabled();
-        buttons[1][3] = Button.secondary("empty3", " ").asDisabled();
+        buttons[1][1] = Button.secondary("empty1", "-").asDisabled();
+        buttons[1][2] = Button.secondary("empty2", "-").asDisabled();
+        buttons[1][3] = Button.secondary("empty3", "-").asDisabled();
         buttons[1][4] = disableButton(shuffleButton(isShuffled), isPlaylist);
 
 
@@ -88,9 +88,9 @@ public enum QueueStatus {
     }
 
     private static Button disableButton(Button button, boolean enabled) {
-        if(enabled){
+        if (enabled) {
             return button;
-        }else {
+        } else {
             return button.asDisabled();
         }
     }
@@ -114,5 +114,4 @@ public enum QueueStatus {
     private interface ButtonBuilder {
         ActionRow[] getButtons(boolean isPaused, boolean isPlaylist, boolean isShuffled);
     }
-
 }

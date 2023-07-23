@@ -1,11 +1,16 @@
 package halleg.discordmusikbot.guild.buttons;
 
+import halleg.discordmusikbot.guild.commands.MyCommand;
 import halleg.discordmusikbot.guild.player.QueuePlayer;
 import halleg.discordmusikbot.guild.player.queue.QueueElement;
-import net.dv8tion.jda.api.entities.Emoji;
+import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.emoji.CustomEmoji;
+import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.exceptions.InsufficientPermissionException;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
+
+import java.util.function.Consumer;
 
 public enum MyButton {
     REPEAT_BUTTON("repeat", "<:replay:979022469342068736>", "Queue this Song again", (event, player) -> {
@@ -16,9 +21,13 @@ public enum MyButton {
             player.getHandler().handleMissingPermission(e);
             return;
         }
-        player.getHandler().sendRepeatMessage(search, message1 -> {
-            player.getHandler().getLoader().search(search, player, event.getMember(), message1);
-        });
+        player.getHandler().queue(player.getHandler().getChannel().sendMessage(player.getHandler().getBuilder().buildRepeatMessage(search)),
+                new Consumer<Message>() {
+                    @Override
+                    public void accept(Message message) {
+                        player.getHandler().getLoader().search(search, player, event.getMember(), message);
+                    }
+                });
     }),
 
     NEXT_BUTTON("next", "<:next:979022469308497940>", "Skip this song", (ele) -> ele.onNext()),
@@ -51,14 +60,14 @@ public enum MyButton {
 
     MyButton(String id, String emoji, String description, SimpleExecutor executor) {
         this.id = id;
-        this.emoji = Emoji.fromMarkdown(emoji);
+        this.emoji = Emoji.fromFormatted(emoji);
         this.exe = executor;
         this.description = description;
     }
 
     MyButton(String id, String emoji, String description, ButtonExecutor executor) {
         this.id = id;
-        this.emoji = Emoji.fromMarkdown(emoji);
+        this.emoji = Emoji.fromFormatted(emoji);
         this.exe = executor;
         this.description = description;
     }
@@ -105,7 +114,7 @@ public enum MyButton {
     }
 
     public String getDescription() {
-        return description;
+        return this.description;
     }
 
     public void execute(ButtonInteractionEvent event, QueuePlayer player) {

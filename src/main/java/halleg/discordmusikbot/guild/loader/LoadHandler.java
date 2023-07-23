@@ -31,7 +31,7 @@ public abstract class LoadHandler implements AudioLoadResultHandler {
     @Override
     public void trackLoaded(AudioTrack track) {
         if (this.message != null) {
-            this.handler.delete(this.message);
+            this.handler.queue(this.message.delete());
         }
         this.handler.log("track loadet \"" + track.getInfo().title + "\"");
     }
@@ -40,7 +40,7 @@ public abstract class LoadHandler implements AudioLoadResultHandler {
     public void noMatches() {
         this.handler.log("no matches found \"" + this.source + "\"");
         if (this.message != null) {
-            this.handler.deleteLater(this.message);
+            this.handler.queueLater(this.message.delete());
             this.handler.getBuilder().setLoadingFailed(this.message);
         }
     }
@@ -49,14 +49,14 @@ public abstract class LoadHandler implements AudioLoadResultHandler {
     public void loadFailed(FriendlyException exception) {
         this.handler.sendErrorMessage(exception.getMessage());
         if (this.message != null) {
-            this.handler.deleteLater(this.message);
+            this.handler.queue(this.message.delete());
             this.handler.getBuilder().setLoadingFailed(this.message);
         }
     }
 
     @Override
     public void playlistLoaded(AudioPlaylist playlist) {
-        this.handler.delete(this.message);
+        this.handler.queueLater(this.message.delete());
         this.handler.log("playlist loadet \"" + playlist.getName() + "\"");
     }
 }

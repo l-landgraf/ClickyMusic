@@ -5,11 +5,12 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import halleg.discordmusikbot.guild.GuildHandler;
 import halleg.discordmusikbot.guild.player.queue.QueueElement;
 import halleg.discordmusikbot.guild.player.queue.QueueStatus;
-import net.dv8tion.jda.api.entities.AudioChannel;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.channel.middleman.AudioChannel;
 import net.dv8tion.jda.api.exceptions.InsufficientPermissionException;
 import net.dv8tion.jda.api.managers.AudioManager;
+import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -63,14 +64,19 @@ public class QueuePlayer implements Timer.TimerListener {
 
     public void addQueue(QueueElement element) {
         if (this.currentTrack == null) {
-            Message m = element.buildMessage(QueueStatus.PLAYING);
-            Message message = this.handler.complete(m);
+            MessageCreateBuilder mcb = new MessageCreateBuilder();
+            mcb.setEmbeds(element.buildMessageEmbed(QueueStatus.PLAYING));
+            
+            Message message =
+                    this.handler.complete(this.handler.getConfig().getOutputChannel().sendMessage(mcb.build()));
             element.setMessage(message);
             this.currentTrack = element;
             this.currentTrack.onPlaying();
         } else {
-            Message m = element.buildMessage(QueueStatus.QUEUED);
-            Message message = this.handler.complete(m);
+            MessageCreateBuilder mcb = new MessageCreateBuilder();
+            mcb.setEmbeds(element.buildMessageEmbed(QueueStatus.QUEUED));
+            Message message =
+                    this.handler.complete(this.handler.getConfig().getOutputChannel().sendMessage(mcb.build()));
             element.setMessage(message);
             this.queue.add(element);
             element.onQueued();

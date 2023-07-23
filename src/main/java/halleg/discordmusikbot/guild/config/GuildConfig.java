@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreType;
 import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.MessageChannel;
+import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 
 @JsonIgnoreType
 public class GuildConfig {
@@ -19,7 +19,7 @@ public class GuildConfig {
         this.guild = guild;
 
         if (channelid == null) {
-            this.outputChannel = guild.getDefaultChannel();
+            this.outputChannel = guild.getDefaultChannel().asTextChannel();
         } else {
             this.outputChannel = guild.getTextChannelById(channelid);
         }

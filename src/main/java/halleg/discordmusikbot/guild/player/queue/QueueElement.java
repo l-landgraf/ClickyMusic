@@ -2,9 +2,12 @@ package halleg.discordmusikbot.guild.player.queue;
 
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import halleg.discordmusikbot.guild.player.QueuePlayer;
-import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.dv8tion.jda.api.utils.messages.MessageEditBuilder;
+import net.dv8tion.jda.api.utils.messages.MessageEditData;
+
+import java.util.function.Consumer;
 
 public abstract class QueueElement {
     protected final boolean isPlaylist;
@@ -26,10 +29,6 @@ public abstract class QueueElement {
         return null;
     }
 
-    public Message buildMessage(QueueStatus status) {
-        return new MessageBuilder(buildMessageEmbed(status)).build();
-    }
-
 
     public Message getMessage() {
         return this.message;
@@ -44,54 +43,53 @@ public abstract class QueueElement {
             return;
         }
 
-        this.player.getHandler().editMessage(this.message, new MessageBuilder(buildMessageEmbed(this.status)).build(),
-                this.status.getButtons(this.player.isPaused(), this.isPlaylist, this.isShuffle),
-                (message) -> {
-                    QueueElement.this.message = message;
-                });
+
+        MessageEditBuilder meb = new MessageEditBuilder();
+        meb.setEmbeds(buildMessageEmbed(this.status));
+        meb.setComponents(this.status.getButtons(this.player.isPaused(), this.isPlaylist, this.isShuffle));
+        this.player.getHandler().queue(this.message.editMessage(meb.build()), new Consumer<Message>() {
+            @Override
+            public void accept(Message message) {
+                QueueElement.this.message = message;
+            }
+        });
     }
 
     public abstract AudioTrack getCurrentTrack();
 
     public void onQueued() {
         this.status = QueueStatus.QUEUED;
-        this.player.getHandler().setButtons(this.message, this.status.getButtons(
-                this.player.isPaused(), this.isPlaylist, this.isShuffle));
+        setButtons();
     }
 
     public void onPlaying() {
         this.status = QueueStatus.PLAYING;
         this.player.playTrack(this.getCurrentTrack());
-        this.player.getHandler().setButtons(this.message,
-                this.status.getButtons(this.player.isPaused(), this.isPlaylist, this.isShuffle));
+        setButtons();
         updateMessage();
     }
 
     public void onPlayed() {
         this.status = QueueStatus.PLAYED;
-        this.player.getHandler().setButtons(this.message,
-                this.status.getButtons(this.player.isPaused(), this.isPlaylist, this.isShuffle));
+        setButtons();
         updateMessage();
     }
 
     public void onResumePause() {
         this.player.togglePaused();
-        this.player.getHandler().setButtons(this.message,
-                this.status.getButtons(this.player.isPaused(), this.isPlaylist, this.isShuffle));
+        setButtons();
     }
 
     public void onEnded() {
         this.status = QueueStatus.PLAYED;
         this.player.nextTrack();
-        this.player.getHandler().setButtons(this.message,
-                this.status.getButtons(this.player.isPaused(), this.isPlaylist, this.isShuffle));
+        setButtons();
         updateMessage();
     }
 
     public void onSkip() {
         this.status = QueueStatus.SKIPPED;
-        this.player.getHandler().setButtons(this.message,
-                this.status.getButtons(this.player.isPaused(), this.isPlaylist, this.isShuffle));
+        setButtons();
         this.player.nextTrack();
         updateMessage();
     }
@@ -105,9 +103,16 @@ public abstract class QueueElement {
     public void onRemoved() {
         this.status = QueueStatus.REMOVED;
         this.player.removeElement(this);
-        this.player.getHandler().setButtons(this.message,
-                this.status.getButtons(this.player.isPaused(), this.isPlaylist, this.isShuffle));
+
+        setButtons();
         updateMessage();
+    }
+
+    private void setButtons() {
+        this.player.getHandler().queue(
+                this.message.editMessage(MessageEditData.fromMessage(this.message)).setComponents(this.status.getButtons(this.player.isPaused(),
+                        this.isPlaylist,
+                        this.isShuffle)));
     }
 
     public void onShuffle() {

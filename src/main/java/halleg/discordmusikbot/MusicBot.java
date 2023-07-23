@@ -14,8 +14,8 @@ import halleg.discordmusikbot.guild.spotify.SpotifyAudioSourceManager;
 import halleg.discordmusikbot.guild.youtube.MyYoutubeAudioSourceManager;
 import halleg.discordmusikbot.guild.youtube.YoutubeQueryAudioSourceManager;
 import net.dv8tion.jda.api.JDA;
-import net.dv8tion.jda.api.entities.AudioChannel;
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.channel.middleman.AudioChannel;
 import net.dv8tion.jda.api.events.guild.GuildJoinEvent;
 import net.dv8tion.jda.api.events.guild.GuildLeaveEvent;
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceUpdateEvent;
@@ -25,7 +25,6 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.jetbrains.annotations.NotNull;
 
-import javax.annotation.Nonnull;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -72,10 +71,12 @@ public class MusicBot extends ListenerAdapter {
 
             System.out.println("initializing guild " + g.getName() + " (" + g.getIdLong() + ")");
             try {
-                handler = new GuildHandler(this, loadConfig(file).build(g), buildAudioPlayerManager(g),mapper,httpClient);
+                handler = new GuildHandler(this, loadConfig(file).build(g), buildAudioPlayerManager(g), this.mapper,
+                        this.httpClient);
             } catch (Exception e) {
                 System.out.println("failed to load, using default");
-                handler = new GuildHandler(this, new GuildConfigBuilder().build(g), buildAudioPlayerManager(g),mapper,httpClient);
+                handler = new GuildHandler(this, new GuildConfigBuilder().build(g), buildAudioPlayerManager(g),
+                        this.mapper, this.httpClient);
                 saveGuildHandler(handler);
             }
             this.map.put(g.getIdLong(), handler);
@@ -119,7 +120,7 @@ public class MusicBot extends ListenerAdapter {
     }
 
     @Override
-    public void onGuildVoiceUpdate(@Nonnull GuildVoiceUpdateEvent event) {
+    public void onGuildVoiceUpdate(GuildVoiceUpdateEvent event) {
         AudioChannel channel = event.getChannelJoined();
 
         if (channel == null) {
@@ -135,7 +136,7 @@ public class MusicBot extends ListenerAdapter {
     public void onGuildJoin(GuildJoinEvent event) {
         System.out.println("joined new server " + event.getGuild().getIdLong());
         GuildHandler guildHandler = new GuildHandler(this, new GuildConfigBuilder().build(event.getGuild()),
-                buildAudioPlayerManager(event.getGuild()),mapper,httpClient);
+                buildAudioPlayerManager(event.getGuild()), this.mapper, this.httpClient);
         this.map.put(event.getGuild().getIdLong(), guildHandler);
         saveGuildHandler(guildHandler);
     }
