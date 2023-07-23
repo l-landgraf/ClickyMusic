@@ -18,11 +18,13 @@ public class EventListener extends AudioEventAdapter {
 
     @Override
     public void onPlayerPause(AudioPlayer player) {
+        this.handler.getPlayer().progressUpdate();
         this.handler.log("paused");
     }
 
     @Override
     public void onPlayerResume(AudioPlayer player) {
+        this.handler.getPlayer().progressUpdate();
         this.handler.log("resumed");
     }
 

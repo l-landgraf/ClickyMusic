@@ -2,6 +2,8 @@ package halleg.discordmusikbot.guild.player.queue;
 
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import halleg.discordmusikbot.guild.player.QueuePlayer;
+import halleg.discordmusikbot.guild.player.tracks.Track;
+import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.utils.messages.MessageEditBuilder;
@@ -42,7 +44,6 @@ public abstract class QueueElement {
         if (this.message == null) {
             return;
         }
-
 
         MessageEditBuilder meb = new MessageEditBuilder();
         meb.setEmbeds(buildMessageEmbed(this.status));
@@ -119,6 +120,24 @@ public abstract class QueueElement {
         this.isShuffle = !this.isShuffle;
         updateMessage();
     }
+
+    protected void addProgressBar(EmbedBuilder eb, AudioTrack track) {
+        int barWidth = 60;
+        int p = (int) (((float) this.player.getPosition() / (float) track.getDuration()) * (float) barWidth);
+
+        String bar = "";
+        for (int i = 0; i < barWidth; i++) {
+            if (i < p) {
+                bar += "=";
+            } else if (i == p) {
+                bar += "|";
+            } else {
+                bar += "-";
+            }
+        }
+        eb.addField(bar, Track.toTime(this.player.getPosition()), false);
+    }
+
 
     public abstract void onNext();
 

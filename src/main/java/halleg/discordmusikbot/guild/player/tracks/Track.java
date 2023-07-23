@@ -5,69 +5,69 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import net.dv8tion.jda.api.entities.Member;
 
 public class Track {
-	protected AudioTrack track;
-	protected Member member;
-	protected String thumbnail;
-	protected String authorLink;
+    protected AudioTrack track;
+    protected Member member;
+    protected String thumbnail;
+    protected String authorLink;
 
-	public Track(AudioTrack track, Member member, String authorLink, String image) {
-		this.track = track;
-		this.member = member;
-		this.thumbnail = image;
-		this.authorLink = authorLink;
-	}
+    public Track(AudioTrack track, Member member, String authorLink, String image) {
+        this.track = track;
+        this.member = member;
+        this.thumbnail = image;
+        this.authorLink = authorLink;
+    }
 
-	public String getTitle() {
-		return this.track.getInfo().title;
-	}
+    public String getTitle() {
+        return this.track.getInfo().title;
+    }
 
-	public String getTitleEmbedLink() {
-		return "[" + getTitle() + "](" + getURI() + ")";
-	}
+    public String getTitleEmbedLink() {
+        return "[" + getTitle() + "](" + getURI() + ")";
+    }
 
-	public String getAuthor() {
-		return this.track.getInfo().author;
-	}
+    public String getAuthor() {
+        return this.track.getInfo().author;
+    }
 
-	public String getAuthorEmbedLink() {
-		return "[" + getAuthor() + "](" + getAuthorLink() + ")";
-	}
+    public String getAuthorEmbedLink() {
+        return "[" + getAuthor() + "](" + getAuthorLink() + ")";
+    }
 
-	public String getLength() {
-		return toTime(this.track.getInfo().length);
-	}
+    public String getLength() {
+        return toTime(this.track.getInfo().length);
+    }
 
-	public String getURI() {
-		return this.track.getInfo().uri;
-	}
+    public long getSize() {
+        return this.track.getInfo().length;
+    }
 
-	public String getThumbnail() {
-		return this.thumbnail;
-	}
+    public String getURI() {
+        return this.track.getInfo().uri;
+    }
 
-	public AudioTrack getTrack() {
-		return this.track;
-	}
+    public String getThumbnail() {
+        return this.thumbnail;
+    }
 
-	public Member getMember() {
-		return this.member;
-	}
+    public AudioTrack getTrack() {
+        return this.track;
+    }
 
-	public String getAuthorLink() {
-		return this.authorLink;
-	}
+    public Member getMember() {
+        return this.member;
+    }
 
-	protected String toTime(long length) {
-		String sec = Long.toString((length / 1000l) % 60l);
-		if (sec.length() < 2) {
-			sec = "0" + sec;
-		}
+    public String getAuthorLink() {
+        return this.authorLink;
+    }
 
-		String min = Long.toString((length / 60000));
-		if (sec.length() < 2) {
-			sec = "0" + sec;
-		}
+    public static String toTime(long length) {
 
-		return min + ":" + sec;
-	}
+        int seconds = (int) (length / 1000) % 60;
+        int minutes = (int) ((length / (1000 * 60)) % 60);
+        int hours = (int) ((length / (1000 * 60 * 60)) % 24);
+
+        return String.format("%02d", hours) + ":" + String.format("%02d", minutes) + ":" + String.format("%02d",
+                seconds);
+    }
 }

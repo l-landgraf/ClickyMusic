@@ -15,8 +15,9 @@ import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
 import java.util.LinkedList;
 import java.util.List;
 
-public class QueuePlayer implements Timer.TimerListener {
+public class QueuePlayer {
     private static final long DISCONNECT_TIME = 10000L;
+    private static final long PROGRESS_UPDATE_TIME = 10000L;
 
     private List<QueueElement> queue;
     private QueueElement currentTrack;
@@ -28,7 +29,8 @@ public class QueuePlayer implements Timer.TimerListener {
     private GuildHandler handler;
     private AudioManager audioManager;
 
-    private Timer timer;
+    private Timer progressUpdateTimer;
+    private Timer leaveTimer;
 
     public QueuePlayer(GuildHandler handler, AudioPlayer player) {
 
@@ -39,7 +41,9 @@ public class QueuePlayer implements Timer.TimerListener {
         this.player.addListener(this.listener);
         this.sender = new SendHandler(this.player);
         this.queue = new LinkedList<>();
-        this.timer = new Timer(DISCONNECT_TIME, this);
+        this.leaveTimer = new Timer(DISCONNECT_TIME, false, () -> leave());
+        this.progressUpdateTimer = new Timer(PROGRESS_UPDATE_TIME, true, () -> progressUpdate());
+        this.progressUpdateTimer.start();
         this.audioManager.setSendingHandler(this.sender);
     }
 
@@ -63,17 +67,15 @@ public class QueuePlayer implements Timer.TimerListener {
     }
 
     public void addQueue(QueueElement element) {
+        MessageCreateBuilder mcb = new MessageCreateBuilder();
         if (this.currentTrack == null) {
-            MessageCreateBuilder mcb = new MessageCreateBuilder();
             mcb.setEmbeds(element.buildMessageEmbed(QueueStatus.PLAYING));
-            
             Message message =
                     this.handler.complete(this.handler.getConfig().getOutputChannel().sendMessage(mcb.build()));
             element.setMessage(message);
             this.currentTrack = element;
             this.currentTrack.onPlaying();
         } else {
-            MessageCreateBuilder mcb = new MessageCreateBuilder();
             mcb.setEmbeds(element.buildMessageEmbed(QueueStatus.QUEUED));
             Message message =
                     this.handler.complete(this.handler.getConfig().getOutputChannel().sendMessage(mcb.build()));
@@ -157,6 +159,9 @@ public class QueuePlayer implements Timer.TimerListener {
     }
 
     public long getPosition() {
+        if (this.player.getPlayingTrack() == null) {
+            return 0;
+        }
         return this.player.getPlayingTrack().getPosition();
     }
 
@@ -173,6 +178,15 @@ public class QueuePlayer implements Timer.TimerListener {
             throw new Exception("Cant seek, track end reached.");
         }
         this.player.getPlayingTrack().setPosition(l);
+        progressUpdate();
+    }
+
+    public void progressUpdate() {
+        if (this.currentTrack == null) {
+            return;
+        }
+        this.handler.log("updating progress");
+        this.currentTrack.updateMessage();
     }
 
     public void voiceUpdate() {
@@ -186,11 +200,11 @@ public class QueuePlayer implements Timer.TimerListener {
 
             if (nonBotUsers >= 1) {
                 this.handler.log("Timer stopped.");
-                this.timer.stop();
+                this.leaveTimer.stop();
                 return;
             }
             this.handler.log("Disconnecting in " + DISCONNECT_TIME / 1000 + "s...");
-            this.timer.start();
+            this.leaveTimer.start();
 
         }
     }
@@ -209,11 +223,6 @@ public class QueuePlayer implements Timer.TimerListener {
 
     public void togglePaused() {
         setPaused(!isPaused());
-    }
-
-    @Override
-    public void onTimerEnd() {
-        leave();
     }
 
     public boolean isPlaying() {

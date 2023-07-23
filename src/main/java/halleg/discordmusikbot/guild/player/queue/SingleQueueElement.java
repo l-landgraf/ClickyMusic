@@ -7,6 +7,7 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 
 import java.io.File;
+import java.util.Random;
 
 public class SingleQueueElement extends QueueElement {
     private Track track;
@@ -36,11 +37,10 @@ public class SingleQueueElement extends QueueElement {
 
         eb.addField("By", this.track.getAuthorEmbedLink(), true);
         eb.addField("Length", this.track.getLength(), true);
+        if (status == QueueStatus.PLAYING) {
+            addProgressBar(eb, this.track.getTrack());
+        }
         return eb.build();
-    }
-
-    @Override
-    public void updateMessage() {
     }
 
     @Override

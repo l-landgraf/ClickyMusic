@@ -177,7 +177,7 @@ public class GuildHandler {
     }
 
     public void log(String string) {
-        System.out.println("[" + this.config.getGuild().getName() + "] (" + Thread.currentThread().getId() + ") " + string);
+        System.out.println(System.currentTimeMillis() + " [" + this.config.getGuild().getName() + "] " + string);
     }
 
     public Guild getGuild() {

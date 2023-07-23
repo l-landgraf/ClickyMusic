@@ -3,12 +3,13 @@ package halleg.discordmusikbot.guild.player;
 public class Timer implements Runnable {
 
     private long time;
-    private long until;
+    private boolean repeat;
     private Thread thread;
     private TimerListener listener;
 
-    public Timer(long time, TimerListener listener) {
+    public Timer(long time, boolean repeat, TimerListener listener) {
         this.time = time;
+        this.repeat = repeat;
         this.listener = listener;
         this.thread = new Thread(this);
     }
@@ -28,13 +29,15 @@ public class Timer implements Runnable {
 
     @Override
     public void run() {
-        try {
-            Thread.sleep(this.time);
-        } catch (InterruptedException e) {
-            return;
-        }
+        do {
+            try {
+                Thread.sleep(this.time);
+            } catch (InterruptedException e) {
+                return;
+            }
 
-        this.listener.onTimerEnd();
+            this.listener.onTimerEnd();
+        } while (this.repeat);
     }
 
     public interface TimerListener {

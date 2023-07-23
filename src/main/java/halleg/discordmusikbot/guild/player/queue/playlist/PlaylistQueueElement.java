@@ -48,6 +48,9 @@ public abstract class PlaylistQueueElement<L extends TrackPlaylist> extends Queu
             addCommingUpRows(eb);
         }
 
+        if (status == QueueStatus.PLAYING) {
+            addProgressBar(eb, this.getCurrentTrack());
+        }
         return eb.build();
     }
 
