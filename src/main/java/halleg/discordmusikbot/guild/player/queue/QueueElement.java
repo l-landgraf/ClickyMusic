@@ -122,7 +122,7 @@ public abstract class QueueElement {
     }
 
     protected void addProgressBar(EmbedBuilder eb, AudioTrack track) {
-        int barWidth = 60;
+        int barWidth = 50;
         int p = (int) (((float) this.player.getPosition() / (float) track.getDuration()) * (float) barWidth);
 
         String bar = "";

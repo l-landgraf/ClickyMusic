@@ -185,13 +185,11 @@ public class QueuePlayer {
     }
 
     public void progressUpdate() {
-
-
-//        if (this.currentTrack == null) {
-//            return;
-//        }
-//        this.handler.log("updating progress");
-//        this.currentTrack.updateMessage();
+        if (this.currentTrack == null) {
+            return;
+        }
+        this.handler.log("updating progress");
+        this.currentTrack.updateMessage();
     }
 
     public void voiceUpdate() {
