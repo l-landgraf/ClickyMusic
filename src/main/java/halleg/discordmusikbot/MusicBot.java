@@ -8,7 +8,9 @@ import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers;
 import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager;
 import halleg.discordmusikbot.guild.GuildHandler;
 import halleg.discordmusikbot.guild.TrackLoader;
+import halleg.discordmusikbot.guild.config.GuildConfig;
 import halleg.discordmusikbot.guild.config.GuildConfigBuilder;
+import halleg.discordmusikbot.guild.config.GuildConfigException;
 import halleg.discordmusikbot.guild.local.MyLocalAudioSourceManager;
 import halleg.discordmusikbot.guild.spotify.SpotifyAudioSourceManager;
 import halleg.discordmusikbot.guild.youtube.MyYoutubeAudioSourceManager;
@@ -73,10 +75,15 @@ public class MusicBot extends ListenerAdapter {
             try {
                 handler = new GuildHandler(this, loadConfig(file).build(g), buildAudioPlayerManager(g), this.mapper,
                         this.httpClient);
-            } catch (Exception e) {
+            } catch (Exception ee) {
                 System.out.println("failed to load, using default");
-                handler = new GuildHandler(this, new GuildConfigBuilder().build(g), buildAudioPlayerManager(g),
-                        this.mapper, this.httpClient);
+                try {
+                    handler = new GuildHandler(this, new GuildConfigBuilder().build(g), buildAudioPlayerManager(g),
+                            this.mapper, this.httpClient);
+                } catch (GuildConfigException e) {
+                    System.out.println("Error: " + e.getMessage());
+                    continue;
+                }
                 saveGuildHandler(handler);
             }
             this.map.put(g.getIdLong(), handler);
@@ -135,10 +142,14 @@ public class MusicBot extends ListenerAdapter {
     @Override
     public void onGuildJoin(GuildJoinEvent event) {
         System.out.println("joined new server " + event.getGuild().getIdLong());
-        GuildHandler guildHandler = new GuildHandler(this, new GuildConfigBuilder().build(event.getGuild()),
-                buildAudioPlayerManager(event.getGuild()), this.mapper, this.httpClient);
-        this.map.put(event.getGuild().getIdLong(), guildHandler);
-        saveGuildHandler(guildHandler);
+        try {
+            GuildHandler guildHandler = new GuildHandler(this, new GuildConfigBuilder().build(event.getGuild()),
+                    buildAudioPlayerManager(event.getGuild()), this.mapper, this.httpClient);
+            this.map.put(event.getGuild().getIdLong(), guildHandler);
+            saveGuildHandler(guildHandler);
+        } catch (GuildConfigException e) {
+            System.out.println("Error: " + e.getMessage());
+        }
     }
 
     @Override

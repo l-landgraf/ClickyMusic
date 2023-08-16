@@ -14,7 +14,7 @@ public class GuildConfigBuilder {
         this.prefix = null;
     }
 
-    public GuildConfig build(Guild g) {
+    public GuildConfig build(Guild g) throws GuildConfigException {
         return new GuildConfig(this.outputChannelId, this.prefix, g);
     }
 
