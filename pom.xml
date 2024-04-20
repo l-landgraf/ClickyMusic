@@ -41,7 +41,7 @@
         <dependency>
             <groupId>dev.arbjerg</groupId>
             <artifactId>lavaplayer</artifactId>
-            <version>2.1.1</version>
+            <version>afec211f05c9dcf0b6ee44276a02f0316ea2458a-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>se.michaelthelin.spotify</groupId>
@@ -74,6 +74,10 @@
         <repository>
             <id>jitpack</id>
             <url>https://jitpack.io</url>
+        </repository>
+        <repository>
+            <id>lavalink-snapshot</id>
+            <url>https://maven.lavalink.dev/snapshots</url>
         </repository>
     </repositories>
 
