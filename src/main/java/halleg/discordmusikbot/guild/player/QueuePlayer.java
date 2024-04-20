@@ -133,6 +133,7 @@ public class QueuePlayer {
         if (c == null) {
             return;
         }
+        this.handler.log("Joining voice cannel " + c.getName());
         this.audioManager.openAudioConnection(c);
     }
 

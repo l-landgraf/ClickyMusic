@@ -35,6 +35,7 @@ public class EventListener extends AudioEventAdapter {
 
     @Override
     public void onTrackEnd(AudioPlayer player, AudioTrack track, AudioTrackEndReason endReason) {
+        this.handler.log("track ended: " + endReason);
         if (endReason.mayStartNext) {
             this.player.trackEnded();
         }
@@ -51,6 +52,7 @@ public class EventListener extends AudioEventAdapter {
 
     @Override
     public void onTrackException(AudioPlayer player, AudioTrack track, FriendlyException exception) {
+        this.handler.log("track exception: " + " " + exception.getMessage());
 //        this.handler.getPlayer().findElement(track).addError(exception.getMessage());
 //      this.handler.log(exception.getCause().getMessage() + "\n" + exception.getCause().getStackTrace());
     }

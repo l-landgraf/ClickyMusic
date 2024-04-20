@@ -126,8 +126,7 @@ public class GuildHandler {
         }
         return;
     }
-
-
+    
     public void handleButton(ButtonInteractionEvent event) {
         this.buttons.handleEvent(event, this.player);
     }
