@@ -26,7 +26,7 @@ import java.util.Locale;
 public enum MyCommand {
 
     QUEUE("adds a song to the queue. Alternatively you can write the " +
-            "source directly in the specefied channel.",
+            "source directly in the specefied channel.", CommandType.FREE,
             new OptionData(OptionType.STRING, "source", "source", true)) {
         @Override
         protected MessageCreateData run(SlashCommandInteractionEvent event, GuildHandler handler) {
@@ -47,7 +47,7 @@ public enum MyCommand {
         }
     },
 
-    PLAY("plays the playlist song specefied by the number",
+    PLAY("plays the playlist song specefied by the number", CommandType.SAME_CHANNEL,
             new OptionData(OptionType.INTEGER, "songnr", "songnr", true)) {
         @Override
         protected MessageCreateData run(SlashCommandInteractionEvent event, GuildHandler handler) {
@@ -72,7 +72,7 @@ public enum MyCommand {
         }
     },
 
-    JOIN("the bot will join your voicechannel.") {
+    JOIN("the bot will join your voicechannel.", CommandType.FREE) {
         @Override
         protected MessageCreateData run(SlashCommandInteractionEvent event, GuildHandler handler) {
             if (event.getMember().getVoiceState().getChannel() == null) {
@@ -89,7 +89,7 @@ public enum MyCommand {
         }
     },
 
-    SETCHANNEL("sets the channel for this bot.",
+    SETCHANNEL("sets the channel for this bot.", CommandType.ANY,
             new OptionData(OptionType.CHANNEL, "channelid", "channelid", false).setChannelTypes(ChannelType.TEXT)) {
         @Override
         protected MessageCreateData run(SlashCommandInteractionEvent event, GuildHandler handler) {
@@ -110,7 +110,7 @@ public enum MyCommand {
         }
     },
 
-    PAUSE("pauses the player.") {
+    PAUSE("pauses the player.", CommandType.SAME_CHANNEL) {
         @Override
         protected MessageCreateData run(SlashCommandInteractionEvent event, GuildHandler handler) {
             if (handler.getPlayer().isPaused()) {
@@ -121,7 +121,7 @@ public enum MyCommand {
         }
     },
 
-    RESUME("resumes the player.") {
+    RESUME("resumes the player.", CommandType.SAME_CHANNEL) {
         @Override
         protected MessageCreateData run(SlashCommandInteractionEvent event, GuildHandler handler) {
             if (!handler.getPlayer().isPaused()) {
@@ -132,7 +132,7 @@ public enum MyCommand {
         }
     },
 
-    SKIP("skips the current track.", new OptionData(OptionType.INTEGER,
+    SKIP("skips the current track.", CommandType.SAME_CHANNEL, new OptionData(OptionType.INTEGER,
             "amount", "amount", false)) {
         @Override
         protected MessageCreateData run(SlashCommandInteractionEvent event, GuildHandler handler) {
@@ -155,7 +155,7 @@ public enum MyCommand {
         }
     },
 
-    NExT("plays the next track in the playlist.") {
+    NExT("plays the next track in the playlist.", CommandType.SAME_CHANNEL) {
         @Override
         protected MessageCreateData run(SlashCommandInteractionEvent event, GuildHandler handler) {
             QueueElement ele = handler.getPlayer().getCurrentElement();
@@ -171,7 +171,7 @@ public enum MyCommand {
         }
     },
 
-    PREV("plays the previous track in the playlist.") {
+    PREV("plays the previous track in the playlist.", CommandType.SAME_CHANNEL) {
         @Override
         protected MessageCreateData run(SlashCommandInteractionEvent event, GuildHandler handler) {
             QueueElement ele = handler.getPlayer().getCurrentElement();
@@ -187,7 +187,7 @@ public enum MyCommand {
         }
     },
 
-    BACK("Restarts the track.") {
+    BACK("Restarts the track.", CommandType.SAME_CHANNEL) {
         @Override
         protected MessageCreateData run(SlashCommandInteractionEvent event, GuildHandler handler) {
             QueueElement ele = handler.getPlayer().getCurrentElement();
@@ -203,7 +203,7 @@ public enum MyCommand {
         }
     },
 
-    SHUFFLE("Shuffles / unshuffles the queue.") {
+    SHUFFLE("Shuffles / unshuffles the queue.", CommandType.SAME_CHANNEL) {
         @Override
         protected MessageCreateData run(SlashCommandInteractionEvent event, GuildHandler handler) {
             QueueElement ele = handler.getPlayer().getCurrentElement();
@@ -225,7 +225,7 @@ public enum MyCommand {
 
     SEEK("seeks to the desired possition or skips forward the given" +
             " " +
-            "amount of time.", new OptionData(OptionType.STRING, "time", "[sign][[hours" +
+            "amount of time.", CommandType.SAME_CHANNEL, new OptionData(OptionType.STRING, "time", "[sign][[hours" +
             ":]minutes:]seconds", true)) {
 
         public static final String SEEK_TIPPS = "Incorrect Syntax, seek examples:\n'+10' - skips forward " +
@@ -296,7 +296,7 @@ public enum MyCommand {
         }
     },
 
-    TIME("displays the time of the current Song.") {
+    TIME("displays the time of the current Song.", CommandType.SAME_CHANNEL) {
         @Override
         protected MessageCreateData run(SlashCommandInteractionEvent event, GuildHandler handler) {
             if (!handler.getPlayer().isPlaying()) {
@@ -317,7 +317,7 @@ public enum MyCommand {
 
     LEAVE("the bot will leave any voicechannel and completly clear " +
             "its " +
-            "Queue.") {
+            "Queue.", CommandType.SAME_CHANNEL) {
         @Override
         protected MessageCreateData run(SlashCommandInteractionEvent event, GuildHandler handler) {
             handler.getPlayer().leave();
@@ -326,7 +326,7 @@ public enum MyCommand {
         }
     },
 
-    CLEAR("clears the queue and the currently playling track.") {
+    CLEAR("clears the queue and the currently playling track.", CommandType.SAME_CHANNEL) {
         @Override
         protected MessageCreateData run(SlashCommandInteractionEvent event, GuildHandler handler) {
             handler.getPlayer().clearQueue();
@@ -334,7 +334,7 @@ public enum MyCommand {
         }
     },
 
-    TREE("displays all local files.") {
+    TREE("displays all local files.", CommandType.ANY) {
         @Override
         protected MessageCreateData run(SlashCommandInteractionEvent event, GuildHandler handler) {
             return handler.getBuilder().successReply("```" + handler.getFileManager().showTree() +
@@ -342,7 +342,7 @@ public enum MyCommand {
         }
     },
 
-    COPY("copies a file or folder.", new OptionData(OptionType.STRING,
+    COPY("copies a file or folder.", CommandType.ANY, new OptionData(OptionType.STRING,
             "from", "from", true), new
 
             OptionData(OptionType.STRING, "to", "to", true)) {
@@ -355,7 +355,7 @@ public enum MyCommand {
         }
     },
 
-    MOVE("moves a file or folder. can also be used for renaming.",
+    MOVE("moves a file or folder. can also be used for renaming.", CommandType.ANY,
             new OptionData(OptionType.STRING, "from", "from", true), new
 
             OptionData(OptionType.STRING, "to", "to"
@@ -370,7 +370,7 @@ public enum MyCommand {
         }
     },
 
-    DELETE("deletes a file or folder.",
+    DELETE("deletes a file or folder.", CommandType.ANY,
             new OptionData(OptionType.STRING, "directory", "directory", true)) {
         @Override
         protected MessageCreateData run(SlashCommandInteractionEvent event, GuildHandler handler) {
@@ -380,7 +380,7 @@ public enum MyCommand {
         }
     },
 
-    DELETE_ALL("deletes a directory and all of its contents.",
+    DELETE_ALL("deletes a directory and all of its contents.", CommandType.ANY,
             new OptionData(OptionType.STRING, "directory", "directory", true)) {
         @Override
         protected MessageCreateData run(SlashCommandInteractionEvent event, GuildHandler handler) {
@@ -389,7 +389,7 @@ public enum MyCommand {
         }
     },
 
-    LIST("lists the files of the folder.",
+    LIST("lists the files of the folder.", CommandType.ANY,
             new OptionData(OptionType.STRING, "directory", "directory", true)) {
         @Override
         protected MessageCreateData run(SlashCommandInteractionEvent event, GuildHandler handler) {
@@ -398,7 +398,7 @@ public enum MyCommand {
         }
     },
 
-    HELP("Displays a help message"
+    HELP("Displays a help message", CommandType.ANY
     ) {
         @Override
         protected MessageCreateData run(SlashCommandInteractionEvent event, GuildHandler handler) {
@@ -411,20 +411,31 @@ public enum MyCommand {
 
     private String description;
     private OptionData[] options;
+    private CommandType type;
 
-    MyCommand(String description, OptionData... options) {
+    MyCommand(String description, CommandType type, OptionData... options) {
         this.description = description;
         this.options = options;
+        this.type = type;
     }
 
     protected abstract MessageCreateData run(SlashCommandInteractionEvent event, GuildHandler handler);
 
     public boolean check(SlashCommandInteractionEvent event, GuildHandler handler) {
+
+
         if (!event.getInteraction().getName().equalsIgnoreCase(getCommand())) {
             return false;
         }
 
         handler.log("executing command: " + getCommand());
+
+        if (this.type == CommandType.SAME_CHANNEL && !handler.isSameAudioChannel(event.getMember().getVoiceState().getChannel())) {
+            return true;
+        } else if (this.type == CommandType.FREE && !handler.isFreeAudioChannel(event.getMember().getVoiceState().getChannel())) {
+            return true;
+        }
+
         MessageCreateData m = run(event, handler);
         handler.queue(event.reply(m));
 

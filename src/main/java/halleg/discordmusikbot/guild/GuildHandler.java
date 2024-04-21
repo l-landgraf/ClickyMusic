@@ -10,6 +10,7 @@ import halleg.discordmusikbot.guild.config.GuildConfig;
 import halleg.discordmusikbot.guild.player.QueuePlayer;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.entities.channel.middleman.AudioChannel;
 import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.dv8tion.jda.api.entities.channel.unions.AudioChannelUnion;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
@@ -92,7 +93,8 @@ public class GuildHandler {
             handleAttachments(event);
             return;
         }
-        if (!isCorrectChannel(event.getMember().getVoiceState().getChannel())) {
+
+        if (!isFreeAudioChannel(event.getMember().getVoiceState().getChannel())) {
             return;
         }
 
@@ -126,7 +128,7 @@ public class GuildHandler {
         }
         return;
     }
-    
+
     public void handleButton(ButtonInteractionEvent event) {
         this.buttons.handleEvent(event, this.player);
     }
@@ -223,8 +225,23 @@ public class GuildHandler {
         return this.fileManager;
     }
 
-    public boolean isCorrectChannel(AudioChannelUnion channel) {
-        return channel != null && (this.player.getConnectedChannel() == null || channel.getIdLong() == this.player.getConnectedChannel().getIdLong());
+    public boolean isSameAudioChannel(AudioChannel channel) {
+        if (channel == null) {
+            return false;
+        }
+        return channel == this.player.getConnectedChannel();
+    }
+
+    public boolean isFreeAudioChannel(AudioChannel channel) {
+        if (channel == null) {
+            return false;
+        }
+
+        if (this.player.getConnectedChannel() == null) {
+            return true;
+        }
+
+        return channel == this.player.getConnectedChannel();
     }
 
     public void handleMissingPermission(InsufficientPermissionException e) {

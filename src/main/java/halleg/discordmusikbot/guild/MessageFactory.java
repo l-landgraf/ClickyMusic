@@ -179,7 +179,7 @@ public class MessageFactory {
 
     public MessageCreateData buildRepeatMessage(String link) {
         MessageCreateBuilder mcb = new MessageCreateBuilder();
-        mcb.setContent(MyButton.REPEAT_BUTTON.getEmoji() + MessageFactory.inlineCodeBlock(link));
+        mcb.setContent(MyButton.REPEAT_BUTTON.getEmoji().getFormatted() + MessageFactory.inlineCodeBlock(link));
         return mcb.build();
     }
 
