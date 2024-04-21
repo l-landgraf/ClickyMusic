@@ -56,7 +56,7 @@ public abstract class LoadHandler implements AudioLoadResultHandler {
 
     @Override
     public void playlistLoaded(AudioPlaylist playlist) {
-        this.handler.queueLater(this.message.delete());
+        this.handler.queue(this.message.delete());
         this.handler.log("playlist loadet \"" + playlist.getName() + "\"");
     }
 }
