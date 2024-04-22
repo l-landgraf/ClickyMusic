@@ -122,17 +122,17 @@ public abstract class QueueElement {
     }
 
     protected void addProgressBar(EmbedBuilder eb, AudioTrack track) {
-        int barWidth = 50;
+        int barWidth = 30;
         int p = (int) (((float) this.player.getPosition() / (float) track.getDuration()) * (float) barWidth);
 
         String bar = "";
         for (int i = 0; i < barWidth; i++) {
             if (i < p) {
-                bar += "=";
+                bar += "█";
             } else if (i == p) {
-                bar += "|";
+                bar += "█";
             } else {
-                bar += "-";
+                bar += "▄";
             }
         }
         eb.addField(bar, Track.toTime(this.player.getPosition()), false);
