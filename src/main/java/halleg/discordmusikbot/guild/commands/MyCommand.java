@@ -30,11 +30,7 @@ public enum MyCommand {
             new OptionData(OptionType.STRING, "source", "source", true)) {
         @Override
         protected MessageCreateData run(SlashCommandInteractionEvent event, GuildHandler handler) {
-
-            try {
-                handler.getPlayer().join(event.getMember().getVoiceState().getChannel());
-            } catch (InsufficientPermissionException e) {
-                handler.handleMissingPermission(e);
+            if (handler.getPlayer().join(event.getMember().getVoiceState().getChannel())) {
                 return null;
             }
 
@@ -75,14 +71,8 @@ public enum MyCommand {
     JOIN("the bot will join your voicechannel.", CommandType.FREE) {
         @Override
         protected MessageCreateData run(SlashCommandInteractionEvent event, GuildHandler handler) {
-            if (event.getMember().getVoiceState().getChannel() == null) {
-                return handler.getBuilder().errorReply("You are not in a Voice channel");
-            }
-            try {
-                handler.getPlayer().join(event.getMember().getVoiceState().getChannel());
-            } catch (InsufficientPermissionException e) {
-                handler.handleMissingPermission(e);
-                return handler.getBuilder().successReply(GuildHandler.LOADING_FAILED_EMOJI);
+            if (handler.getPlayer().join(event.getMember().getVoiceState().getChannel())) {
+                return null;
             }
 
             return handler.getBuilder().successReply("Joined channel");

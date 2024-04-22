@@ -19,18 +19,18 @@ public enum MyButton {
                 @Override
                 public void execute(ButtonInteractionEvent event, QueuePlayer player) {
                     String search = player.getHandler().getBuilder().getURI(event.getMessage());
-                    try {
-                        player.join(event.getMember().getVoiceState().getChannel());
-                    } catch (InsufficientPermissionException e) {
-                        player.getHandler().handleMissingPermission(e);
+
+                    if (!player.join(event.getMember().getVoiceState().getChannel())) {
                         return;
                     }
+
 
                     player.getHandler().queue(player.getHandler().getChannel().sendMessage(player.getHandler().getBuilder().buildRepeatMessage(search)),
                             new Consumer<Message>() {
                                 @Override
                                 public void accept(Message message) {
-                                    player.getHandler().getLoader().search(search, player, event.getMember(), message);
+                                    player.getHandler().getLoader().search(search, player, event.getMember(),
+                                            message);
                                 }
                             });
                 }

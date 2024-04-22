@@ -102,10 +102,7 @@ public class GuildHandler {
             return;
         }
 
-        try {
-            this.player.join(event.getMember().getVoiceState().getChannel());
-        } catch (InsufficientPermissionException e) {
-            handleMissingPermission(e);
+        if (!this.player.join(event.getMember().getVoiceState().getChannel())) {
             return;
         }
 
@@ -145,17 +142,19 @@ public class GuildHandler {
         }
     }
 
-    public <T> void queue(RestAction<T> action) {
-        queue(action, null);
+    public <T> boolean queue(RestAction<T> action) {
+        return queue(action, null);
     }
 
-    public <T> void queue(RestAction action, Consumer<T> consumer) {
+    public <T> boolean queue(RestAction action, Consumer<T> consumer) {
         try {
             action.queue(consumer, throwable -> {
                 log(throwable.toString());
             });
+            return true;
         } catch (InsufficientPermissionException e) {
             handleMissingPermission(e);
+            return false;
         }
     }
 
@@ -172,9 +171,15 @@ public class GuildHandler {
     }
 
 
-    public void addReaction(Message message, String reaction) {
+    public boolean addReaction(Message message, String reaction) {
         Emoji e = Emoji.fromUnicode(reaction);
-        message.addReaction(e).queue();
+        try {
+            message.addReaction(e).queue();
+            return true;
+        } catch (InsufficientPermissionException ex) {
+            handleMissingPermission(ex);
+            return false;
+        }
     }
 
     public void log(String string) {

@@ -129,12 +129,19 @@ public class QueuePlayer {
         this.player.playTrack(track.makeClone());
     }
 
-    public void join(AudioChannel c) throws InsufficientPermissionException {
+    public boolean join(AudioChannel c) {
         if (c == null) {
-            return;
+            return false;
         }
+        
         this.handler.log("Joining voice cannel " + c.getName());
-        this.audioManager.openAudioConnection(c);
+        try {
+            this.audioManager.openAudioConnection(c);
+            return true;
+        } catch (InsufficientPermissionException e) {
+            this.handler.handleMissingPermission(e);
+            return false;
+        }
     }
 
     public void removeElement(QueueElement element) {
