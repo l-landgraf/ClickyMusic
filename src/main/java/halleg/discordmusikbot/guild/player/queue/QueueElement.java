@@ -12,6 +12,11 @@ import net.dv8tion.jda.api.utils.messages.MessageEditData;
 import java.util.function.Consumer;
 
 public abstract class QueueElement {
+    public static final String PROGRESSBAR_FULL_CHARACTER = "█";
+    public static final String PROGRESSBAR_SEPERATOR_CHARACTER = "█";
+    public static final String PROGRESSBAR_EMPTY_CHARACTER = "░";
+
+
     protected final boolean isPlaylist;
     protected boolean isShuffle;
 
@@ -128,11 +133,11 @@ public abstract class QueueElement {
         String bar = "";
         for (int i = 0; i < barWidth; i++) {
             if (i < p) {
-                bar += "█";
+                bar += PROGRESSBAR_FULL_CHARACTER;
             } else if (i == p) {
-                bar += "█";
+                bar += PROGRESSBAR_SEPERATOR_CHARACTER;
             } else {
-                bar += "▄";
+                bar += PROGRESSBAR_EMPTY_CHARACTER;
             }
         }
         eb.addField(bar, Track.toTime(this.player.getPosition()), false);
