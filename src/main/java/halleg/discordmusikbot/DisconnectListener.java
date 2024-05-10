@@ -14,11 +14,13 @@ public class DisconnectListener extends ListenerAdapter implements Timer.TimerLi
 
     @Override
     public void onSessionResume(SessionResumeEvent event) {
+        System.out.println("Disconnect timer stopped.");
         this.timer.stop();
     }
 
     @Override
     public void onSessionDisconnect(SessionDisconnectEvent event) {
+        System.out.println("Disconnect timer started.");
         this.timer.start();
     }
 
