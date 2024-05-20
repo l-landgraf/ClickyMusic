@@ -27,6 +27,6 @@ public class DisconnectListener extends ListenerAdapter implements Timer.TimerLi
     @Override
     public void onTimerEnd() {
         System.out.println("Disconnect timer run out. shutting down.");
-        System.exit(1);
+        //System.exit(1);
     }
 }
